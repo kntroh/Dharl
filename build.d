@@ -1,9 +1,12 @@
 #!/usr/bin/rdmd
-/// ビルドスクリプト。
+/// Build script.
 module build;
 
 immutable NAME = "dharl";
 immutable string[] CRITICAL = [
+];
+immutable string[] RES_DIR = [
+	"res",
 ];
 
 import std.algorithm;
@@ -138,7 +141,7 @@ immutable string[] RELEASE_FLAGS_L = [
 
 immutable DMD = "dmd";
 
-/// コマンドを実行。
+/// Executes command.
 void exec(string[] cmd ...) {
 	string line = cmd.join(" ");
 	writeln(line);
@@ -147,11 +150,11 @@ void exec(string[] cmd ...) {
 	timer.stop();
 	writefln("%d msecs", timer.peek().msecs);
 }
-/// ファイル名が一致するか。
+/// a equals b by file name?
 bool equalsFilename(string a, string b) {
 	return 0 == a.filenameCmp(b);
 }
-/// コンパイル対象の情報を格納する。
+/// Puts compile target information.
 string[] put(string file, ref string[string] objs, in string[] qual) {
 	string obj = "objs".buildPath(file).setExtension(O);
 	objs[file] = obj;
@@ -167,15 +170,15 @@ string[] put(string file, ref string[string] objs, in string[] qual) {
 	}
 	return array;
 }
-/// argsにflagが含まれているか(大文字・小文字を区別しない)。
+/// Is args has flag? (Ignore case)
 bool has(in string[] args, string flag) {
 	return !find!("0 == icmp(a, b)")(args, flag).empty;
 }
-/// pathがtargより新しいか。
+/// path is newer than the targ?
 bool newer(string path, string targ) {
 	return !targ.exists() || path.timeLastModified() > targ.timeLastModified();
 }
-/// pathを削除する。
+/// Removes path.
 void removeFile(string path) {
 	if (!path.exists()) return;
 	if (path.isDir()) {
@@ -185,7 +188,7 @@ void removeFile(string path) {
 	}
 	writefln("removed: %s", path);
 }
-/// argsの内容を分類する。
+/// To classify the args.
 void divide(in string[] args, out string[] file, out string[] option, out string[] dmdOption) {
 	foreach (a; args) {
 		if (0 == a.extension().filenameCmp(".d")) {
@@ -201,7 +204,7 @@ void divide(in string[] args, out string[] file, out string[] option, out string
 void main(string[] args) {
 	auto timer = StopWatch(AutoStart.yes);
 
-	// ビルドフラグ
+	// Build flags.
 	string[] test, option, dmdOption;
 	divide(args[1 .. $], test, option, dmdOption);
 	test = test.sort;
@@ -218,7 +221,7 @@ void main(string[] args) {
 		return;
 	}
 
-	// 前回のフラグと比較・保存
+	// Compared with previous flags, and save flags.
 	bool mod = false;
 	if (!test.length) {
 		auto option2 = option.dup;
@@ -229,7 +232,7 @@ void main(string[] args) {
 	}
 
 	if (clean || mod) {
-		// クリーン
+		// clean
 		EXE.removeFile();
 		version (Windows) {
 			RES.removeFile();
@@ -240,17 +243,14 @@ void main(string[] args) {
 		if (clean && 1 == test.length + option.length) return;
 	}
 
-	// ソースコードとオブジェクトファイルのリスト
-	string[string] objs; // コンパイル対象と生成されるオブジェクトファイルのテーブル
-	string[][string] files; // コンパイル対象(ディレクトリ毎)
-	string[] critical; // 速度優先でコンパイルされるべきファイル
-	auto res = .make!(RedBlackTree!string)(); // リソースのディレクトリ
+	// Lists for source code and object file.
+	string[string] objs; // Table of compilation targets and creation object file.
+	string[][string] files; // Compilation target (each directory).
+	string[] critical; // These files should be compiled with performance priority.
+	string[] res; // Resource directories.
 	foreach (string file; ".".dirEntries(SpanMode.depth)) {
 		if (file.isDir()) continue;
-		if (!file.extension().equalsFilename(".d")) {
-			res.insert("-J" ~ file.dirName);
-			continue;
-		}
+		if (!file.extension().equalsFilename(".d")) continue;
 		file = file.buildNormalizedPath();
 		if (file.equalsFilename(__FILE__)) continue;
 		if (-1 != CRITICAL.countUntil!equalsFilename(file)) {
@@ -259,11 +259,14 @@ void main(string[] args) {
 		}
 		files[file.dirName] ~= put(file, objs, test);
 	}
+	foreach (resDir; RES_DIR) {
+		res ~= "-J" ~ resDir;
+	}
 
 	string[] cmd;
 
 	version (Windows) {
-		// リソースファイル
+		// Resource files.
 		if (RC.length && RC.newer(RES)) {
 			cmd = [RCC];
 			exec(cmd ~ RC);
@@ -272,19 +275,19 @@ void main(string[] args) {
 
 	cmd = [DMD];
 
-	// *.dのコンパイル
+	// Compiles *.d
 	string[] flags = FLAGS.dup;
 	flags ~= release ? RELEASE_FLAGS : DEBUG_FLAGS;
 	flags ~= window ? WINDOW_FLAGS : CONSOLE_FLAGS;
 	if (critical.length) {
-		exec(cmd ~ CRITICAL_FLAGS ~ res.array() ~ critical ~ "-odobjs" ~ dmdOption);
+		exec(cmd ~ CRITICAL_FLAGS ~ res ~ critical ~ "-odobjs" ~ dmdOption);
 	}
 	foreach (dir, array; files) {
 		if (!array.length) continue;
-		exec(cmd ~ flags ~ array ~ res.array() ~ "-odobjs" ~ dmdOption);
+		exec(cmd ~ flags ~ array ~ res ~ "-odobjs" ~ dmdOption);
 	}
 
-	// ファイルが指定されている場合はコンパイルテストなのでここで終了
+	// If a file name is specified, compile-test. Ends here.
 	if (test.length) {
 		foreach (f; critical ~ files.values.join()) {
 			auto obj = objs[f];
@@ -295,7 +298,7 @@ void main(string[] args) {
 		return;
 	}
 
-	// リンク
+	// Links object files.
 	flags = LIB.dup;
 	flags ~= release ? RELEASE_FLAGS_L : DEBUG_FLAGS_L;
 	flags ~= window ? WINDOW_FLAGS_L : CONSOLE_FLAGS_L;
