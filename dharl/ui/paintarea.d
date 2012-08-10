@@ -91,7 +91,7 @@ class PaintArea : Canvas, Undoable {
 	private PaintMode _mode = PaintMode.FreePath;
 
 	/// Is mouse button downing?
-	private bool _mouseDown = false;
+	private int _mouseDown = -1;
 	/// Is there mouse cursor?
 	private bool _mouseEnter = false;
 
@@ -112,6 +112,9 @@ class PaintArea : Canvas, Undoable {
 
 	/// A cursor of every paint mode.
 	private Cursor[PaintMode] _cursor;
+
+	/// A cursor of syringe mode.
+	private Cursor _cursorDropper;
 
 	/// The only constructor.
 	this (Composite parent, int style) {
@@ -687,7 +690,7 @@ class PaintArea : Canvas, Undoable {
 		fixPaste();
 		redrawCursorArea();
 		_rangeSel = v;
-		_mouseDown = false;
+		_mouseDown = -1;
 		resetSelectedRange();
 
 		clearCache();
@@ -713,7 +716,7 @@ class PaintArea : Canvas, Undoable {
 		fixPaste();
 		redrawCursorArea();
 		_mode = v;
-		_mouseDown = false;
+		_mouseDown = -1;
 		resetSelectedRange();
 
 		clearCache();
@@ -765,8 +768,43 @@ class PaintArea : Canvas, Undoable {
 			_cursor[mode] = cursor;
 		}
 		if (mode is this.mode) {
-			this.p_cursor = cursor;
+			this.p_cursor = cursorNow;
 		}
+	}
+
+	/// A cursor of syringe mode.
+	/// If it is null, use cursor(PaintMode).
+	@property
+	const
+	const(Cursor) cursorDropper() { return _cursorDropper; }
+	/// ditto
+	@property
+	Cursor cursorDropper() { 
+		checkWidget();
+		return _cursorDropper;
+	}
+	/// ditto
+	@property
+	void cursorDropper(Cursor cursor) {
+		checkWidget();
+		_cursorDropper = cursor;
+		this.p_cursor = cursorNow;
+	}
+
+	/// Dropper mode?
+	@property
+	const
+	bool dropperMode() {
+		return 3 == _mouseDown && !_rangeSel;
+	}
+
+	/// Cursor in use.
+	@property
+	Cursor cursorNow() {
+		if (dropperMode && _cursorDropper) {
+			return _cursorDropper;
+		}
+		return  cursor(this.mode);
 	}
 
 	/// Operations to cut, copy, paste, and delete. TODO comment
@@ -1675,7 +1713,7 @@ class PaintArea : Canvas, Undoable {
 				if (selLayer[i]) pLayerIndex++;
 			}
 			pushPasteLayer(data, pLayerIndex, layer);
-		} else if (!_rangeSel && _mouseDown) {
+		} else if (!_rangeSel && 1 == _mouseDown) {
 			/// Draws cursor in painting. TODO comment
 			if (_mode is PaintMode.FreePath) {
 				// Unnecessary. After painted.
@@ -1772,7 +1810,7 @@ class PaintArea : Canvas, Undoable {
 			e.gc.drawFocus(cca.x, cca.y, cca.width, cca.height);
 		} else {
 			// Draws cursor.
-			if (showCursor && !_mouseDown && _mouseEnter && 0 != _layers.length) {
+			if (showCursor && 1 != _mouseDown && _mouseEnter && 0 != _layers.length) {
 				// Draws only pixel under a mouse cursor.
 				auto ia = iCursorArea;
 				int ix1 = ia.x, ix2 = ia.x + ia.width - 1;
@@ -1828,7 +1866,7 @@ class PaintArea : Canvas, Undoable {
 		if (_image.empty) return;
 		int ix = cxtoix(e.x);
 		int iy = cytoiy(e.y);
-		if (_mouseDown) {
+		if (1 == _mouseDown) {
 			if (_pasteLayer) {
 				int isx = ix - _iPCatchX;
 				int isy = iy - _iPCatchY;
@@ -1924,11 +1962,11 @@ class PaintArea : Canvas, Undoable {
 				} else if (ea || we) {
 					this.p_cursor = d.getSystemCursor(SWT.CURSOR_SIZEWE);
 				} else {
-					this.p_cursor = cursor(mode);
+					this.p_cursor = cursorNow;
 				}
 				return;
 			}
-			this.p_cursor = cursor(mode);
+			this.p_cursor = cursorNow;
 			if (_iCurFrom.x == ix && _iCurFrom.y == iy) {
 				return;
 			}
@@ -1949,8 +1987,9 @@ class PaintArea : Canvas, Undoable {
 		if (_image.empty) return;
 		switch (e.button) {
 		case 1:
-			if (_mouseDown) return;
-			_mouseDown = true;
+			if (1 == _mouseDown) return;
+			scope (exit) this.p_cursor = cursorNow;
+			_mouseDown = 1;
 			if (_pasteLayer) {
 				auto ca = cCursorArea;
 				if (ca.contains(e.x, e.y)) {
@@ -2047,6 +2086,10 @@ class PaintArea : Canvas, Undoable {
 				}
 			}
 			break;
+		case 3:
+			scope (exit) this.p_cursor = cursorNow;
+			_mouseDown = 3;
+			break;
 		default:
 			break;
 		}
@@ -2061,7 +2104,8 @@ class PaintArea : Canvas, Undoable {
 		if (_image.empty) return;
 		switch (e.button) {
 		case 1:
-			_mouseDown = false;
+			scope (exit) this.p_cursor = cursorNow;
+			_mouseDown = -1;
 			if (_pasteLayer) return;
 			if (_rangeSel) {
 				// No draws. TODO comment
@@ -2083,6 +2127,8 @@ class PaintArea : Canvas, Undoable {
 			drawReceivers.raiseEvent();
 			break;
 		case 3:
+			scope (exit) this.p_cursor = cursorNow;
+			_mouseDown = -1;
 			if (cInImage(e.x, e.y)) {
 				auto pixels = iGetPixels(cxtoix(e.x), cytoiy(e.y));
 				_pixel = pixels[0];

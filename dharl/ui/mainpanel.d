@@ -305,6 +305,7 @@ class MainPanel : Composite {
 		foreach (mode; EnumMembers!PaintMode) {
 			_paintArea.cursor(mode, cursor);
 		}
+		_paintArea.cursorDropper = ccur(_c.image.cursorDropper, 0, 0);
 		_paintPreview.init(_paintArea);
 		_layerList.init(_paintArea);
 		_colorSlider.color = _paletteView.color(_paletteView.pixel1);
