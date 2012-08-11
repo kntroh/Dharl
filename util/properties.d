@@ -3,7 +3,6 @@
 module util.properties;
 
 private import util.types;
-private import util.utils : parseS;
 
 private import std.conv;
 private import std.exception;

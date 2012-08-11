@@ -2,7 +2,7 @@
 /// This module includes common types and structures.
 module util.types;
 
-private import util.utils : parseS;
+private import util.utils : safeParse;
 
 private import std.algorithm;
 private import std.conv;
@@ -45,11 +45,11 @@ struct CRGB {
 	static CRGB fromElement(ElementParser ep) {
 		CRGB r;
 		auto p = "r" in ep.tag.attr;
-		if (p) r.r = parseS!ubyte(*p, r.r);
+		if (p) r.r = safeParse!ubyte(*p, r.r);
 		p = "g" in ep.tag.attr;
-		if (p) r.g = parseS!ubyte(*p, r.g);
+		if (p) r.g = safeParse!ubyte(*p, r.g);
 		p = "b" in ep.tag.attr;
-		if (p) r.b = parseS!ubyte(*p, r.b);
+		if (p) r.b = safeParse!ubyte(*p, r.b);
 		return r;
 	}
 	/// Creates XML element from this instance.
@@ -133,11 +133,11 @@ struct CHSV {
 	static CHSV fromElement(ElementParser ep) {
 		CHSV r;
 		auto p = "h" in ep.tag.attr;
-		if (p) r.h = parseS!ushort(*p, r.h);
+		if (p) r.h = safeParse!ushort(*p, r.h);
 		p = "s" in ep.tag.attr;
-		if (p) r.s = parseS!real(*p, r.s);
+		if (p) r.s = safeParse!real(*p, r.s);
 		p = "v" in ep.tag.attr;
-		if (p) r.v = parseS!real(*p, r.v);
+		if (p) r.v = safeParse!real(*p, r.v);
 		return r;
 	}
 	/// Creates XML element from this instance.
@@ -210,13 +210,13 @@ struct PBounds {
 	static PBounds fromElement(ElementParser ep) {
 		PBounds r;
 		auto p = "x" in ep.tag.attr;
-		if (p) r.x = parseS!int(*p, r.x);
+		if (p) r.x = safeParse!int(*p, r.x);
 		p = "y" in ep.tag.attr;
-		if (p) r.y = parseS!int(*p, r.y);
+		if (p) r.y = safeParse!int(*p, r.y);
 		p = "width" in ep.tag.attr;
-		if (p) r.width = parseS!int(*p, r.width);
+		if (p) r.width = safeParse!int(*p, r.width);
 		p = "height" in ep.tag.attr;
-		if (p) r.height = parseS!int(*p, r.height);
+		if (p) r.height = safeParse!int(*p, r.height);
 		return r;
 	}
 	/// Creates XML element from this instance.
@@ -242,9 +242,9 @@ struct PPoint {
 	static PPoint fromElement(ElementParser ep) {
 		PPoint r;
 		auto p = "x" in ep.tag.attr;
-		if (p) r.x = parseS!int(*p, r.x);
+		if (p) r.x = safeParse!int(*p, r.x);
 		p = "y" in ep.tag.attr;
-		if (p) r.y = parseS!int(*p, r.y);
+		if (p) r.y = safeParse!int(*p, r.y);
 		return r;
 	}
 	/// Creates XML element from this instance.
@@ -268,9 +268,9 @@ struct PSize {
 	static PSize fromElement(ElementParser ep) {
 		PSize r;
 		auto p = "width" in ep.tag.attr;
-		if (p) r.width = parseS!int(*p, r.width);
+		if (p) r.width = safeParse!int(*p, r.width);
 		p = "height" in ep.tag.attr;
-		if (p) r.height = parseS!int(*p, r.height);
+		if (p) r.height = safeParse!int(*p, r.height);
 		return r;
 	}
 	/// Creates XML element from this instance.
@@ -292,9 +292,9 @@ struct Weights {
 	static Weights fromElement(ElementParser ep) {
 		Weights w;
 		auto p = "l" in ep.tag.attr;
-		if (p) w.l = parseS!uint(*p, w.l);
+		if (p) w.l = safeParse!uint(*p, w.l);
 		p = "r" in ep.tag.attr;
-		if (p) w.r = parseS!uint(*p, w.r);
+		if (p) w.r = safeParse!uint(*p, w.r);
 		return w;
 	}
 	/// Creates string from this instance.

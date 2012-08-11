@@ -2,9 +2,10 @@
 module util.utils;
 
 private import std.algorithm;
-private import std.functional;
-private import std.traits;
 private import std.conv;
+private import std.functional;
+private import std.math;
+private import std.traits;
 
 version (Console) {
 	import std.stdio;
@@ -50,6 +51,21 @@ debug static ~this() {
 			std.stdio.writefln("performance[%d], %d: %d(%d)", i, c, t, t / c);
 		}
 	}
+}
+
+/// Converts from degree to radian.
+@safe
+nothrow
+pure
+real radian(real degree) {
+	return degree * PI / 180;
+}
+/// Converts from radian to degree.
+@safe
+nothrow
+pure
+real degree(real radian) {
+	return radian * 180 / PI;
 }
 
 /// Send event to receivers.
@@ -114,7 +130,7 @@ T roundCast(T, N)(in N value) {
 }
 
 /// Parse string. This function don't throw an exception.
-T parseS(T)(string s, lazy T defaultValue) {
+T safeParse(T)(string s, lazy T defaultValue) {
 	try {
 		return parse!T(s);
 	} catch (ConvException e) {

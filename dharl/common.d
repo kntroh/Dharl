@@ -98,6 +98,7 @@ class DImages {
 	const DImage rotateLeft = importImage!("rotate_left.png"); /// ditto
 	const DImage rotateUp = importImage!("rotate_up.png"); /// ditto
 	const DImage rotateDown = importImage!("rotate_down.png"); /// ditto
+	const DImage turn = importImage!("turn.png"); /// ditto
 
 	const DImage configuration = importImage!("configuration.png"); /// ditto
 }
@@ -193,6 +194,8 @@ struct DMenuText {
 	mixin MsgProp!("rotateLeft", "Rotate &left"); /// ditto
 	mixin MsgProp!("rotateUp", "Rotate &up"); /// ditto
 	mixin MsgProp!("rotateDown", "Rotate &down"); /// ditto
+	mixin MsgProp!("turn", "&Turn"); /// ditto
+
 	mixin MsgProp!("configuration", "&Configuration..."); /// ditto
 
 	mixin MsgProp!("help", "&Help"); /// ditto

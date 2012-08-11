@@ -1159,6 +1159,37 @@ class PaintArea : Canvas, Undoable {
 	void rotateDown() {
 		transform(&.rotateDown!(int[]));
 	}
+	/// Turns image.
+	void turn(real deg) {
+		checkWidget();
+		checkInit();
+		if (_image.empty) return;
+		if (_pasteLayer) {
+			auto back = new int[_pasteLayer.layerCount];
+			back[] = backgroundPixel;
+			.turn(deg, &iPGetPixels, &iPSetPixels, 0, 0,
+				_pasteLayer.width, _pasteLayer.height, back);
+			clearCache();
+			redrawCursorArea();
+		} else if (_iSelRange.p_empty) {
+			if (_um) _um.store(this);
+			clearCache();
+			auto back = new int[_layers.length];
+			back[] = backgroundPixel;
+			.turn(deg, &iGetPixels2, &iSetPixels2,
+				0, 0, _image.width, _image.height, back);
+		} else {
+			if (_um) _um.store(this);
+			clearCache();
+			auto back = new int[_layers.length];
+			back[] = backgroundPixel;
+			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
+			.turn(deg, &iGetPixels2, &iSetPixels2,
+				ir.x, ir.y, ir.width, ir.height, back);
+		}
+		clearCache();
+		drawReceivers.raiseEvent();
+	}
 
 	/// Resizes image.
 	void resize(int newW, int newH) {

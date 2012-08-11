@@ -802,18 +802,33 @@ void resize(T)(int rw, int rh, T delegate(int x, int y) pget, void delegate(int 
 }
 
 /// Turns image data.
-void turn(T)(real r, T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
-		ref int sx, ref int sy, ref int w, ref int h) {
+void turn(T)(real deg, T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
+		int sx, int sy, int w, int h, T backgroundPixel) {
 	enforce(0 <= w);
 	enforce(0 <= h);
-	if (isNaN(r) || isInfinity(r) || 0 == r || 0 == w || 0 == h) return;
-	r %= 360;
-	r += 360;
+	if (isNaN(deg) || isInfinity(deg) || 0 == w || 0 == h) return;
+	auto rad = radian(deg);
+	if (0 == deg) return;
+	auto dcos = .cos(rad);
+	auto dsin = .sin(rad);
 	auto base = new T[w * h];
 	foreach (x; 0 .. w) {
 		foreach (y; 0 .. h) {
 			base[y * w + x] = pget(sx + x, sy + y);
+			pset(sx + x, sy + y, backgroundPixel);
 		}
 	}
-	// TODO
+	real cx = w / 2.0;
+	real cy = h / 2.0;
+	foreach (x; 0 .. w) {
+		foreach (y; 0 .. h) {
+			int ax = .roundTo!int((x - cx) * dcos - (y - cy) * dsin + cx);
+			int ay = .roundTo!int((x - cx) * dsin + (y - cy) * dcos + cy);
+			int xx = sx + ax;
+			int yy = sy + ay;
+			if (sx <= xx && ax < w && sy <= yy && ay < h) {
+				pset(xx, yy, base[y * w + x]);
+			}
+		}
+	}
 }

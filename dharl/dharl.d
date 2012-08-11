@@ -171,6 +171,16 @@ void main() {
 		mainPanel.paintArea.rotateDown();
 	});
 	separator(mTool);
+
+	auto turnDeg = basicSpinner(toolBar, 0, 360);
+	turnDeg.p_selection = 90;
+	basicToolItem(toolBar, turnDeg);
+	basicToolItem(toolBar, c.text.menu.turn, cimg(c.image.turn), {
+		int deg = turnDeg.p_selection;
+		mainPanel.paintArea.turn(deg);
+	});
+	separator(mTool);
+
 	auto mConf = basicMenuItem(mTool, c.text.menu.configuration, cimg(c.image.configuration), {
 		auto dlg = new ConfigDialog(shell, c);
 		dlg.appliedReceivers ~= {
