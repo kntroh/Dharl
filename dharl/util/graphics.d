@@ -629,7 +629,7 @@ class ColorTree {
 }
 
 /// TODO comment
-void mirrorHorizontal(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
+void mirror(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
 	enforce(0 <= h);
@@ -645,7 +645,7 @@ void mirrorHorizontal(T)(T delegate(int x, int y) pget, void delegate(int x, int
 	}
 }
 /// ditto
-void mirrorVertical(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
+void flip(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
 	enforce(0 <= h);
@@ -662,7 +662,7 @@ void mirrorVertical(T)(T delegate(int x, int y) pget, void delegate(int x, int y
 }
 
 /// TODO comment
-void mirrorCHorizontal(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
+void mirrorRange(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
 	enforce(0 <= h);
@@ -674,7 +674,7 @@ void mirrorCHorizontal(T)(T delegate(int x, int y) pget, void delegate(int x, in
 	}
 }
 /// ditto
-void mirrorCVertical(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
+void mirrorRange(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
 	enforce(0 <= h);

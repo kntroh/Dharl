@@ -1,5 +1,5 @@
 
-/// This module includes types. TODO comment
+/// This module includes common types and structures.
 module dharl.util.types;
 
 private import dharl.util.utils : parseS;
@@ -41,7 +41,7 @@ struct CRGB {
 		return hsv;
 	}
 
-	/// Creates instance from ep. TODO comment
+	/// Creates instance from ep.
 	static CRGB fromElement(ElementParser ep) {
 		CRGB r;
 		auto p = "r" in ep.tag.attr;
@@ -52,7 +52,7 @@ struct CRGB {
 		if (p) r.b = parseS!ubyte(*p, r.b);
 		return r;
 	}
-	/// Creates XML element from this. TODO comment
+	/// Creates XML element from this instance.
 	const
 	Element toElement(string tagName) {
 		auto e = new Element(tagName);
@@ -129,7 +129,7 @@ struct CHSV {
 		}
 	}
 
-	/// Creates instance from ep. TODO comment
+	/// Creates instance from ep.
 	static CHSV fromElement(ElementParser ep) {
 		CHSV r;
 		auto p = "h" in ep.tag.attr;
@@ -140,7 +140,7 @@ struct CHSV {
 		if (p) r.v = parseS!real(*p, r.v);
 		return r;
 	}
-	/// Creates XML element from this. TODO comment
+	/// Creates XML element from this instance.
 	const
 	Element toElement(string tagName) {
 		auto e = new Element(tagName);
@@ -189,9 +189,9 @@ unittest {
 	assert (CRGB(0, 0, 0).toHSV().toRGB() == CRGB(0, 0, 0));
 }
 
-/// Bounds. TODO comment
+/// Bounds.
 struct PBounds {
-	/// Bounds data. TODO comment
+	/// Coordinate of bounds.
 	int x;
 	/// ditto
 	int y;
@@ -200,13 +200,13 @@ struct PBounds {
 	/// ditto
 	uint height;
 
-	/// This contains coordinates of x, y? TODO comment
+	/// This contains coordinates of x, y?
 	const
 	bool contains(int x, int y) {
 		return this.x <= x && x < this.x + width && this.y <= y && y < this.y + height;
 	}
 
-	/// Creates instance from ep. TODO comment
+	/// Creates instance from ep.
 	static PBounds fromElement(ElementParser ep) {
 		PBounds r;
 		auto p = "x" in ep.tag.attr;
@@ -219,7 +219,7 @@ struct PBounds {
 		if (p) r.height = parseS!int(*p, r.height);
 		return r;
 	}
-	/// Creates XML element from this. TODO comment
+	/// Creates XML element from this instance.
 	const
 	Element toElement(string tagName) {
 		auto e = new Element(tagName);
@@ -231,14 +231,14 @@ struct PBounds {
 	}
 }
 
-/// Coordinates. TODO comment
+/// Coordinate.
 struct PPoint {
-	/// Coordinates data. TODO comment
+	/// Value of coordinate.
 	int x;
 	/// ditto
 	int y;
 
-	/// Creates instance from ep. TODO comment
+	/// Creates instance from ep.
 	static PPoint fromElement(ElementParser ep) {
 		PPoint r;
 		auto p = "x" in ep.tag.attr;
@@ -247,7 +247,7 @@ struct PPoint {
 		if (p) r.y = parseS!int(*p, r.y);
 		return r;
 	}
-	/// Creates XML element from this. TODO comment
+	/// Creates XML element from this instance.
 	const
 	Element toElement(string tagName) {
 		auto e = new Element(tagName);
@@ -257,14 +257,14 @@ struct PPoint {
 	}
 }
 
-/// Size. TODO comment
+/// Size.
 struct PSize {
-	/// Size data. TODO comment
+	/// Value of size.
 	uint width;
 	/// ditto
 	uint height;
 
-	/// Creates instance from ep. TODO comment
+	/// Creates instance from ep.
 	static PSize fromElement(ElementParser ep) {
 		PSize r;
 		auto p = "width" in ep.tag.attr;
@@ -273,7 +273,7 @@ struct PSize {
 		if (p) r.height = parseS!int(*p, r.height);
 		return r;
 	}
-	/// Creates XML element from this. TODO comment
+	/// Creates XML element from this instance.
 	const
 	Element toElement(string tagName) {
 		auto e = new Element(tagName);
@@ -283,12 +283,12 @@ struct PSize {
 	}
 }
 
-/// Weights of split area. TODO comment
+/// Weights of split area.
 struct Weights {
-	uint l; /// Weight of left area. TODO comment
-	uint r; /// Weight of right area. TODO comment
+	uint l; /// Weight of left area.
+	uint r; /// Weight of right area.
 
-	/// Creates instance from s. TODO comment
+	/// Creates instance from ep.
 	static Weights fromElement(ElementParser ep) {
 		Weights w;
 		auto p = "l" in ep.tag.attr;
@@ -297,7 +297,7 @@ struct Weights {
 		if (p) w.r = parseS!uint(*p, w.r);
 		return w;
 	}
-	/// Creates string from this. TODO comment
+	/// Creates string from this instance.
 	const
 	Element toElement(string tagName) {
 		auto e = new Element(tagName);
@@ -307,13 +307,13 @@ struct Weights {
 	}
 }
 
-/// Tone data. TODO comment
+/// Tone.
 struct Tone {
 	string name;
-	/// Tone data. TODO comment
+	/// Data of tone.
 	bool[][] value;
 
-	/// Creates instance from s. TODO comment
+	/// Creates instance from ep.
 	static Tone fromElement(ElementParser ep) {
 		Tone r;
 		r.name = ep.tag.attr.get("name", "(No name)");
@@ -330,7 +330,7 @@ struct Tone {
 		ep.parse();
 		return r;
 	}
-	/// Creates string from this. TODO comment
+	/// Creates string from this instance.
 	const
 	Element toElement(string tagName) {
 		char[] buf;

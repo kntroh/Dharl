@@ -6,8 +6,18 @@ private import std.functional;
 private import std.traits;
 private import std.conv;
 
-/// Prints debug message. TODO comment
-alias std.stdio.writeln debugln;
+version (Console) {
+	import std.stdio;
+	/// Prints debug message.
+	alias std.stdio.writeln writeln;
+	/// ditto
+	alias std.stdio.writefln writefln;
+} else {
+	/// Prints debug message.
+	void writeln(Args...)(Args args);
+	/// ditto
+	void writefln(Args...)(string format, Args args);
+}
 
 debug private import std.datetime;
 
@@ -42,7 +52,7 @@ debug static ~this() {
 	}
 }
 
-/// Raises event to receivers. TODO comment
+/// Send event to receivers.
 RetType raiseEvent(RetType, Args ...)(RetType delegate(Args)[] receivers, Args args) {
 	static if (!is(RetType == void)) {
 		RetType ret;
@@ -103,7 +113,7 @@ T roundCast(T, N)(in N value) {
 	return cast(T) min(T.max, max(T.min, value));
 }
 
-/// Parse string no throws exception. TODO comment
+/// Parse string. This function don't throw an exception.
 T parseS(T)(string s, lazy T defaultValue) {
 	try {
 		return parse!T(s);
@@ -155,7 +165,8 @@ T[] qsort(alias Less = "a < b", T)(T[] array) {
 	assert (qsort([10, 9, 8, 7, 6, 5, 4]) == [4, 5, 6, 7, 8, 9, 10]);
 }
 
-/// TODO comment
+/// Search val from in array.
+/// If val not found, this function returns the index closest to the target.
 size_t qsearchLose(alias Less = "a < b", T)(in T[] array, in T val) {
 	alias binaryFun!Less lessFun;
 	size_t qsearchLoseImpl(size_t f, size_t t) {

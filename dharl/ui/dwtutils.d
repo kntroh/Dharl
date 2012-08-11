@@ -16,8 +16,8 @@ private import std.typecons;
 
 private import org.eclipse.swt.all;
 
-/// Sets weights of sash form children
-/// and refreshs weights when disposed sa. TODO comment
+/// Sets weights of sash children.
+/// And save weights when disposed sa.
 void setRefWeights(SashForm sa, ref Weights weights) {
 	int[] ws = [weights.l, weights.r];
 	sa.p_weights = ws;
@@ -78,7 +78,7 @@ ImageData colorReduction(ImageData image, bool errorDiffusion = true) {
 		return image;
 	}
 	if (image.depth <= 8 && !image.palette.isDirect) {
-		/// TODO comment
+		/// image is less than 8-bit indexed color.
 		auto rgbs = new RGB[256];
 		foreach (i, ref rgb; rgbs) {
 			if (i < image.palette.colors.length) {

@@ -13,20 +13,20 @@ private import std.exception;
 
 private import org.eclipse.swt.all;
 
-/// Layer data. TODO comment
+/// Layer data.
 struct Layer {
-	ImageData image = null;
-	string name = "";
-	bool visible = true;
+	ImageData image = null; /// Image data of layer.
+	string name = ""; /// Name of layer.
+	bool visible = true; /// Visibility of layer.
 }
 
-/// Multi layer image. TODO comment
+/// Multi layer image.
 class MLImage : Undoable {
-	/// Restore event receivers. TODO comment
+	/// Receivers of restore event.
 	void delegate()[] restoreReceivers;
-	/// Resize event receivers. TODO comment
+	/// Receivers of resize event.
 	void delegate()[] resizeReceivers;
-	/// Initialize event receivers. TODO comment
+	/// Receivers of initialize event.
 	void delegate()[] initializeReceivers;
 
 	/// Layers.
@@ -36,17 +36,15 @@ class MLImage : Undoable {
 	/// Image size. It is common in all layers.
 	private uint _iw = 0, _ih = 0;
 
-	/// If doesn't initialized throws exception.
+	/// If doesn't initialized instance, throws exception.
 	const
 	private void checkInit() {
 		enforce(_palette, new Exception("MLImage is no initialized.", __FILE__, __LINE__));
 	}
 
 	/// Initializes this image.
-	/// If call a other methods before didn't called this,
-	/// It throws exception.
-	/// When raised resize event returns true.
-	/// TODO comment
+	/// If call a other methods before called this,
+	/// it throws exception.
 	void init(ImageData image, string name) {
 		if (!image || !name) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
@@ -88,7 +86,7 @@ class MLImage : Undoable {
 		initializeReceivers.raiseEvent();
 	}
 
-	/// Disposes this image. TODO comment
+	/// Disposes this image.
 	void dispose() {
 		removeLayers(0, _layers.length);
 		restoreReceivers.length = 0;
@@ -110,7 +108,7 @@ class MLImage : Undoable {
 		return _ih;
 	}
 
-	/// Resizes this image. TODO comment
+	/// Resizes this image.
 	void resize(uint w, uint h, size_t backgroundPixel) {
 		if (w == 0 || h == 0) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -139,7 +137,7 @@ class MLImage : Undoable {
 		_ih = h;
 		resizeReceivers.raiseEvent();
 	}
-	/// Change image scale. TODO comment
+	/// Change image scale.
 	void scaledTo(uint w, uint h) {
 		if (w == 0 || h == 0) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -158,7 +156,7 @@ class MLImage : Undoable {
 		resizeReceivers.raiseEvent();
 	}
 
-	/// Gets count of layer. TODO comment
+	/// Gets count of layer.
 	@property
 	const
 	size_t layerCount() {
@@ -184,7 +182,7 @@ class MLImage : Undoable {
 		return _layers[index];
 	}
 
-	/// TODO comment
+	/// Push src to this image starting from srcX and srcY.
 	bool pushImage(MLImage src, int srcX, int srcY, int backgroundPixel) {
 		if (!src) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
@@ -198,7 +196,8 @@ class MLImage : Undoable {
 		checkInit();
 
 		bool changed = false;
-		/// TODO comment
+
+		/// If number of layers don't match, adjust layers number.
 		if (src.layerCount < _layers.length) {
 			removeLayers(src.layerCount, _layers.length);
 			changed = true;
@@ -222,7 +221,7 @@ class MLImage : Undoable {
 					if (0 <= ilx && ilx < l.width && 0 <= ily && ily < l.height) {
 						sPixel = l.getPixel(ilx, ily);
 					} else {
-						// Out of source image. TODO comment
+						// Out of source image.
 						sPixel = backgroundPixel;
 					}
 					if (pixel != sPixel) {
@@ -244,8 +243,9 @@ class MLImage : Undoable {
 		}
 		checkInit();
 
-		/// TODO comment
 		bool changed = false;
+
+		/// If number of layers don't match, adjust layers number.
 		if (src.layerCount > _layers.length) {
 			auto names = new string[src.layerCount - _layers.length];
 			names[] = "";
@@ -275,7 +275,7 @@ class MLImage : Undoable {
 		return changed;
 	}
 
-	/// Creates MLImage from this. TODO comment
+	/// Creates MLImage based this instance.
 	MLImage createMLImage(in size_t[] layer = null) {
 		return createMLImage(0, 0, _iw, _ih, layer);
 	}
@@ -332,7 +332,7 @@ class MLImage : Undoable {
 		return r;
 	}
 
-	/// Creates one image from all layers. TODO comment
+	/// Creates one image from all layers.
 	ImageData createImageData(ubyte depth, in size_t[] layer = null) {
 		return createImageData(0, 0, _iw, _ih, depth, layer);
 	}
@@ -410,7 +410,7 @@ class MLImage : Undoable {
 		return data;
 	}
 
-	/// If this hasn't layer, returns true. TODO comment
+	/// If haven't layer, returns true.
 	@property
 	const
 	bool empty() {
@@ -454,7 +454,6 @@ class MLImage : Undoable {
 		_layers ~= Layer(data, name, true);
 	}
 	/// Removes layer.
-	/// TODO comment
 	void removeLayer(size_t index) {
 		if (_layers.length <= index) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -500,7 +499,7 @@ class MLImage : Undoable {
 		checkInit();
 		return _palette;
 	}
-	/// Gets copy palette. TODO comment
+	/// Gets copy of this palette of image.
 	PaletteData copyPalette() {
 		checkInit();
 		auto rgbs = new RGB[_palette.colors.length];
@@ -536,7 +535,7 @@ class MLImage : Undoable {
 		checkInit();
 		color(index, rgb.red, rgb.green, rgb.blue);
 	}
-	/// Sets all colors. TODO comment
+	/// Sets all colors.
 	@property
 	void colors(in RGB[] rgbs) {
 		checkInit();
@@ -580,21 +579,22 @@ class MLImage : Undoable {
 		}
 	}
 
-	/// Data object for undo. TODO comment
+	/// A data object for undo.
 	private static class StoreData {
-		/// Size of image. TODO comment
+		/// Size of image.
 		uint width, height;
-		/// Palette data. TODO comment
+		/// Data of palette.
 		CRGB[256] palette;
-		/// Layer data. TODO comment
+		/// Data of layers.
 		byte[][] layers = null;
-		/// Layer name. TODO comment
+		/// Name of layers.
 		string[] name = null;
-		/// Layer visible. TODO comment
+		/// Visibility of layers.
 		bool[] visible = null;
 	}
 
-	/// Equals this and o. Require o is return value at storeData(). TODO comment
+	/// Checks this is equal to o.
+	/// Require o is return value at storeData().
 	const
 	bool equalsTo(ref const(Object) o) {
 		auto data = cast(const(StoreData)) o;

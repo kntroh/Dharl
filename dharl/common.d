@@ -11,53 +11,53 @@ private import std.path;
 private import std.string;
 private import std.xml;
 
-/// Common data and method for the application. TODO comment
+/// Common data and methods for the application.
 class DCommon {
-	/// All message and text. TODO comment
+	/// All messages and texts.
 	private DText _text;
-	/// All icon and image. TODO comment
+	/// All icons and images.
 	private DImages _image;
-	/// Application config. TODO comment
+	/// Application configuration.
 	private DConfig _conf;
 
-	/// The only constructor. TODO comment
+	/// The only constructor.
 	this () {
 		_text = new DText;
 		_image = new DImages;
 		_conf = new DConfig;
 	}
 
-	/// All message and text. TODO comment
+	/// All messages and texts.
 	@property
 	DText text() { return _text; }
-	/// All icon and image. TODO comment
+	/// All icons and images.
 	@property
 	DImages image() { return _image; }
-	/// Application config. TODO comment
+	/// Application configuration.
 	@property
 	DConfig conf() { return _conf; }
 }
 
-/// Image ID and data. TODO comment
+/// A image ID and data.
 struct DImage {
-	/// Image ID. TODO comment
+	/// Image ID.
 	string id;
-	/// Image data. TODO comment
+	/// Image data.
 	ubyte[] data;
 }
-/// Creates DImage instance from File. TODO comment
+/// Creates DImage instance from File.
 @property
 private DImage importImage(string File)() {
 	return DImage(File.stripExtension(), cast(ubyte[]) import(File).dup);
 }
 
-/// All image ID and data in the appilication. TODO comment
+/// All images ID and data in the application.
 class DImages {
 	/// Image data for cursors.
 	const DImage cursorPen = importImage!("cursor_pen.png");
 	const DImage cursorDropper = importImage!("cursor_dropper.png"); /// ditto
 
-	/// Image data for tool bar and menu. TODO comment
+	/// Image data for toolbars and menus.
 	const DImage createNewImage = importImage!("create_new_image.png");
 	const DImage openImage = importImage!("open_image.png"); /// ditto
 	const DImage saveOverwrite = importImage!("save_overwrite.png"); /// ditto
@@ -92,8 +92,8 @@ class DImages {
 	const DImage noTone = importImage!("no_tone.png"); /// ditto
 
 	const DImage resize = importImage!("resize.png"); /// ditto
-	const DImage mirrorHorizontal = importImage!("mirror_horizontal.png"); /// ditto
-	const DImage mirrorVertical = importImage!("mirror_vertical.png"); /// ditto
+	const DImage mirror = importImage!("mirror.png"); /// ditto
+	const DImage flip = importImage!("flip.png"); /// ditto
 	const DImage rotateRight = importImage!("rotate_right.png"); /// ditto
 	const DImage rotateLeft = importImage!("rotate_left.png"); /// ditto
 	const DImage rotateUp = importImage!("rotate_up.png"); /// ditto
@@ -102,12 +102,12 @@ class DImages {
 	const DImage configuration = importImage!("configuration.png"); /// ditto
 }
 
-/// All message and text in the application. TODO comment
+/// All messages and texts in the application.
 class DText {
-	/// Menu text. TODO comment
+	/// Menu texts.
 	mixin Prop!("menu", DMenuText);
 
-	/// Messages. TODO comment
+	/// Messages.
 	mixin MsgProp!("appName", "pa");
 	mixin MsgProp!("fAppNameWithImage", "%s - pa"); /// ditto
 
@@ -124,8 +124,8 @@ class DText {
 	mixin MsgProp!("layerVisible", "Visible"); /// ditto
 
 	mixin MsgProp!("question", "Question"); /// ditto
-	mixin MsgProp!("paintAreaChanged", "Paint area is changed.\nDo quit?"); /// ditto
-	mixin MsgProp!("fCanvasChanged", "%s is changed.\nIs it save?"); /// ditto
+	mixin MsgProp!("paintAreaChanged", "The paint area has been changed.\nAre you sure you want to quit?"); /// ditto
+	mixin MsgProp!("fCanvasChanged", "%s has been changed.\nDo you want to save it?"); /// ditto
 
 	mixin MsgProp!("fLoadImageType", "Image file (%s)"); /// ditto
 	mixin MsgProp!("fSaveImageTypeBitmap", "%d-bit (%d colors) bitmap image (*.bmp)"); /// ditto
@@ -136,15 +136,16 @@ class DText {
 	mixin MsgProp!("zoom", "Zoom"); /// ditto
 	mixin MsgProp!("lineWidth", "Line width"); /// ditto
 
-	mixin MsgProp!("fConfigDialog", "Configuration - %s");
-	mixin MsgProp!("characterSize", "Character size");
-	mixin MsgProp!("characterWidth", "Character width");
-	mixin MsgProp!("characterHeight", "Character height");
+	mixin MsgProp!("fConfigDialog", "Configuration - %s"); /// ditto
+	mixin MsgProp!("characterSize", "Character size"); /// ditto
+	mixin MsgProp!("characterWidth", "Character width"); /// ditto
+	mixin MsgProp!("characterHeight", "Character height"); /// ditto
 
 	mixin PropIO!("i18n");
 }
+/// ditto
 struct DMenuText {
-	/// Menu texts. TODO comment
+	/// Menu texts.
 	mixin MsgProp!("file", "&File");
 	mixin MsgProp!("createNewImage", "Create &new image\tCtrl+N"); /// ditto
 	mixin MsgProp!("openImage", "&Open image...\tCtrl+O"); /// ditto
@@ -186,8 +187,8 @@ struct DMenuText {
 
 	mixin MsgProp!("tool", "&Tool"); /// ditto
 	mixin MsgProp!("resize", "&Resize..."); /// ditto
-	mixin MsgProp!("mirrorHorizontal", "Mirror &horizontal"); /// ditto
-	mixin MsgProp!("mirrorVertical", "Mirror &vertical"); /// ditto
+	mixin MsgProp!("mirror", "&Mirror"); /// ditto
+	mixin MsgProp!("flip", "&Flip"); /// ditto
 	mixin MsgProp!("rotateRight", "Rotate &right"); /// ditto
 	mixin MsgProp!("rotateLeft", "Rotate &left"); /// ditto
 	mixin MsgProp!("rotateUp", "Rotate &up"); /// ditto
@@ -200,13 +201,13 @@ struct DMenuText {
 	mixin PropIO!("menu");
 }
 
-/// Application config. TODO comment
+/// Application configuration.
 class DConfig {
-	/// Character (paint area) size. TODO comment
+	/// Character (paint area) size.
 	mixin Prop!("character", PSize, PSize(100, 100));
-	/// Maximum count of undo operation. TODO comment
+	/// Maximum count of undo operation.
 	mixin Prop!("undoMax", uint, 1024);
-	/// Tones. TODO comment
+	/// Tones.
 	mixin Prop!("tones", PArray!("tone", Tone), PArray!("tone", Tone)([
 		Tone("Tone A", [
 			[1, 0],

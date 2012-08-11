@@ -6,28 +6,30 @@ private import dharl.util.utils;
 
 private import std.exception;
 
-/// Undo / Redo mode. TODO comment
+/// Mode of undo or redo.
 enum UndoMode {
 	Undo, /// Undo.
 	Redo /// Redo.
 }
 
-/// Undo / Redo manager class. TODO comment
+/// Manager class for undo and redo.
 class UndoManager {
-	/// Status changed event receivers. TODO comment
+	/// Receivers of status changed event.
 	void delegate()[] statusChangedReceivers;
 
-	/// Maximum capacity of _stack. TODO comment
+	/// Maximum capacity of _stack.
 	private size_t _capacity;
 
-	/// Stack for Undoable classes. TODO comment
+	/// Stack of Undoable classes.
 	private Undoable[][] _stack;
-	/// Stack for store data from Undoable classes. TODO comment
+	/// Stack of store data from Undoable classes.
 	private Object[][] _dataStack;
-	/// Pointer of _stack. TODO comment
+	/// Pointer of _stack.
 	private size_t _pointer = 0;
 
-	/// TODO comment
+	/// Last retry-word.
+	/// If this received continue same retry-word,
+	/// undo operation will return to a first one.
 	private string _retryWord = null;
 
 	/// The only constructor.
@@ -35,7 +37,7 @@ class UndoManager {
 		_capacity = capacity;
 	}
 
-	/// Clears undo stack. TODO comment
+	/// Clears undo stack.
 	void clear() {
 		_stack.length = 0;
 		_dataStack.length = 0;
@@ -44,20 +46,20 @@ class UndoManager {
 		statusChangedReceivers.raiseEvent();
 	}
 
-	/// Gets stack size now. TODO comment
+	/// Gets stack size now.
 	@property
 	const
 	size_t stackSize() { return _stack.length; }
 
-	/// Executes undo. TODO comment
+	/// Executes undo.
 	void undo() {
 		undoRedoImpl(&canUndo, UndoMode.Undo);
 	}
-	/// Executes redo. TODO comment
+	/// Executes redo.
 	void redo() {
 		undoRedoImpl(&canRedo, UndoMode.Redo);
 	}
-	/// Executes undo or redo. TODO comment
+	/// Executes undo or redo.
 	private void undoRedoImpl(bool delegate() can, UndoMode mode) {
 		if (!can()) return;
 		resetRetryWord();
@@ -88,7 +90,7 @@ class UndoManager {
 		}
 	}
 
-	/// If can undo or redo returns true. TODO comment
+	/// If can undo or redo, returns true.
 	@property
 	bool canUndo() {
 		if (0 == _pointer) return false;
@@ -111,7 +113,9 @@ class UndoManager {
 		return false;
 	}
 
-	/// Stores undoable class. TODO comment
+	/// Stores undo data.
+	/// If this received continue same retry-word,
+	/// undo operation will return to a first one.
 	bool store(Undoable u, bool delegate() func = null, string retryWord = null) {
 		auto us = [u];
 		return store(us, func, retryWord);
@@ -165,7 +169,7 @@ class UndoManager {
 		return true;
 	}
 
-	/// TODO comment
+	/// Clears retry-word.
 	void resetRetryWord() {
 		_retryWord = null;
 	}
@@ -233,14 +237,15 @@ class UndoManager {
 	assert (!um.canUndo);
 }
 
-/// Can undo class implements this. TODO comment.
+/// Undoable class implements this.
 interface Undoable {
-	/// TODO comment
+	/// Creates data of undo operation.
 	@property
 	Object storeData();
-	/// TODO comment
+	/// Executes undo operation.
+	/// Implement class must restore own state from data.
 	void restore(Object data, UndoMode mode);
-	/// TODO comment
+	/// If enable undo operation, returns true.
 	@property
 	bool enabledUndo();
 }

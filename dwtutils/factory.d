@@ -57,7 +57,7 @@ SashForm basicSashForm(Composite parent, int style = SWT.HORIZONTAL) {
 	return sa;
 }
 
-/// Creates separator. TODO comment
+/// Creates separator.
 Label separator(Composite parent, int style = SWT.HORIZONTAL) {
 	return new Label(parent, style | SWT.SEPARATOR);
 }
@@ -169,7 +169,7 @@ ToolItem basicToolItem(ToolBar parent, Control control) {
 	return toolItem;
 }
 
-/// Creates basic style menu item and tool item (binding). TODO comment
+/// Creates basic style a menu item and a tool item bound.
 MTItem basicMenuItem(Menu menu, ToolBar tool, string text, Image image, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false) {
 	typeof(return) result;
 	void delegate(Event e) nl = null;
@@ -489,7 +489,7 @@ struct GD {
 		gd.data = new GridData(style);
 		return gd;
 	}
-	/// Creates new GD with fill style. TODO comment
+	/// Creates new GD with fill style.
 	@property
 	static GD fill(bool horizontal, bool vertical) {
 		GD gd;

@@ -28,7 +28,7 @@ class ColorSlider : Canvas {
 	private CSlider _sl3; /// For B or V.
 	private Text _sp3; /// ditto
 
-	private bool _setting = false; /// When calling methods is false. TODO comment
+	private bool _setting = false; /// During processing of methods is true.
 
 	private ColorModel _cModel = ColorModel.RGB; /// Color model.
 
@@ -53,8 +53,6 @@ class ColorSlider : Canvas {
 			this.p_layout = GL.minimum(2, false).margin(0);
 		}
 
-		// If this is focus control setted true. TODO comment
-		bool fIn = false;
 		// widgets
 		void createWidgets(out CSlider sl, out Text sp) {
 			// Layout is switched by a SWT.HORIZONTAL or SWT.VERTICAL.

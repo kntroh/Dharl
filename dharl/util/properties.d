@@ -1,5 +1,5 @@
 
-/// This module includes property functions. TODO comment
+/// This module includes property related functions and templates.
 module dharl.util.properties;
 
 private import dharl.util.types;
@@ -11,7 +11,7 @@ private import std.file;
 private import std.string;
 private import std.xml;
 
-/// Creates simple properties data from mixin. TODO comment
+/// Creates simple properties data by mixin.
 /// Example:
 /// ---
 /// Window bounds.
@@ -26,22 +26,22 @@ private import std.xml;
 /// }
 /// ---
 mixin template Prop(string Name, Type, Type DefaultValue = Type.init, bool ReadOnly = false) {
-	/// A property. TODO comment
+	/// A property.
 	mixin("PropValue!(Name, Type, DefaultValue, ReadOnly) " ~ Name ~ ";");
 }
 /// ditto
 mixin template MsgProp(string Name, string Value) {
-	/// A property. TODO comment
+	/// A property.
 	mixin Prop!(Name, string, Value);
 }
 /// ditto
 mixin template PropIO(string RootName) {
-	/// Reads all properties from file. TODO comment
+	/// Reads all properties from file.
 	void readXMLFile(string file) {
 		char[] s = cast(char[]) std.file.read(file);
 		readXML(std.exception.assumeUnique(s));
 	}
-	/// Reads all properties from xml. TODO comment
+	/// Reads all properties from xml.
 	void readXML(string xml) {
 		auto parser = new std.xml.DocumentParser(xml);
 		parser.onStartTag[RootName] = (std.xml.ElementParser ep) {
@@ -49,7 +49,7 @@ mixin template PropIO(string RootName) {
 		};
 		parser.parse();
 	}
-	/// Reads all properties from ep. TODO comment
+	/// Reads all properties from ep.
 	void readElement(std.xml.ElementParser ep) {
 		foreach (fld; this.tupleof) {
 			ep.onStartTag[fld.NAME] = (std.xml.ElementParser ep) {
@@ -58,7 +58,7 @@ mixin template PropIO(string RootName) {
 		}
 		ep.parse();
 	}
-	/// Creates new instance from ep. TODO comment
+	/// Creates new instance from ep.
 	static typeof(this) fromElement(std.xml.ElementParser ep) {
 		typeof(this) r;
 		static if (is(typeof(r is null))) {
@@ -68,25 +68,25 @@ mixin template PropIO(string RootName) {
 		return r;
 	}
 
-	/// Writes all properties to file. TODO comment
+	/// Writes all properties to file.
 	const
 	void writeXMLFile(string file) {
 		std.file.write(file, writeXML());
 	}
-	/// Creates XML string include all properties data. TODO comment
+	/// Creates XML string include all properties data.
 	const
 	string writeXML() {
 		auto doc = toElement(RootName);
 		return std.string.join(doc.pretty(1), "\n");
 	}
-	/// Creates XML element include all properties data. TODO comment
+	/// Creates XML element include all properties data.
 	const
 	std.xml.Element toElement(string tagName) {
 		auto r = new std.xml.Element(tagName);
 		foreach (fld; this.tupleof) {
 			if (fld.READ_ONLY && fld.INIT == fld.value) {
-				// If fld is read only and fld value isn't changed,
-				// no creates element. TODO comment
+				// If fld is read only or fld value isn't changed,
+				// no creates element.
 				continue;
 			}
 			r ~= .toElement(fld.NAME, fld.value);
@@ -96,22 +96,21 @@ mixin template PropIO(string RootName) {
 }
 /// ditto
 struct PropValue(string Name, Type, Type DefaultValue, bool ReadOnly) {
-	/// Property name. TODO comment
+	/// Property name.
 	static const NAME = Name;
-	/// Is property read only? TODO comment
+	/// Is property read only?
 	static const READ_ONLY = ReadOnly;
-	/// Property initialize value. TODO comment
+	/// Initializing value of property.
 	static const INIT = DefaultValue;
 
-	/// Property value. TODO comment
+	/// Value of property.
 	Type value = DefaultValue;
 	/// ditto
 	alias value this;
 }
 
 /// Creates T from ep.
-/// Require T.fromElement(ep) or T.fromString(string) or to!T(string).
-/// TODO comment
+/// T.fromElement(ep) or T.fromString(string) or to!T(string) is required.
 T fromElement(T)(ElementParser ep) {
 	static if (is(typeof(T.fromElement(ep)))) {
 		return T.fromElement(ep);
@@ -133,8 +132,7 @@ T fromElement(T)(ElementParser ep) {
 }
 
 /// Creates XML element from value.
-/// Require value.toElement(tagName) or to!string(value).
-/// TODO comment
+/// value.toElement(tagName) or to!string(value) is required.
 Element toElement(T)(string tagName, in T value) {
 	static if (is(typeof(value.toElement(tagName)))) {
 		return value.toElement(tagName);
@@ -143,14 +141,14 @@ Element toElement(T)(string tagName, in T value) {
 	} else static assert (0);
 }
 
-/// Array property. TODO comment
+/// Array property.
 struct PArray(string ValueName, ValueType) {
-	/// Array. TODO comment
+	/// Array.
 	ValueType[] array;
 	/// ditto
 	alias array this;
 
-	/// Creates instance from ep. TODO comment
+	/// Creates instance from ep.
 	static PArray fromElement(ElementParser ep) {
 		PArray r;
 		ep.onStartTag[ValueName] = (ElementParser ep) {
@@ -159,7 +157,7 @@ struct PArray(string ValueName, ValueType) {
 		ep.parse();
 		return r;
 	}
-	/// Creates XML element from this. TODO comment
+	/// Creates XML element from this instance.
 	const
 	Element toElement(string tagName) {
 		auto e = new Element(tagName);

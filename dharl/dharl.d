@@ -150,22 +150,22 @@ void main() {
 	}, SWT.CHECK);
 
 	separator(toolBar);
-	auto mMirrorH = basicMenuItem(mTool, toolBar, c.text.menu.mirrorHorizontal, cimg(c.image.mirrorHorizontal), {
-		mainPanel.paintArea.mirrorHorizontal();
+	basicMenuItem(mTool, toolBar, c.text.menu.mirror, cimg(c.image.mirror), {
+		mainPanel.paintArea.mirror();
 	});
-	auto mMirrorV = basicMenuItem(mTool, toolBar, c.text.menu.mirrorVertical, cimg(c.image.mirrorVertical), {
-		mainPanel.paintArea.mirrorVertical();
+	basicMenuItem(mTool, toolBar, c.text.menu.flip, cimg(c.image.flip), {
+		mainPanel.paintArea.flip();
 	});
-	auto mRotateR = basicMenuItem(mTool, toolBar, c.text.menu.rotateRight, cimg(c.image.rotateRight), {
+	basicMenuItem(mTool, toolBar, c.text.menu.rotateRight, cimg(c.image.rotateRight), {
 		mainPanel.paintArea.rotateRight();
 	});
-	auto mRotateL = basicMenuItem(mTool, toolBar, c.text.menu.rotateLeft, cimg(c.image.rotateLeft), {
+	basicMenuItem(mTool, toolBar, c.text.menu.rotateLeft, cimg(c.image.rotateLeft), {
 		mainPanel.paintArea.rotateLeft();
 	});
-	auto mRotateU = basicMenuItem(mTool, toolBar, c.text.menu.rotateUp, cimg(c.image.rotateUp), {
+	basicMenuItem(mTool, toolBar, c.text.menu.rotateUp, cimg(c.image.rotateUp), {
 		mainPanel.paintArea.rotateUp();
 	});
-	auto mRotateD = basicMenuItem(mTool, toolBar, c.text.menu.rotateDown, cimg(c.image.rotateDown), {
+	basicMenuItem(mTool, toolBar, c.text.menu.rotateDown, cimg(c.image.rotateDown), {
 		mainPanel.paintArea.rotateDown();
 	});
 	separator(mTool);

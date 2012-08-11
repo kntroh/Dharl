@@ -1142,12 +1142,12 @@ class PaintArea : Canvas, Undoable {
 	}
 
 	/// TODO comment
-	void mirrorHorizontal() {
-		transform(&.mirrorHorizontal!(int[]));
+	void mirror() {
+		transform(&.mirror!(int[]));
 	}
 	/// ditto
-	void mirrorVertical() {
-		transform(&.mirrorVertical!(int[]));
+	void flip() {
+		transform(&.flip!(int[]));
 	}
 	/// ditto
 	void rotateRight() {
