@@ -635,8 +635,33 @@ class ColorTree {
 	}
 }
 
-/// Flips image data horizontally or vertically.
-void mirror(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
+/// Transforms image data to mirror horizontally or vertically.
+void mirrorHorizontal(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
+		int sx, int sy, int w, int h) {
+	enforce(0 <= w);
+	enforce(0 <= h);
+	if (0 == w || 0 == h) return;
+	foreach (x; 0 .. w / 2) {
+		foreach (y; 0 .. h) {
+			pset(sx + w - x - 1, sy + y, pget(sx + x, sy + y));
+		}
+	}
+}
+/// ditto
+void mirrorVertical(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
+		int sx, int sy, int w, int h) {
+	enforce(0 <= w);
+	enforce(0 <= h);
+	if (0 == w || 0 == h) return;
+	foreach (x; 0 .. w) {
+		foreach (y; 0 .. h / 2) {
+			pset(sx + x, sy + h - y - 1, pget(sx + x, sy + y));
+		}
+	}
+}
+
+/// ditto
+void flipHorizontal(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
 	enforce(0 <= h);
@@ -652,7 +677,7 @@ void mirror(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixe
 	}
 }
 /// ditto
-void flip(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
+void flipVertical(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
 	enforce(0 <= h);
@@ -664,31 +689,6 @@ void flip(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel)
 			auto temp = pget(x1, y1);
 			pset(x1, y1, pget(x2, y2));
 			pset(x2, y2, temp);
-		}
-	}
-}
-
-/// ditto
-void mirrorRange(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
-		int sx, int sy, int w, int h) {
-	enforce(0 <= w);
-	enforce(0 <= h);
-	if (0 == w || 0 == h) return;
-	foreach (x; 0 .. w / 2) {
-		foreach (y; 0 .. h) {
-			pset(sx + w - x - 1, sy + y, pget(sx + x, sy + y));
-		}
-	}
-}
-/// ditto
-void fripRange(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
-		int sx, int sy, int w, int h) {
-	enforce(0 <= w);
-	enforce(0 <= h);
-	if (0 == w || 0 == h) return;
-	foreach (x; 0 .. w) {
-		foreach (y; 0 .. h / 2) {
-			pset(sx + x, sy + h - y - 1, pget(sx + x, sy + y));
 		}
 	}
 }
@@ -822,8 +822,8 @@ void turn(T)(real deg, T delegate(int x, int y) pget, void delegate(int x, int y
 	real cy = h / 2.0;
 	foreach (x; 0 .. w) {
 		foreach (y; 0 .. h) {
-			int ax = .roundTo!int((x - cx) * dcos - (y - cy) * dsin + cx);
-			int ay = .roundTo!int((x - cx) * dsin + (y - cy) * dcos + cy);
+			int ax = cast(int) ((x - cx) * dcos - (y - cy) * dsin + cx);
+			int ay = cast(int) ((x - cx) * dsin + (y - cy) * dcos + cy);
 			int xx = sx + ax;
 			int yy = sy + ay;
 			if (sx <= xx && ax < w && sy <= yy && ay < h) {

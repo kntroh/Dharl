@@ -152,11 +152,17 @@ void main() {
 	}, SWT.CHECK);
 
 	separator(toolBar);
-	basicMenuItem(mTool, toolBar, c.text.menu.mirror, cimg(c.image.mirror), {
-		mainPanel.paintArea.mirror();
+	basicMenuItem(mTool, toolBar, c.text.menu.mirrorHorizontal, cimg(c.image.mirrorHorizontal), {
+		mainPanel.paintArea.mirrorHorizontal();
 	});
-	basicMenuItem(mTool, toolBar, c.text.menu.flip, cimg(c.image.flip), {
-		mainPanel.paintArea.flip();
+	basicMenuItem(mTool, toolBar, c.text.menu.mirrorVertical, cimg(c.image.mirrorVertical), {
+		mainPanel.paintArea.mirrorVertical();
+	});
+	basicMenuItem(mTool, toolBar, c.text.menu.flipHorizontal, cimg(c.image.flipHorizontal), {
+		mainPanel.paintArea.flipHorizontal();
+	});
+	basicMenuItem(mTool, toolBar, c.text.menu.flipVertical, cimg(c.image.flipVertical), {
+		mainPanel.paintArea.flipVertical();
 	});
 	basicMenuItem(mTool, toolBar, c.text.menu.rotateRight, cimg(c.image.rotateRight), {
 		mainPanel.paintArea.rotateRight();

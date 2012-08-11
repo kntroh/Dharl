@@ -1158,13 +1158,21 @@ class PaintArea : Canvas, Undoable {
 		drawReceivers.raiseEvent();
 	}
 
-	/// Flips image data horizontally or vertically.
-	void mirror() {
-		transform(&.mirror!(int[]));
+	/// Transforms image data to mirror horizontally or vertically.
+	void mirrorHorizontal() {
+		transform(&.mirrorHorizontal!(int[]));
 	}
 	/// ditto
-	void flip() {
-		transform(&.flip!(int[]));
+	void mirrorVertical() {
+		transform(&.mirrorVertical!(int[]));
+	}
+	/// Flips image data horizontally or vertically.
+	void flipHorizontal() {
+		transform(&.flipHorizontal!(int[]));
+	}
+	/// ditto
+	void flipVertical() {
+		transform(&.flipVertical!(int[]));
 	}
 	/// Moves image data in each direction.
 	/// Rotates a pixel of bounds.

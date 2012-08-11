@@ -93,8 +93,10 @@ class DImages {
 	const DImage noTone = importImage!("no_tone.png"); /// ditto
 
 	const DImage resize = importImage!("resize.png"); /// ditto
-	const DImage mirror = importImage!("mirror.png"); /// ditto
-	const DImage flip = importImage!("flip.png"); /// ditto
+	const DImage mirrorHorizontal = importImage!("mirror_horizontal.png"); /// ditto
+	const DImage mirrorVertical = importImage!("mirror_vertical.png"); /// ditto
+	const DImage flipHorizontal = importImage!("flip_horizontal.png"); /// ditto
+	const DImage flipVertical = importImage!("flip_vertical.png"); /// ditto
 	const DImage rotateRight = importImage!("rotate_right.png"); /// ditto
 	const DImage rotateLeft = importImage!("rotate_left.png"); /// ditto
 	const DImage rotateUp = importImage!("rotate_up.png"); /// ditto
@@ -189,8 +191,10 @@ struct DMenuText {
 
 	mixin MsgProp!("tool", "&Tool"); /// ditto
 	mixin MsgProp!("resize", "&Resize..."); /// ditto
-	mixin MsgProp!("mirror", "&Mirror"); /// ditto
-	mixin MsgProp!("flip", "&Flip"); /// ditto
+	mixin MsgProp!("mirrorHorizontal", "&Mirror horizontal"); /// ditto
+	mixin MsgProp!("mirrorVertical", "M&irror vertical"); /// ditto
+	mixin MsgProp!("flipHorizontal", "&Flip horizontal"); /// ditto
+	mixin MsgProp!("flipVertical", "Fli&p vertical"); /// ditto
 	mixin MsgProp!("rotateRight", "Rotate &right"); /// ditto
 	mixin MsgProp!("rotateLeft", "Rotate &left"); /// ditto
 	mixin MsgProp!("rotateUp", "Rotate &up"); /// ditto
