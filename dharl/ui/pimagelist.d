@@ -16,9 +16,9 @@ private import org.eclipse.swt.all;
 /// This class displays image listing.
 /// And user can select piece of image in list.
 class PImageList : Canvas {
-	/// Remove event receivers. TODO comment
+	/// Receivers of remove event.
 	bool delegate(size_t index)[] removeReceivers;
-	/// Removed event receivers. TODO comment
+	/// Receivers of removed event.
 	void delegate()[] removedReceivers;
 
 	/// Image spacing.
@@ -54,15 +54,15 @@ class PImageList : Canvas {
 		this.bindListeners();
 	}
 
-	/// Calculates parameters of scroll bars. TODO comment
+	/// Calculates parameters of scrollbars.
 	private void calcScrollParams() {
 		checkWidget();
 		auto ca = this.p_clientArea;
 
 		int x = SPACING;
 		int y = SPACING;
-		int maxW = 0; // Maximum width in the list. TODO comment
-		int maxH = 0; // Maximum height in a row. TODO comment.
+		int maxW = 0; // Maximum width of images in the list.
+		int maxH = 0; // Maximum height of images in a row.
 		foreach (i, img; _images) {
 			img._bounds.x = x;
 			img._bounds.y = y;
@@ -103,8 +103,8 @@ class PImageList : Canvas {
 	const
 	size_t imageCount() { return _images.length; }
 
-	/// Index of image selected.
-	/// -1 is no selected. TODO comment
+	/// Selection image index.
+	/// If image is not selected is -1.
 	@property
 	const
 	int selectedIndex() { return _selected; }
@@ -126,9 +126,9 @@ class PImageList : Canvas {
 			_images[index].redrawFocus();
 		}
 	}
-	/// Index of image from location.
-	/// If a location out of image _bounds, returns -1.
-	/// A name area is -1. TODO comment
+	/// Gets index of image from coordinates.
+	/// If x, y is out of image bounds, it returns -1.
+	/// A name area is -1.
 	int indexOf(int x, int y) {
 		checkWidget();
 
@@ -144,8 +144,9 @@ class PImageList : Canvas {
 		}
 		return -1;
 	}
-	/// Index of image from location. TODO comment
-	size_t indexOfName(int x, int y) {
+	/// Gets index of image from coordinates.
+	/// A name area is assumed to be image area.
+	int indexOfName(int x, int y) {
 		checkWidget();
 
 		auto rect = CRect(0, 0, 0, 0);
@@ -160,7 +161,8 @@ class PImageList : Canvas {
 		}
 		return -1;
 	}
-	/// Index of image from location. TODO comment
+	/// Gets index of image from coordinates.
+	/// If coordinates is out of image, returns index of closest image.
 	size_t indexOfLose(int x, int y) {
 		checkWidget();
 
@@ -188,7 +190,7 @@ class PImageList : Canvas {
 		return _images.length;
 	}
 
-	/// Shows selected item. TODO comment
+	/// Show selection item.
 	void showSelection() {
 		checkWidget();
 		if (-1 == _selected) return;
@@ -202,14 +204,14 @@ class PImageList : Canvas {
 
 		auto ib = _images[_selected]._bounds;
 
-		// TODO comment
+		// Common method for horizontal and vertical.
 		int scroll(int selH, int imgX, int imgW, int caX, int caW) {
 			if (imgX < SPACING) {
 				redraw();
 				return selH - (SPACING - imgX);
 			} else {
 				int cw = caX + caW;
-				int iw = imgX + imgW / 2; // TODO comment
+				int iw = imgX + imgW / 2; // show half
 				if (cw < iw) {
 					redraw();
 					return min(imgX - SPACING, selH + ((imgX + imgW + SPACING) - cw));
@@ -222,7 +224,7 @@ class PImageList : Canvas {
 		vs.p_selection = scroll(vss, ib.y, ib.height, ca.y, ca.height);
 	}
 
-	/// Gets item. TODO comment
+	/// Get item from index.
 	PImageItem item(size_t index) {
 		if (_images.length <= index) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -315,7 +317,7 @@ class PImageList : Canvas {
 		}
 	}
 
-	/// Selects image. TODO comment
+	/// Selects image.
 	private void onKeyDown(Event e) {
 		checkWidget();
 		if (!_images.length) return;
@@ -346,7 +348,7 @@ class PImageList : Canvas {
 		}
 	}
 
-	/// Draws image list. TODO comment
+	/// Draws image list.
 	private void onPaint(Event e) {
 		checkWidget();
 		auto ca = this.p_clientArea;
@@ -366,7 +368,7 @@ class PImageList : Canvas {
 		auto cRect = CRectangle(e.x, e.y, e.width, e.height);
 		int x = SPACING - hss;
 		int y = SPACING - vss;
-		int maxH = 0; // Maximum height in a row. TODO comment.
+		int maxH = 0; // Maximum height of image in a row.
 		foreach (i, img; _images) {
 			img._bounds.x = x;
 			img._bounds.y = y;
@@ -457,7 +459,7 @@ class PImageList : Canvas {
 				int psy = (e.y - iRect.y) / ph * ph;
 				set(psx, psy);
 			} else if (-1 != img._selectedPiece.x) {
-				// Mouse exit on img. TODO comment
+				// Mouse pointer is out of img.
 				set(-1, -1);
 			}
 			initRect(img, img._tBounds);
@@ -510,23 +512,23 @@ class PImageList : Canvas {
 
 /// One image.
 private class PImageItem : Item {
-	private PImageList _parent; /// Parent of this. TODO comment
+	private PImageList _parent; /// Parent of this item.
 
 	private string _name; /// Name of this image.
-	private MLImage _image; /// Data of this image (multi layer). TODO comment
-	private string _toolTip = null; /// Tool tip text. TODO comment
+	private MLImage _image; /// Data of this image (multi layer).
+	private string _toolTip = null; /// Tool tip text.
 
-	private Rectangle _bounds; /// Bounds of this image (including name). TODO comment
-	private Rectangle _iBounds; /// Bounds of this image (excluding name). TODO comment
-	private Rectangle _tBounds; /// Bounds of name area. TODO comment
-	private Rectangle _cBounds; /// Bounds of close button. TODO comment
+	private Rectangle _bounds; /// Bounds of this image (including name).
+	private Rectangle _iBounds; /// Bounds of this image (excluding name).
+	private Rectangle _tBounds; /// Bounds of name area.
+	private Rectangle _cBounds; /// Bounds of close button.
 	private Rectangle _selectedPiece; /// Range of selected piece.
 
-	/// Creates PImageItem. TODO comment
+	/// Creates PImageItem.
 	this (PImageList parent, int style) {
 		this (parent, style, -1);
 	}
-	/// Creates PImageItem with index. TODO comment
+	/// Creates PImageItem at index.
 	this (PImageList parent, int style, int index) {
 		if (!parent) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
@@ -554,7 +556,7 @@ private class PImageItem : Item {
 		this.bindListeners();
 	}
 
-	/// Calculates _bounds. TODO comment
+	/// Calculates bounds.
 	private void calcBounds() {
 		checkWidget();
 		if (!_image || _image.empty) return;
@@ -579,7 +581,7 @@ private class PImageItem : Item {
 		_parent.redraw();
 	}
 
-	/// Image. TODO comment
+	/// Image of this item.
 	@property
 	void image(MLImage v) {
 		if (!v) {
@@ -603,7 +605,7 @@ private class PImageItem : Item {
 	@property
 	MLImage image() { return _image; }
 
-	/// Tool tip text. TODO comment
+	/// Tool tip text.
 	@property
 	void toolTip(string v) {
 		checkWidget();
@@ -614,13 +616,13 @@ private class PImageItem : Item {
 	const
 	string toolTip() { return _toolTip; }
 
-	/// Gets palette of first layer. TODO comment
+	/// Gets palette of image.
 	@property
 	const
 	const(PaletteData) palette() {
 		return _image.palette;
 	}
-	/// Gets _bounds of selected piece. TODO comment
+	/// Gets bounds of selected piece.
 	@property
 	Rectangle selectedPiece() {
 		checkWidget();
@@ -628,7 +630,7 @@ private class PImageItem : Item {
 		return CRect(pb.x, pb.y, pb.width, pb.height);
 	}
 
-	/// TODO comment
+	/// Push src to image of this item.
 	bool pushImage(MLImage src) {
 		checkWidget();
 		redrawPiece();
@@ -636,7 +638,7 @@ private class PImageItem : Item {
 		return _image.pushImage(src, cip.x, cip.y);
 	}
 
-	/// Color of palette. TODO comment
+	/// Color in palette.
 	void color(size_t pixel, in RGB rgb) {
 		checkWidget();
 		_image.color(pixel, rgb);
@@ -647,20 +649,20 @@ private class PImageItem : Item {
 	RGB color(size_t pixel) {
 		return _image.color(pixel);
 	}
-	/// Sets colors. TODO comment
+	/// Sets all colors.
 	@property
 	void colors(in RGB[] colors) {
 		_image.colors = colors;
 		redrawImage();
 	}
 
-	/// Resizes image. TODO comment
+	/// Resizes image.
 	void resize(uint w, uint h, size_t backgroundPixel) {
 		checkWidget();
 		_image.resize(w, h, backgroundPixel);
 		calcBounds();
 	}
-	/// Change image scale. TODO comment
+	/// Image scaled to size of parameters.
 	void scaledTo(uint w, uint h) {
 		checkWidget();
 		_image.scaledTo(w, h);
@@ -674,7 +676,7 @@ private class PImageItem : Item {
 		redrawFocus();
 	}
 
-	/// Redraws area of image. TODO comment
+	/// Redraw area of image.
 	private void redrawImage() {
 		if (!_image || _image.empty) return;
 		checkWidget();
@@ -682,7 +684,7 @@ private class PImageItem : Item {
 		auto iib = _iBounds;
 		_parent.redraw(ib.x + iib.x, ib.y + iib.y, iib.width, iib.height, true);
 	}
-	/// Redraws area of text. TODO comment
+	/// Redraw area of text.
 	private void redrawText() {
 		if (!_image || _image.empty) return;
 		checkWidget();
@@ -690,7 +692,7 @@ private class PImageItem : Item {
 		auto itb = _tBounds;
 		_parent.redraw(ib.x + itb.x, ib.y + itb.y, itb.width, itb.height, true);
 	}
-	/// Redraws close button. TODO comment;
+	/// Redraw close button.
 	private void redrawCloseButton() {
 		if (!_image || _image.empty) return;
 		checkWidget();
@@ -698,7 +700,7 @@ private class PImageItem : Item {
 		auto icb = _cBounds;
 		_parent.redraw(ib.x + icb.x, ib.y + icb.y, icb.width, icb.height, true);
 	}
-	/// Redraws area of focus. TODO comment
+	/// Redraw frame of focus.
 	private void redrawFocus() {
 		if (!_image || _image.empty) return;
 		checkWidget();
@@ -721,7 +723,7 @@ private class PImageItem : Item {
 		int ch = _cBounds.height;
 		_parent.redraw(cx, cy, cw, ch, true);
 	}
-	/// Redraws area of selected piece. TODO comment
+	/// Redraw area of selected piece.
 	private void redrawPiece() {
 		if (!_image || _image.empty) return;
 		checkWidget();
@@ -733,7 +735,7 @@ private class PImageItem : Item {
 		int h = min(ip.height + 1, _iBounds.height - ip.y);
 		_parent.redraw(x, y, w, h, true);
 	}
-	/// Redraws area of selected piece frame. TODO comment
+	/// Redraw frame of selected piece.
 	private void redrawPieceFrame() {
 		if (!_image || _image.empty) return;
 		checkWidget();
@@ -768,7 +770,7 @@ private class PImageItem : Item {
 		}
 	}
 
-	/// Creates image of this. TODO comment
+	/// Creates Image object from image of this item.
 	Image createImage(bool selected) {
 		checkWidget();
 		if (!_image || _image.empty) return null;
@@ -785,7 +787,7 @@ private class PImageItem : Item {
 			gc.drawImage(img, _iBounds.x, _iBounds.y);
 		}
 
-		/// Draws selected area. TODO comment
+		/// Draws selection area.
 		if (-1 != _selectedPiece.x) {
 			auto color1 = d.getSystemColor(SWT.COLOR_WHITE);
 			auto color2 = d.getSystemColor(SWT.COLOR_RED);
@@ -805,7 +807,7 @@ private class PImageItem : Item {
 		string t = this.p_text;
 		auto ts = gc.textExtent(t);
 		if (ts.x > _tBounds.width) {
-			// Cuts longer name. TODO comment
+			// Truncates longer name
 			auto ds = gc.textExtent("...");
 			auto dst = to!dstring(t);
 			while (t.length) {
@@ -848,7 +850,7 @@ private class PImageItem : Item {
 		return canvas;
 	}
 
-	/// Removes image at list. TODO comment
+	/// Removes image of this item from the list.
 	private void onDispose(Event e) {
 		checkWidget();
 		int index = _parent._images.countUntil(this);

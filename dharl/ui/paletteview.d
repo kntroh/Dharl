@@ -15,11 +15,11 @@ private import org.eclipse.swt.all;
 
 /// Viewer and chooser for colors of palette.
 class PaletteView : Canvas, Undoable {
-	/// Restore event receivers. TODO comment
+	/// Receivers of restore event.
 	void delegate()[] restoreReceivers;
-	/// Status changed event receivers. TODO comment
+	/// Receivers of status changed event.
 	void delegate()[] statusChangedReceivers;
-	/// Color change event receivers.
+	/// Receivers of color change event.
 	/// This event raises before process executed.
 	void delegate(int pixel, in RGB afterRGB)[] colorChangeReceivers;
 	/// Color swap event receivers.
@@ -35,7 +35,7 @@ class PaletteView : Canvas, Undoable {
 	private RGB[256] _colors;
 	/// Settings of mask.
 	private bool[256] _mask;
-	/// Bitmap depth. TODO comment
+	/// Bitmap depth.
 	private ubyte _depth = 8;
 	/// Index of selected color.
 	private int _pixel1 = 1, _pixel2 = 0;
@@ -44,7 +44,7 @@ class PaletteView : Canvas, Undoable {
 
 	/// If edit mask mode is true.
 	private bool _maskMode = false;
-	/// Range of changing mask. TODO comment
+	/// Range of change operation of mask.
 	private int _piMaskFrom = -1;
 	private int _piMaskTo = -1;
 
@@ -52,10 +52,10 @@ class PaletteView : Canvas, Undoable {
 	/// No downing is -1.
 	private int _downButton = -1;
 
-	/// Index of edited mask. TODO comment
+	/// Index of last edited mask.
 	private int _piEditMask = -1;
 
-	/// Undo manager. TODO comment
+	/// Manager of undo and redo operation.
 	private UndoManager _um = null;
 
 	/// The only constructor.
@@ -66,7 +66,7 @@ class PaletteView : Canvas, Undoable {
 		initPalette(_colors);
 	}
 
-	// Initialize palette. (default 16 colors) TODO comment
+	// Initialize palette. (Default 16 colors)
 	private static void initPalette(RGB[] colors) {
 		assert (256 == colors.length);
 		colors[ 0] = new RGB(255, 255, 255);
@@ -90,14 +90,14 @@ class PaletteView : Canvas, Undoable {
 		}
 	}
 
-	/// Creates default palette (16 colors). TODO comment
+	/// Creates default palette (16 colors).
 	static PaletteData createDefaultPalette() {
 		auto colors = new RGB[256];
 		initPalette(colors);
 		return new PaletteData(colors);
 	}
 
-	/// Undo manager. TODO comment
+	/// Manager of undo and redo operation.
 	@property
 	void undoManager(UndoManager um) { _um = um; }
 	/// ditto
@@ -158,7 +158,7 @@ class PaletteView : Canvas, Undoable {
 		redraw();
 	}
 
-	/// Edit mask mode. TODO comment
+	/// Is editing color mask?
 	@property
 	const
 	bool maskMode() { return _maskMode; }
@@ -217,7 +217,7 @@ class PaletteView : Canvas, Undoable {
 	void color(size_t index, in RGB rgb) {
 		color(index, rgb.red, rgb.green, rgb.blue);
 	}
-	/// Gets all colors. TODO comment
+	/// Gets all colors.
 	@property
 	const
 	const(RGB)[] colors() {
@@ -286,7 +286,7 @@ class PaletteView : Canvas, Undoable {
 		}
 	}
 
-	/// Bitmap depth. TODO comment
+	/// Bitmap depth.
 	@property
 	const
 	ubyte depth() { return _depth; }
@@ -326,7 +326,7 @@ class PaletteView : Canvas, Undoable {
 		int cy = tiRow * _cBoxHeight;
 		return CPoint(cx, cy);
 	}
-	/// Converts a pixel index to a table index (column, row). TODO comment
+	/// Converts from a pixel index to a table index (column, row).
 	private void pitoti(size_t pixel, ref size_t tiCol, ref size_t tiRow) {
 		checkWidget();
 		auto ca = this.p_clientArea;
@@ -335,7 +335,7 @@ class PaletteView : Canvas, Undoable {
 		tiCol = pixel % pCountInLine;
 		tiRow = pixel / pCountInLine;
 	}
-	/// Converts a table index (column, row) to a pixel index. TODO comment
+	/// Converts from a table index (column, row) to a pixel index.
 	private size_t titopi(size_t tiCol, size_t tiRow) {
 		checkWidget();
 		auto ca = this.p_clientArea;
@@ -343,7 +343,7 @@ class PaletteView : Canvas, Undoable {
 		if (!pCountInLine) pCountInLine = 1;
 		return tiRow * pCountInLine + tiCol;
 	}
-	/// If pixel in rectangle range, returns true. TODO comment
+	/// If pixel in rectangle of range, it returns true.
 	private bool piInRange(size_t pixel, int piFrom, int piTo) {
 		if (-1 == piFrom) return false;
 		if (-1 == piTo) return false;
@@ -358,7 +358,7 @@ class PaletteView : Canvas, Undoable {
 		pitoti(pixel, tiCol, tiRow);
 		return tiCol1 <= tiCol && tiCol <= tiCol2 && tiRow1 <= tiRow && tiRow <= tiRow2;
 	}
-	/// Calls dlg with pixels in rectangle range. TODO comment
+	/// Calls dlg with pixels in rectangle of range.
 	private void piProcRange(void delegate(int pixel) dlg, int piFrom, int piTo) {
 		if (-1 == piFrom) return;
 		if (-1 == piTo) return;
@@ -378,7 +378,7 @@ class PaletteView : Canvas, Undoable {
 		}
 	}
 
-	/// Fixes edited mask. TODO comment
+	/// Fixes edited mask.
 	private void fixEditMask(Event e) {
 		bool doit = false;
 		piProcRange((int pixel) {
@@ -397,7 +397,7 @@ class PaletteView : Canvas, Undoable {
 		auto cp = pitoc(pixel);
 		redraw(cp.x - 1, cp.y - 1, _cBoxWidth + 2, _cBoxHeight + 2, false);
 	}
-	/// Redraws rectangle range. TODO comment
+	/// Redraws a rectangle of range.
 	private void piRedrawRange(int piFrom, int piTo) {
 		if (-1 == piFrom) return;
 		if (-1 == piTo) return;
@@ -447,7 +447,7 @@ class PaletteView : Canvas, Undoable {
 				e.gc.p_foreground = white;
 			}
 			if (pim <= pi) {
-				// Draws unusing color mark. TODO comment
+				// Draws mark of nonuse color.
 				e.gc.drawRectangle(cx, cy, _cBoxWidth - 1, _cBoxHeight - 1);
 				e.gc.p_antialias = SWT.ON;
 				scope (exit) e.gc.p_antialias = SWT.OFF;
@@ -458,7 +458,7 @@ class PaletteView : Canvas, Undoable {
 				mask = !mask;
 			}
 			if (mask) {
-				// Draws mask mark (X).
+				// Draws mark of mask (X).
 				e.gc.p_antialias = SWT.ON;
 				scope (exit) e.gc.p_antialias = SWT.OFF;
 				e.gc.drawLine(cx + cMaskX1, cy + cMaskY1, cx + cMaskX2, cy + cMaskY2);
@@ -639,12 +639,12 @@ class PaletteView : Canvas, Undoable {
 			break;
 		}
 	}
-	/// Changes selection. TODO comment
+	/// Change selection
 	private void onKeyDown(Event e) {
 		auto ca = this.p_clientArea;
 		int col = ca.width / _cBoxWidth;
 		int row = _colors.length / col;
-		// Number of color in last row. TODO comment
+		// Number of color in current row.
 		if (_colors.length % col) row++;
 
 		bool shift = cast(bool) (e.stateMask & SWT.SHIFT);
@@ -653,7 +653,7 @@ class PaletteView : Canvas, Undoable {
 		case SWT.ARROW_UP:
 			pixel -= col;
 			if (pixel < 0) {
-				// TODO comment
+				// move up. (rotation)
 				pixel += col * row;
 				if (_colors.length <= pixel) {
 					pixel -= col;
@@ -663,7 +663,7 @@ class PaletteView : Canvas, Undoable {
 		case SWT.ARROW_DOWN:
 			pixel += col;
 			if (_colors.length <= pixel) {
-				// TODO comment
+				// move down. (rotation)
 				pixel -= col * row;
 			}
 			break;
@@ -723,9 +723,9 @@ class PaletteView : Canvas, Undoable {
 		return CPoint(cw, ch);
 	}
 
-	/// Data object for undo. TODO comment
+	/// A data object for undo.
 	private static class StoreData {
-		/// Palette data. TODO comment
+		/// Palette data.
 		CRGB[256] colors;
 	}
 	@property
