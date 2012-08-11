@@ -172,15 +172,6 @@ void main() {
 	});
 	separator(mTool);
 
-	auto turnDeg = basicSpinner(toolBar, 0, 360);
-	turnDeg.p_selection = 90;
-	basicToolItem(toolBar, turnDeg);
-	basicToolItem(toolBar, c.text.menu.turn, cimg(c.image.turn), {
-		int deg = turnDeg.p_selection;
-		mainPanel.paintArea.turn(deg);
-	});
-	separator(mTool);
-
 	auto mConf = basicMenuItem(mTool, c.text.menu.configuration, cimg(c.image.configuration), {
 		auto dlg = new ConfigDialog(shell, c);
 		dlg.appliedReceivers ~= {
@@ -188,6 +179,15 @@ void main() {
 			mainPanel.paintArea.setCanvasSize(s.width, s.height);
 		};
 		dlg.open();
+	});
+
+	separator(toolBar);
+	auto turnDeg = basicSpinner(toolBar, 0, 360);
+	turnDeg.p_selection = 90;
+	basicToolItem(toolBar, turnDeg);
+	basicToolItem(toolBar, c.text.menu.turn, cimg(c.image.turn), {
+		int deg = turnDeg.p_selection;
+		mainPanel.paintArea.turn(deg);
 	});
 
 	separator(toolBar);
@@ -217,11 +217,12 @@ void main() {
 
 		auto selArea = mainPanel.paintArea.selectedArea;
 		bool sel = selArea.width > 0 && selArea.height > 0;
+		bool alive = !mainPanel.paintArea.empty;
 		tCut.p_enabled = sel;
 		tCopy.p_enabled = sel;
-		tPaste.p_enabled = !mainPanel.paintArea.empty;
+		tPaste.p_enabled = alive;
 		tDelete.p_enabled = sel;
-		tSelectAll.p_enabled = !mainPanel.paintArea.empty;
+		tSelectAll.p_enabled = alive;
 
 		tUndo.p_enabled = mainPanel.undoManager.canUndo;
 		tRedo.p_enabled = mainPanel.undoManager.canRedo;

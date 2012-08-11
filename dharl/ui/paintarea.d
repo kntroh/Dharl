@@ -107,7 +107,7 @@ class PaintArea : Canvas, Undoable {
 	private bool _grid1 = false, _grid2 = false;
 
 	/// Canvas size.
-	private uint _canvasW = 0, _canvasH = 0;
+	private uint _iCanvasW = 0, _iCanvasH = 0;
 
 	/// Cache of showingIamge().
 	private Image[] _cache = [];
@@ -117,6 +117,8 @@ class PaintArea : Canvas, Undoable {
 
 	/// A cursor of dropper mode.
 	private Cursor _cursorDropper;
+	/// A cursor of range selection mode.
+	private Cursor _cursorSelRange;
 
 	/// The only constructor.
 	this (Composite parent, int style) {
@@ -572,9 +574,9 @@ class PaintArea : Canvas, Undoable {
 	void setCanvasSize(uint w, uint h) {
 		checkWidget();
 		checkInit();
-		if (_canvasW == w && _canvasH == h) return;
-		_canvasW = w;
-		_canvasH = h;
+		if (_iCanvasW == w && _iCanvasH == h) return;
+		_iCanvasW = w;
+		_iCanvasH = h;
 		redraw();
 	}
 	/// ditto
@@ -582,7 +584,7 @@ class PaintArea : Canvas, Undoable {
 	const
 	Point canvasSize() {
 		checkInit();
-		return CPoint(_canvasW, _canvasH);
+		return CPoint(_iCanvasW, _iCanvasH);
 	}
 
 	/// Gets palette.
@@ -788,20 +790,42 @@ class PaintArea : Canvas, Undoable {
 		this.p_cursor = cursorNow;
 	}
 
-	/// Dropper mode?
+	/// A cursor of range selection mode.
+	/// If it is null, use cursor(PaintMode).
 	@property
 	const
-	bool dropperMode() {
-		return 3 == _mouseDown && !_rangeSel;
+	const(Cursor) cursorSelRange() { return _cursorSelRange; }
+	/// ditto
+	@property
+	Cursor cursorSelRange() { 
+		checkWidget();
+		return _cursorSelRange;
+	}
+	/// ditto
+	@property
+	void cursorSelRange(Cursor cursor) {
+		checkWidget();
+		_cursorSelRange = cursor;
+		this.p_cursor = cursorNow;
 	}
 
 	/// Cursor in use.
 	@property
 	Cursor cursorNow() {
+		if (rangeSelection && _cursorSelRange) {
+			return _cursorSelRange;
+		}
 		if (dropperMode && _cursorDropper) {
 			return _cursorDropper;
 		}
-		return  cursor(this.mode);
+		return cursor(this.mode);
+	}
+
+	/// Dropper mode?
+	@property
+	const
+	bool dropperMode() {
+		return 3 == _mouseDown && !rangeSelection;
 	}
 
 	/// Executes operation of cut, copy, paste, and delete.
@@ -1825,15 +1849,24 @@ class PaintArea : Canvas, Undoable {
 				e.gc.drawLine(ixtocx(0), iytocy(iy), ixtocx(ib.width), iytocy(iy));
 			}
 		}
-		if (0 != _canvasW && 0 != _canvasH) {
-			e.gc.drawLine(ixtocx(_canvasW), iytocy(0), ixtocx(_canvasW), iytocy(_canvasH) + 1);
-			e.gc.drawLine(ixtocx(0), iytocy(_canvasH), ixtocx(_canvasW), iytocy(_canvasH));
+		if (0 != _iCanvasW && 0 != _iCanvasH) {
+			int icw = .min(_iCanvasW, ib.width);
+			int ich = .min(_iCanvasH, ib.height);
+			if (icw < ib.width) {
+				e.gc.drawLine(ixtocx(icw), iytocy(0), ixtocx(icw), iytocy(ich));
+			}
+			if (ich < ib.height) {
+				e.gc.drawLine(ixtocx(0), iytocy(ich), ixtocx(icw), iytocy(ich));
+			}
 		}
 
 		if ((_pasteLayer || _rangeSel) && !_iSelRange.p_empty) {
 			// If selection area, draw focus line.
 			auto cca = cCursorArea();
-			e.gc.drawFocus(cca.x, cca.y, cca.width, cca.height);
+			auto oldLineStyle = e.gc.p_lineStyle;
+			e.gc.p_lineStyle = SWT.LINE_DOT;
+			scope (exit) e.gc.p_lineStyle = oldLineStyle;
+			e.gc.drawRectangle(cca.x, cca.y, cca.width, cca.height);
 		} else {
 			// Draws cursor.
 			if (showCursor && 1 != _mouseDown && _mouseEnter && 0 != _layers.length) {

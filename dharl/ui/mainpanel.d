@@ -228,6 +228,8 @@ class MainPanel : Composite {
 		checkWidget();
 		checkInit();
 
+		auto d = parent.p_display;
+
 		// Splitter of paint area and palette.
 		auto ppSash = basicSashForm(parent, SWT.VERTICAL);
 		scope (exit) setRefWeights(paintSash, _c.conf.weightsPaint_Preview.value);
@@ -304,11 +306,19 @@ class MainPanel : Composite {
 		_paintArea.pixel = _paletteView.pixel1;
 		_paintArea.backgroundPixel = _paletteView.pixel2;
 		_paintArea.addLayer(_c.text.newLayer);
-		auto cursor = ccur(_c.image.cursorPen, 0, 0);
-		foreach (mode; EnumMembers!PaintMode) {
-			_paintArea.cursor(mode, cursor);
-		}
-		_paintArea.cursorDropper = ccur(_c.image.cursorDropper, 0, 0);
+		auto pen = ccur(_c.image.cursorPen, 0, 0);
+		auto cross = d.getSystemCursor(SWT.CURSOR_CROSS);
+		auto dropper = ccur(_c.image.cursorDropper, 0, 0);
+		auto bucket = ccur(_c.image.cursorBucket, 0, 0);
+		_paintArea.cursor(PaintMode.FreePath, pen);
+		_paintArea.cursor(PaintMode.Straight, cross);
+		_paintArea.cursor(PaintMode.OvalLine, cross);
+		_paintArea.cursor(PaintMode.RectLine, cross);
+		_paintArea.cursor(PaintMode.OvalFill, cross);
+		_paintArea.cursor(PaintMode.RectFill, cross);
+		_paintArea.cursor(PaintMode.Fill, bucket);
+		_paintArea.cursorDropper = dropper;
+		_paintArea.cursorSelRange = cross;
 		_paintPreview.init(_paintArea);
 		_layerList.init(_paintArea);
 		_colorSlider.color = _paletteView.color(_paletteView.pixel1);
