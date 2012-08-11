@@ -1,5 +1,5 @@
 
-/// This module includes minimum dialogs and members related to it. TODO cent 
+/// This module includes dialogs and members related to it.
 module dharl.ui.dialogs;
 
 private import dharl.common;
@@ -14,7 +14,7 @@ private import std.string;
 
 private import org.eclipse.swt.all;
 
-/// Dialog buttons. TODO cent
+/// Bitmasks of dialog buttons.
 enum DBtn {
 	Yes    = 0b00000001, /// Yes.
 	Ok     = 0b00000010, /// OK.
@@ -23,19 +23,19 @@ enum DBtn {
 	Cancel = 0b00010000  /// Cancel.
 }
 
-/// Abstract dialog. TODO cent
+/// Abstract dialog.
 abstract class CDialog {
-	/// Applied event receivers. TODO cent
+	/// Receivers of applied event.
 	void delegate()[] appliedReceivers;
 
-	/// Dialog. TODO cent
+	/// Shell of dialog.
 	private Shell _shl;
-	/// Controls area. TODO cent
+	/// Area of controls.
 	private Composite _area;
 
 	private DCommon _c;
 
-	/// The only constructor. TODO cent
+	/// The only constructor.
 	this (Shell parent, DCommon c, string title, Image image, bool modal, DBtn buttons) {
 		enforce(buttons);
 		bool valid = false;
@@ -59,7 +59,7 @@ abstract class CDialog {
 		auto sep = separator(_shl, SWT.HORIZONTAL);
 		sep.p_layoutData = GD.fill(true, false);
 
-		// Creates buttons. TODO cent
+		// Creates buttons.
 		auto bComp = basicComposite(_shl, RL.horizontal);
 		for (DBtn b = DBtn.min; b <= DBtn.max; b <<= 1) {
 			if (!(buttons & b)) continue;
@@ -108,29 +108,29 @@ abstract class CDialog {
 		return false;
 	}
 
-	/// Opens dialog. TODO cent
+	/// Opens dialog.
 	void open() {
 		setup(_area);
 		_shl.pack();
 		_shl.open();
 	}
 
-	/// DCommon from constructor. TODO cent
+	/// DCommon in use.
 	@property
 	protected DCommon c() { return _c; }
 
-	/// Creates dialog controls. TODO cent
+	/// Creates controls of dialog.
 	protected abstract void setup(Composite area);
-	/// When calls pushed button. TODO cent
+	/// This method is called when the Apply button is pushed.
 	protected abstract bool apply() { return true; }
 }
 
-/// TODO cent
+/// The dialog of application configuration.
 class ConfigDialog : CDialog {
-	/// Character size. TODO cent
+	/// Character (paint area) size.
 	private Spinner _cw, _ch;
 
-	/// The only constructor. TODO cent
+	/// The only constructor.
 	this (Shell parent, DCommon c) {
 		string configDialog = c.text.fConfigDialog;
 		string appName = c.text.appName;
@@ -142,7 +142,7 @@ class ConfigDialog : CDialog {
 	protected override void setup(Composite area) {
 		area.p_layout = GL(1, false);
 
-		// Character size. TODO cent
+		// Character (paint area) size.
 		auto group = basicGroup(area, c.text.characterSize, GL(2, false));
 		group.p_layoutData = GD.fill(true, true);
 
@@ -151,7 +151,7 @@ class ConfigDialog : CDialog {
 		basicLabel(group, c.text.characterHeight);
 		_ch = basicSpinner(group, 1, 9999);
 
-		// Reads configuration to controls. TODO cent
+		// Sets configuration to controls.
 		_cw.p_selection = c.conf.character.width;
 		_ch.p_selection = c.conf.character.height;
 	}
@@ -163,10 +163,12 @@ class ConfigDialog : CDialog {
 	}
 }
 
-/// TODO cent
+/// Dialog of resize image operation.
 class ResizeDialog {
+	// TODO
 }
 
-/// TODO cent
+/// Dialog of resize canvas operation.
 class ResizeCanvasDialog {
+	// TODO
 }

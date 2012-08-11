@@ -22,43 +22,43 @@ private import org.eclipse.swt.all;
 class PaintArea : Canvas, Undoable {
 	static const ZOOM_MAX = 32;
 
-	/// Draw event receivers. TODO comment
+	/// Receivers of draw event.
 	void delegate()[] drawReceivers;
-	/// Status changed event receivers. TODO comment
+	/// Receivers of status changed event.
 	void delegate()[] statusChangedReceivers;
-	/// Select changed event receivers. TODO comment
+	/// Receivers of select changed event.
 	void delegate(int x, int y, int w, int h)[] selectChangedReceivers;
-	/// Restore event receivers. TODO comment
+	/// Receivers of restore event.
 	void delegate()[] restoreReceivers;
-	/// Changed layer event receivers. TODO comment
+	/// Receivers of changed layer event.
 	void delegate()[] changedLayerReceivers;
 
-	/// Identify of this. TODO comment
+	/// ID of this instance.
 	private string _id;
 
-	/// The image.
+	/// The image in drawing.
 	private MLImage _image = null;
-	/// Selected layers. TODO comment
+	/// Selection layers.
 	private size_t[] _layers = [0];
-	/// Paste layer. TODO comment
+	/// Layer of source of paste.
 	private MLImage _pasteLayer = null;
-	/// Temporary of mouse cursor coordinates for moves paste layer. TODO comment
+	/// A coordinates of mouse cursor temporary for moving pasteLayer.
 	private int _iPCatchX, _iPCatchY;
 
-	/// Selected color.
+	/// Index of selection color.
 	private size_t _pixel = 0;
-	/// Background color. TODO comment
+	/// Index of background color.
 	private size_t _backPixel = 1;
 
-	/// Temporary for iGetPixels() TODO comment
+	/// Index of color temporary for iGetPixels().
 	private int[] _pixelsTemp;
-	/// Temporary for iPGetPixels() TODO comment
+	/// Index of color temporary for iPGetPixels().
 	private int[] _pastePixelsTemp;
 
-	/// Enabled to background color. TODO comment
+	/// Is enabled background color?
 	private bool _enabledBackColor = false;
 
-	/// Settings of mask color. TODO comment
+	/// Settings of mask color.
 	private bool[256] _mask;
 
 	/// Zoom magnification.
@@ -69,22 +69,22 @@ class PaintArea : Canvas, Undoable {
 	/// Cursor size.
 	private uint _iCurSize = 1;
 
-	/// Range selection mode. TODO comment
+	/// Range selection mode.
 	private bool _rangeSel = false;
-	/// Selected range.
+	/// Selection range.
 	private Rectangle _iSelRange;
-	/// Moving range. TODO comment
+	/// Range of moving.
 	private Rectangle _iMoveRange;
-	/// When moving is true. TODO comment
+	/// When moving is true.
 	private bool _moving = false;
-	/// Directions at catched frame of selected range. TODO comment
+	/// Direction of caught point of selection range.
 	private bool _catchN = false;
 	private bool _catchE = false; /// ditto
 	private bool _catchS = false; /// ditto
 	private bool _catchW = false; /// ditto
-	/// Catched coordinates. TODO comment
+	/// Caught coordinates.
 	private int _iCatchX = -1, _iCatchY = -1;
-	/// Selected range before catch.
+	/// Last selected range before caught.
 	private Rectangle _iOldSelRange;
 
 	/// Paint mode.
@@ -95,25 +95,25 @@ class PaintArea : Canvas, Undoable {
 	/// Is there mouse cursor?
 	private bool _mouseEnter = false;
 
-	/// Undo manager. TODO comment
+	/// Manager of undo operation.
 	private UndoManager _um = null;
 
-	/// Paint's tone. TODO comment
+	/// Tone.
 	private bool[][] _tone = null;
 
-	/// Is grid showing? TODO comment
+	/// Showing grid?
 	private bool _grid1 = false, _grid2 = false;
 
-	/// Line of canvas size. TODO comment
+	/// Canvas size.
 	private uint _canvasW = 0, _canvasH = 0;
 
-	/// Cache of showingIamge(). TODO comment
+	/// Cache of showingIamge().
 	private Image[] _cache = [];
 
 	/// A cursor of every paint mode.
 	private Cursor[PaintMode] _cursor;
 
-	/// A cursor of syringe mode.
+	/// A cursor of dropper mode.
 	private Cursor _cursorDropper;
 
 	/// The only constructor.
@@ -144,7 +144,7 @@ class PaintArea : Canvas, Undoable {
 		this.bindListeners();
 	}
 
-	/// Calculates parameters of scroll bars. TODO comment
+	/// Calculates parameters of scrollbars.
 	private void calcScrollParams() {
 		checkWidget();
 		auto ca = this.p_clientArea;
@@ -180,9 +180,8 @@ class PaintArea : Canvas, Undoable {
 	}
 
 	/// Initializes this paint area.
-	/// If call a other methods before didn't called this,
-	/// It throws exception.
-	/// TODO comment
+	/// If call a other methods before called this,
+	/// it throws exception.
 	void init(ImageData image, string layerName) {
 		checkWidget();
 		_pixel = 1;
@@ -210,7 +209,7 @@ class PaintArea : Canvas, Undoable {
 		statusChangedReceivers.raiseEvent();
 	}
 
-	/// Undo manager. TODO comment
+	/// Manager of undo and redo operation.
 	@property
 	void undoManager(UndoManager um) { _um = um; }
 	/// ditto
@@ -218,7 +217,7 @@ class PaintArea : Canvas, Undoable {
 	const
 	const(UndoManager) undoManager() { return _um; }
 
-	/// Returns image in this. TODO comment
+	/// Returns image in this paintArea.
 	@property
 	MLImage image() {
 		checkWidget();
@@ -233,7 +232,7 @@ class PaintArea : Canvas, Undoable {
 		return _image;
 	}
 
-	/// TODO comment
+	/// Push src to image in this paintArea starting from srcX and srcY.
 	bool pushImage(MLImage src, int srcX, int srcY) {
 		if (!src) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
@@ -247,7 +246,7 @@ class PaintArea : Canvas, Undoable {
 		return _image.pushImage(src, srcX, srcY, _backPixel);
 	}
 
-	/// If this hasn't layer, returns true. TODO comment
+	/// If image haven't layer, returns true.
 	@property
 	const
 	bool empty() {
@@ -275,7 +274,6 @@ class PaintArea : Canvas, Undoable {
 		statusChangedReceivers.raiseEvent();
 	}
 	/// Removes layer.
-	/// TODO comment
 	void removeLayer(size_t index) {
 		if (_image.layerCount <= index) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -284,7 +282,7 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		if (_um) _um.store(this);
 		if (1 == _image.layerCount) {
-			// Reserve one layer. TODO comment
+			// Last layer don't remove. clear it.
 			auto ib = CRect(0, 0, _image.width, _image.height);
 			iFillRect((int ix, int iy) {
 				iSetPixels(ix, iy, _backPixel);
@@ -319,7 +317,7 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		if (_um) _um.store(this);
 		if (_image.layerCount == to - from) {
-			// Reserve one layer. TODO comment
+			// Last layer don't remove. clear it.
 			assert (0 == from);
 			from++;
 			auto ib = CRect(0, 0, _image.width, _image.height);
@@ -355,7 +353,7 @@ class PaintArea : Canvas, Undoable {
 		statusChangedReceivers.raiseEvent();
 	}
 
-	/// Selected layers. TODO comment
+	/// Sets selection indices of layers.
 	@property
 	void selectedLayers(in size_t[] layers) {
 		if (!layers) {
@@ -420,7 +418,7 @@ class PaintArea : Canvas, Undoable {
 		selectedLayers = sel;
 	}
 
-	/// Selected area. TODO comment
+	/// Gets selection range.
 	@property
 	Rectangle selectedArea() {
 		checkWidget();
@@ -429,7 +427,7 @@ class PaintArea : Canvas, Undoable {
 		return iCursorArea;
 	}
 
-	/// Selected pixel (Index of palette).
+	/// Selection pixel (Index of palette).
 	@property
 	const
 	size_t pixel() { return _pixel; }
@@ -447,7 +445,7 @@ class PaintArea : Canvas, Undoable {
 		drawReceivers.raiseEvent();
 	}
 
-	/// Background pixel (Index of palette). TODO comment
+	/// Background pixel (Index of palette).
 	@property
 	const
 	size_t backgroundPixel() { return _backPixel; }
@@ -467,7 +465,7 @@ class PaintArea : Canvas, Undoable {
 		}
 	}
 
-	/// Enabled to background color. TODO comment
+	/// Is enabled background color?
 	@property
 	const
 	bool enabledBackColor() { return _enabledBackColor; }
@@ -485,7 +483,7 @@ class PaintArea : Canvas, Undoable {
 		statusChangedReceivers.raiseEvent();
 	}
 
-	/// Settings of color mask. TODO comment
+	/// Settings of mask color.
 	@property
 	const
 	const(bool)[] mask() { return _mask; }
@@ -505,8 +503,7 @@ class PaintArea : Canvas, Undoable {
 		drawReceivers.raiseEvent();
 	}
 
-	/// Paint's tone.
-	/// Default value is null. TODO comment
+	/// Tone. A default value is null.
 	@property
 	const
 	const(bool[])[] tone() { return _tone; }
@@ -514,7 +511,7 @@ class PaintArea : Canvas, Undoable {
 	@property
 	void tone(in bool[][] v) {
 		if (v && 0 < v.length) {
-			/// Require rectangle. TODO comment
+			/// v must be a rectangle.
 			if (!v[0]) {
 				SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
 			}
@@ -538,7 +535,7 @@ class PaintArea : Canvas, Undoable {
 		drawReceivers.raiseEvent();
 	}
 
-	/// Is grid showing? TODO comment
+	/// Showing grid?
 	@property
 	void grid1(bool v) {
 		checkWidget();
@@ -571,7 +568,7 @@ class PaintArea : Canvas, Undoable {
 		return _grid2;
 	}
 
-	/// Line of canvas size. TODO comment
+	/// Canvas size.
 	void setCanvasSize(uint w, uint h) {
 		checkWidget();
 		checkInit();
@@ -626,7 +623,7 @@ class PaintArea : Canvas, Undoable {
 		redraw();
 		drawReceivers.raiseEvent();
 	}
-	/// Sets all colors. TODO comment
+	/// Sets all colors.
 	@property
 	void colors(in RGB[] rgbs) {
 		checkWidget();
@@ -674,7 +671,7 @@ class PaintArea : Canvas, Undoable {
 		drawReceivers.raiseEvent();
 	}
 
-	/// Range selection mode. TODO comment
+	/// Range selection mode.
 	@property
 	const
 	bool rangeSelection() {
@@ -726,7 +723,7 @@ class PaintArea : Canvas, Undoable {
 	}
 
 	/// Cursor size.
-	/// If it is 0, no draws. TODO comment
+	/// If it is 0, no draws cursor pixel.
 	@property
 	const
 	uint cursorSize() {
@@ -807,7 +804,7 @@ class PaintArea : Canvas, Undoable {
 		return  cursor(this.mode);
 	}
 
-	/// Operations to cut, copy, paste, and delete. TODO comment
+	/// Executes operation of cut, copy, paste, and delete.
 	void cut() {
 		checkWidget();
 		checkInit();
@@ -884,14 +881,14 @@ class PaintArea : Canvas, Undoable {
 		int ix = ia.x;
 		int iy = ia.y;
 		if (0 == ia.width && 0 == ia.height) {
-			// Paste to top left at visible area. TODO comment
+			// Paste to top left on visible area.
 			ix = iVisibleLeft;
 			iy = iVisibleTop;
 		}
 		initPasteLayer(ix, iy);
 		_moving = true;
 	}
-	/// TODO comment
+	/// Initializes paste source layer.
 	private void initPasteLayer(int ix, int iy) {
 		enforce(_pasteLayer);
 		_iSelRange.x = ix;
@@ -936,10 +933,7 @@ class PaintArea : Canvas, Undoable {
 		redrawCursorArea();
 	}
 
-	/// Fixes paste.
-	/// A pasted image is floating on current layer,
-	/// When fix calls this method or clicks out of range.
-	/// If when not after paste, this method no process. TODO comment
+	/// Paste from source layer to image.
 	void fixPaste() {
 		checkWidget();
 		checkInit();
@@ -967,7 +961,7 @@ class PaintArea : Canvas, Undoable {
 		redrawCursorArea();
 		resetPasteParams();
 	}
-	/// Cancels paste. TODO comment
+	/// Cancels paste operation.
 	void cancelPaste() {
 		checkWidget();
 		checkInit();
@@ -993,8 +987,8 @@ class PaintArea : Canvas, Undoable {
 		drawReceivers.raiseEvent();
 	}
 
-	/// Selects full image.
-	/// Set rangeSelection is true.TODO comment
+	/// Selects entire image.
+	/// Sets true to rangeSelection.
 	void selectAll() {
 		checkWidget();
 		checkInit();
@@ -1010,8 +1004,7 @@ class PaintArea : Canvas, Undoable {
 		raiseSelectChangedEvent();
 	}
 
-	/// Scrolls to coordinate (image coordinates)
-	/// into view port. TODO comment
+	/// Scrolls to x, y (image coordinates) in viewport.
 	void scroll(int x, int y) {
 		checkWidget();
 		checkInit();
@@ -1021,7 +1014,7 @@ class PaintArea : Canvas, Undoable {
 	private void iScroll(int ix, int iy) {
 		checkWidget();
 		checkInit();
-		// TODO comment
+		// Common method for horizontal and vertical.
 		void iScrImpl(int ix, int iw, ScrollBar bar) {
 			if (!bar.p_visible) return;
 			int chss = bar.p_selection;
@@ -1045,7 +1038,7 @@ class PaintArea : Canvas, Undoable {
 		iScrImpl(iy, _image.height, vs);
 	}
 
-	/// Central coordinate at viewport. TODO comment
+	/// Center coordinate at viewport.
 	@property
 	private Point iCenter() {
 		checkWidget();
@@ -1086,7 +1079,7 @@ class PaintArea : Canvas, Undoable {
 		}
 	}
 
-	/// Utility methods for transform. TODO comment
+	/// Utility methods for transform.
 	private int[] iPGetPixels(int ix, int iy) {
 		enforce (_pasteLayer);
 		if (_pastePixelsTemp.length != _pasteLayer.layerCount) {
@@ -1114,7 +1107,7 @@ class PaintArea : Canvas, Undoable {
 		iSetPixels(ix, iy, pixels);
 	}
 
-	/// Transforms image. TODO comment
+	/// Transforms image.
 	private void transform(void function
 			(int[] delegate(int x, int y) pget,
 			void delegate(int x, int y, int[] pixels) pset,
@@ -1141,7 +1134,7 @@ class PaintArea : Canvas, Undoable {
 		drawReceivers.raiseEvent();
 	}
 
-	/// TODO comment
+	/// Flips image data horizontally or vertically.
 	void mirror() {
 		transform(&.mirror!(int[]));
 	}
@@ -1149,7 +1142,8 @@ class PaintArea : Canvas, Undoable {
 	void flip() {
 		transform(&.flip!(int[]));
 	}
-	/// ditto
+	/// Moves image data in each direction.
+	/// Rotates a pixel of bounds.
 	void rotateRight() {
 		transform(&.rotateRight!(int[]));
 	}
@@ -1166,7 +1160,7 @@ class PaintArea : Canvas, Undoable {
 		transform(&.rotateDown!(int[]));
 	}
 
-	/// Resize image. TODO comment
+	/// Resizes image.
 	void resize(int newW, int newH) {
 		checkWidget();
 		checkInit();
@@ -1252,7 +1246,8 @@ class PaintArea : Canvas, Undoable {
 		redrawCursorArea();
 	}
 
-	/// TODO comment
+	/// If range of parameters intersect range of image,
+	/// returns true. (Image coordinate)
 	const
 	private void iInImageRect(ref Rectangle iRect) {
 		checkInit();
@@ -1277,7 +1272,7 @@ class PaintArea : Canvas, Undoable {
 			iRect.height -= iRect.y + iRect.height - _image.height;
 		}
 	}
-	/// TODO comment
+	/// ditto
 	const
 	private Rectangle iInImageRect(int ix, int iy, int iw, int ih) {
 		checkInit();
@@ -1350,7 +1345,7 @@ class PaintArea : Canvas, Undoable {
 		clearCache();
 		raiseSelectChangedEvent();
 	}
-	/// Reset catch frame parameters. TODO comment
+	/// Reset caught frame parameters.
 	private void resetCatchParams() {
 		_catchN = false;
 		_catchE = false;
@@ -1474,7 +1469,7 @@ class PaintArea : Canvas, Undoable {
 		return 0 <= ix && 0 <= iy && ix < _image.width && iy < _image.height;
 	}
 
-	/// Is chacked frame of selected range. TODO comment
+	/// Is cx, cy on the frame of selected range? (Control coordinates)
 	private void cIsCatchedFocus(int cx, int cy, out bool n, out bool e, out bool s, out bool w) {
 		checkInit();
 		n = false;
@@ -1519,7 +1514,7 @@ class PaintArea : Canvas, Undoable {
 		w = cRect.contains(cx, cy);
 	}
 
-	/// If coordinates can draw, returns true. TODO comment
+	/// If coordinate can draw, returns true. (Image coordinate)
 	private bool iCanDraw(int ix, int iy, size_t layer) {
 		if (iMask(ix, iy, layer)) return false;
 		if (_tone && 0 < _tone.length) {
@@ -1529,12 +1524,12 @@ class PaintArea : Canvas, Undoable {
 		return true;
 	}
 
-	/// If coordinates masked, returns true. TODO comment
+	/// If coordinate is masked, returns true. (Image coordinate)
 	private bool iMask(int ix, int iy, size_t layer) {
 		return _mask[iGetPixel(ix, iy, layer)];
 	}
 
-	/// Sets pixel of current layer.
+	/// Sets one pixel of current layer.
 	/// This method uses image coordinates.
 	private void iSetPixels(int ix, int iy) {
 		iSetPixels(ix, iy, _pixel);
@@ -1611,7 +1606,7 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		pointsOfPath(dlg, _mode, _iCurFrom.x, _iCurFrom.y, _iCurTo.x, _iCurTo.y, _image.width, _image.height, _iCurSize);
 	}
-	/// Calls dlg(X, Y) with fill of rectangle. TODO comment
+	/// Calls dlg(X, Y) with each coordinates in rectangle.
 	private void iFillRect(void delegate(int ix, int iy) dlg, Rectangle ia) {
 		iFillRect(dlg, ia.x, ia.y, ia.width, ia.height);
 	}
@@ -1621,7 +1616,7 @@ class PaintArea : Canvas, Undoable {
 			ix, iy, ix + iw - 1, iy + ih - 1, _image.width, _image.height, 1);
 	}
 
-	/// Draws paste layer. TODO comment
+	/// Draws paste source layer.
 	private void pushPasteLayer(ImageData dest, size_t pLayerIndex, size_t layer) {
 		enforce(_pasteLayer);
 		checkWidget();
@@ -1656,7 +1651,7 @@ class PaintArea : Canvas, Undoable {
 		}
 	}
 
-	/// Deletes cache of showingIamge(). TODO comment
+	/// Clears cache for showingIamge().
 	private void clearCache() {
 		foreach (ref c; _cache) {
 			if (c) {
@@ -1666,7 +1661,7 @@ class PaintArea : Canvas, Undoable {
 		}
 		_cache.length = _image.layerCount;
 	}
-	/// Creates showing image. TODO comment
+	/// Creates an image to be showing.
 	private Image showingImage(size_t layer, bool oneLayer) {
 		checkWidget();
 		checkInit();
@@ -1689,13 +1684,13 @@ class PaintArea : Canvas, Undoable {
 			int tPixel = (0 == layer) ? _backPixel : 0;
 			foreach (ix; 0 .. _image.width) {
 				foreach (iy; 0 .. _image.height) {
-					// Fill background pixel to area before move. TODO comment
+					// Fill background pixel to area before move.
 					if (selLayer[layer] && _iMoveRange.contains(ix, iy)) {
 						data.setPixel(ix, iy, tPixel);
 						continue;
 					}
 					int pixel = l.getPixel(ix, iy);
-					// Pixel 0 in layer not first is transparent. TODO comment
+					// In other than first layer, pixel 0 is transparent.
 					if (0 == layer || 0 != pixel) {
 						data.setPixel(ix, iy, pixel);
 					} else {
@@ -1714,7 +1709,7 @@ class PaintArea : Canvas, Undoable {
 			}
 			pushPasteLayer(data, pLayerIndex, layer);
 		} else if (!_rangeSel && 1 == _mouseDown) {
-			/// Draws cursor in painting. TODO comment
+			/// Draws cursor in drawing.
 			if (_mode is PaintMode.FreePath) {
 				// Unnecessary. After painted.
 			} else {
@@ -1824,7 +1819,7 @@ class PaintArea : Canvas, Undoable {
 					if (ccs <= 4) {
 						e.gc.fillRectangle(ixtocx(ix), iytocy(iy), ccs, ccs);
 					} else {
-						// TODO comment
+						// Draws cursor square.
 						if (ix == ix1) {
 							e.gc.fillRectangle(ixtocx(ix), iytocy(iy), 2, ccs);
 						}
@@ -1895,7 +1890,7 @@ class PaintArea : Canvas, Undoable {
 			_iCurTo.x = ix;
 			_iCurTo.y = iy;
 			if (_rangeSel) {
-				// Resizes selected range. TODO comment
+				// Resizes selection range.
 				if (_catchN || _catchE || _catchS || _catchW) {
 					static void catchCommon(ref int isx, ref int isw, bool catchE, bool catchW,
 							int iCatchX, int iCurToX, int iOldX, int iOldW, int imgWidth) {
@@ -1918,7 +1913,7 @@ class PaintArea : Canvas, Undoable {
 					catchCommon(_iSelRange.y, _iSelRange.height, _catchS, _catchN,
 						_iCatchY, _iCurTo.y, _iOldSelRange.y, _iOldSelRange.height, _image.height);
 				} else {
-					// Selects range. TODO comment
+					// Selects range.
 					_iSelRange.x = min(_iCurFrom.x, _iCurTo.x);
 					_iSelRange.y = min(_iCurFrom.y, _iCurTo.y);
 					_iSelRange.width = max(_iCurFrom.x, _iCurTo.x) - _iSelRange.x;
@@ -1949,7 +1944,7 @@ class PaintArea : Canvas, Undoable {
 		} else {
 			if (_pasteLayer) return;
 			if (_rangeSel) {
-				// TODO comment
+				// Set cursor according to state.
 				bool no, ea, so, we;
 				cIsCatchedFocus(e.x, e.y, no, ea, so, we);
 				auto d = this.p_display;
@@ -2008,7 +2003,7 @@ class PaintArea : Canvas, Undoable {
 				bool no, ea, so, we;
 				cIsCatchedFocus(e.x, e.y, no, ea, so, we);
 				if (no || ea || so || we) {
-					// Catching frame of selected range. TODO comment
+					// Catches frame of selection range.
 					_catchN = no;
 					_catchE = ea;
 					_catchS = so;
@@ -2023,7 +2018,7 @@ class PaintArea : Canvas, Undoable {
 				}
 				auto ca = cCursorArea;
 				if (ca.contains(e.x, e.y)) {
-					// Start move. TODO comment
+					// Starts move of selection range.
 					_moving = false;
 					auto ia = iCursorArea;
 					_pasteLayer = _image.createMLImage(ia, _layers);
@@ -2044,7 +2039,7 @@ class PaintArea : Canvas, Undoable {
 			} else {
 				int ifx = _iCurFrom.x;
 				int ify = _iCurFrom.y;
-				// Start draw. TODO comment
+				// Starts drawing.
 				// Only FreePath and Fill paints before mouse up.
 				if (_mode is PaintMode.FreePath) {
 					int ix = cxtoix(e.x);
@@ -2062,7 +2057,7 @@ class PaintArea : Canvas, Undoable {
 					redrawCursorArea();
 					drawReceivers.raiseEvent();
 				} else if (_mode is PaintMode.Fill && iInImage(ifx, ify)) {
-					// Fills area. TODO comment
+					// Fills area.
 					foreach (l; _layers) {
 						int pixel = iGetPixel(_iCurFrom.x, _iCurFrom.y, l);
 						if (pixel != _pixel) {
@@ -2108,7 +2103,7 @@ class PaintArea : Canvas, Undoable {
 			_mouseDown = -1;
 			if (_pasteLayer) return;
 			if (_rangeSel) {
-				// No draws. TODO comment
+				// Don't draws.
 				return;
 			}
 			scope (exit) {
@@ -2127,6 +2122,7 @@ class PaintArea : Canvas, Undoable {
 			drawReceivers.raiseEvent();
 			break;
 		case 3:
+			// Do dropper.
 			scope (exit) this.p_cursor = cursorNow;
 			_mouseDown = -1;
 			if (cInImage(e.x, e.y)) {
@@ -2152,7 +2148,7 @@ class PaintArea : Canvas, Undoable {
 		}
 	}
 
-	/// Changes zoom parameter. TODO comment
+	/// Change zoom magnification.
 	private void onMouseWheel(Event e) {
 		checkWidget();
 		if (0 == e.count) return;
@@ -2200,19 +2196,19 @@ class PaintArea : Canvas, Undoable {
 		return CPoint(cw, ch);
 	}
 
-	/// Data object for undo. TODO comment
+	/// A data object for undo.
 	private static class StoreData {
-		/// Selected layers. TODO comment
+		/// Selection layers.
 		size_t[] layers;
-		/// Store data of MLImage. TODO comment
+		/// StoreData of MLImage.
 		Object image = null;
-		/// Paste layer. TODO comment
+		/// Paste source layer.
 		MLImage pasteLayer = null;
-		/// Paste coordinates. TODO comment
+		/// Coordinates of paste source.
 		int iPasteX = 0;
 		/// ditto
 		int iPasteY = 0;
-		/// Move base coordinate. TODO comment
+		/// Range of moving.
 		int iMoveX = 0;
 		/// ditto
 		int iMoveY = 0;
@@ -2220,7 +2216,7 @@ class PaintArea : Canvas, Undoable {
 		int iMoveW = 0;
 		/// ditto
 		int iMoveH = 0;
-		/// Background mode.
+		/// Is enabled background color?
 		bool enabledBackColor = false;
 		/// Background pixel.
 		int backPixel = 0;
@@ -2271,19 +2267,19 @@ class PaintArea : Canvas, Undoable {
 	}
 }
 
-/// This class is previewer for image. TODO comment
+/// This class is previewer for image.
 class PaintPreview : Canvas {
-	/// Preview paint area. TODO comment
+	/// Preview this area.
 	private PaintArea _paintArea = null;
 
-	/// Coordinates of left and top of preview area. TODO comment
+	/// Coordinates of left top of preview area.
 	private int _px = 0, _py = 0;
 
 	/// Is mouse button downing?
 	private bool _mouseDown = false;
-	/// Mouse downed coordinates. TODO comment
+	/// Mouse downed coordinates.
 	private int _mx = -1, _my = -1;
-	/// When mouse downed preview area coordinates. TODO comment
+	/// Coordinates of when mouse downed.
 	private int _mpx = 0, _mpy = 0;
 
 	/// The only constructor.
@@ -2297,7 +2293,7 @@ class PaintPreview : Canvas {
 		this.bindListeners();
 	}
 
-	/// Sets preview target image. TODO comment
+	/// Sets preview target image.
 	void init(PaintArea paintArea) {
 		checkWidget();
 		if (_paintArea) {
@@ -2326,7 +2322,7 @@ class PaintPreview : Canvas {
 		redraw();
 	}
 
-	/// TODO comment
+	/// This method is called when resizing.
 	private void resizeReceiver() {
 		if (!_paintArea || _paintArea.image.empty) {
 			return;
@@ -2371,7 +2367,7 @@ class PaintPreview : Canvas {
 		}
 	}
 
-	/// Draws image. TODO comment
+	/// Draws image preview.
 	private void onPaint(Event e) {
 		checkWidget();
 		auto ca = this.p_clientArea;
@@ -2410,7 +2406,7 @@ class PaintPreview : Canvas {
 		}
 	}
 
-	/// Moves preview range. TODO comment
+	/// Moves preview range.
 	private void onMouseMove(Event e) {
 		if (!_paintArea || _paintArea.image.empty) {
 			return;
@@ -2487,25 +2483,25 @@ class PaintPreview : Canvas {
 	}
 }
 
-/// Layer list for PaintArea. TODO comment
+/// List of layers for PaintArea.
 class LayerList : Canvas {
-	/// One layer height of view. TODO comment
+	/// Height of a layer view of one.
 	private static const LAYER_H = 60;
 
-	/// Preview paint area. TODO comment
+	/// Show layers of this paintArea.
 	private PaintArea _paintArea = null;
 
-	/// Bounds of name area. TODO comment
+	/// Bounds of name area.
 	private PBounds[] _nameBounds;
-	/// Bounds of check for visible. TODO comment
+	/// Bounds of checkbox for visibility.
 	private PBounds[] _vCheckBounds;
 
-	/// Editor for layer name. TODO comment
+	/// Editor for layer name.
 	private Editor _editor;
-	/// Index of layer editing name. TODO comment
+	/// Index of layer in editing name.
 	private size_t _editing = 0;
 
-	/// Undo manager. TODO comment
+	/// Manager of undo and redo operation.
 	private UndoManager _um = null;
 
 	/// The only constructor.
@@ -2525,7 +2521,7 @@ class LayerList : Canvas {
 		this.bindListeners();
 	}
 
-	/// Undo manager. TODO comment
+	/// Manager of undo and redo operation.
 	@property
 	void undoManager(UndoManager um) { _um = um; }
 	/// ditto
@@ -2533,7 +2529,7 @@ class LayerList : Canvas {
 	const
 	const(UndoManager) undoManager() { return _um; }
 
-	/// Calculates parameters of scroll bars. TODO comment
+	/// Calculates parameters of scrollbars.
 	private void calcScrollParams() {
 		if (!_paintArea || _paintArea.image.empty) {
 			return;
@@ -2562,7 +2558,7 @@ class LayerList : Canvas {
 		calcScrollParams();
 	}
 
-	/// Sets preview target image. TODO comment
+	/// Sets preview target image.
 	void init(PaintArea paintArea) {
 		checkWidget();
 		_editor.cancel();
@@ -2581,7 +2577,7 @@ class LayerList : Canvas {
 		changedLayerReceiver();
 	}
 
-	/// Gets layer index from coordinates. TODO comment
+	/// Gets layer index from coordinates.
 	int indexOf(int x, int y) {
 		if (!_paintArea || _paintArea.image.empty) {
 			return -1;
@@ -2598,7 +2594,7 @@ class LayerList : Canvas {
 		return i;
 	}
 
-	/// Edit layer name. TODO comment
+	/// Edit layer name.
 	void editLayerName(size_t l) {
 		if (!_paintArea || _paintArea.image.empty) {
 			return;
@@ -2635,7 +2631,7 @@ class LayerList : Canvas {
 		}
 	}
 
-	/// Draws layer list. TODO comment
+	/// Draws layers list.
 	private void onPaint(Event e) {
 		if (!_paintArea || _paintArea.image.empty) {
 			return;
@@ -2666,17 +2662,17 @@ class LayerList : Canvas {
 				scope (exit) img.dispose();
 
 				if (selLayer[l]) {
-					// Draws selection mark. TODO comment
+					// Draws selection mark.
 					e.gc.p_background = d.getSystemColor(SWT.COLOR_DARK_BLUE);
 					e.gc.fillRectangle(0, y, ca.width, LAYER_H + 2);
-					// color of name text. TODO comment
+					// color of name text.
 					e.gc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
 				} else {
-					// color of name text. TODO comment
+					// color of name text.
 					e.gc.p_foreground = d.getSystemColor(SWT.COLOR_BLACK);
 				}
 
-				// Draws name. TODO comment
+				// Draws layer name.
 				string name = layer.name;
 				int tx = w + 2;
 				int ty = y;
@@ -2686,7 +2682,7 @@ class LayerList : Canvas {
 				auto ts = e.gc.textExtent(name);
 				_nameBounds[l] = PBounds(tx, ty, max(10, ts.x), th);
 
-				// Draws check box of visible. TODO comment
+				// Draws checkbox of visibility.
 				static const V_CHECK_W = 20;
 				static const V_CHECK_H = 15;
 				int vx = tx;
@@ -2702,7 +2698,7 @@ class LayerList : Canvas {
 				}
 				_vCheckBounds[l] = PBounds(vx, vy, V_CHECK_W, V_CHECK_H);
 
-				// Draws image preview. TODO comment
+				// Draws image preview.
 				if (LAYER_H < ib.height) {
 					e.gc.drawImage(img, ib.x, ib.y, ib.width, ib.height, 1, y + 1, w, LAYER_H);
 				} else {
@@ -2730,7 +2726,7 @@ class LayerList : Canvas {
 			break;
 		}
 	}
-	/// Changes selected layers. TODO comment
+	/// Change selection.
 	private void onKeyDown(Event e) {
 		checkWidget();
 		auto sels =  _paintArea.selectedLayers;
@@ -2804,7 +2800,7 @@ class LayerList : Canvas {
 		auto info = _paintArea.selectedInfo;
 		if (reverse) {
 			info[l] = !info[l];
-			// Require one layer select. TODO comment
+			// Must selected one layer least.
 			foreach (b; info) {
 				if (b) {
 					_paintArea.selectedInfo = info;

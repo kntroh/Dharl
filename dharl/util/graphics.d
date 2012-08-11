@@ -21,8 +21,7 @@ enum PaintMode {
 	Fill, /// Fill same color area.
 }
 
-/// If enabled size parameter of pointsOfPath() at mode,
-/// returns true. TODO comment
+/// If pointsOfPath() is using size parameter by mode, returns true.
 bool isEnabledSize(PaintMode mode) {
 	return PaintMode.Fill != mode;
 }
@@ -40,7 +39,7 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 	if (0 == size) return;
 
 	int s = size - 1;
-	// Calls dlg with X, Y and it around. TODO comment
+	// Calls dlg on around x, y.
 	void around(int x, int y) {
 		assert (isEnabledSize(mode));
 		if (1 == size) {
@@ -117,7 +116,7 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 	final switch (mode) {
 	case PaintMode.FreePath, PaintMode.Straight:
 		if (y1 == y2) {
-			// horizontal TODO comment
+			// horizontal
 			int ss = size * 2 - 1;
 			assert (ss >= 1);
 			int to = min(cast(int) (w - (size - 1)), mxx);
@@ -127,7 +126,7 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 			}
 			if (x - ss < to) around(to, y2);
 		} else if (x1 == x2) {
-			// vertical TODO comment
+			// vertical
 			int ss = size * 2 - 1;
 			assert (ss >= 1);
 			int to = min(cast(int) (h - (size - 1)), mxy);
@@ -137,7 +136,7 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 			}
 			if (y - ss < to) around(x2, to);
 		} else {
-			// slashed TODO comment
+			// diagonal line
 			size_t len = max(mxx - mnx, mxy - mny);
 			// from
 			around(x1, y1);
@@ -224,7 +223,7 @@ void pointsOfFill(void delegate(int, int) dlg, bool delegate(int, int) onFillAre
 	if (sx < 0 || w <= sx) return;
 	if (sy < 0 || h <= sy) return;
 
-	auto did = new bool[h * w]; // TODO comment
+	auto did = new bool[h * w]; // Information of completed.
 
 	// Scans from left of X coordinates to right.
 	// A scanning stops when colliding
@@ -514,19 +513,20 @@ void medianCut(ref CRGB[] colors, size_t countOfTarget) {
 	}
 }
 
-// TODO comment
+// Sorted collection of color. Implemented by octree.
 class ColorTree {
-	/// Index of return value of sortedColors(). TODO comment
+	/// Index of return value of sortedColors().
 	private size_t _index;
-	/// Node level. TODO comment
+	/// Level of node.
 	private ubyte _level;
-	/// This node have color. TODO comment
+	/// Color of this node.
 	private CRGB _color;
-	/// Sub nodes. TODO comment
+	/// Sub nodes.
 	private ColorTree[8] _node;
-	/// All colors sorted. TODO comment
+	/// Sorted colors.
 	private CRGB[] _sorted = null;
-	/// Creates color tree. TODO comment
+
+	/// Creates color tree.
 	this (const(CRGB[]) colors, bool sort) {
 		enforce(colors.length);
 		_index = 0;
@@ -542,12 +542,13 @@ class ColorTree {
 			sortedColorsImpl(_sorted, index);
 		}
 	}
-	/// Creates node. TODO comment
+	/// Creates node of color tree.
 	private this (ubyte level, ref const(CRGB) color, size_t index) {
 		_level = level;
 		_color = color;
 		_index = index;
 	}
+
 	/// Calculates index of _node.
 	private size_t nodeIndex(ref const(CRGB) color)
 	out (result) {
@@ -561,7 +562,8 @@ class ColorTree {
 		assert (r <= 4 && g <= 2 && b <= 1);
 		return r | g | b;
 	}
-	/// Adds color. TODO comment
+
+	/// Adds node of color.
 	private bool add(ref const(CRGB) color, size_t index) {
 		if (0 != _level && _color == color) {
 			return false;
@@ -573,7 +575,8 @@ class ColorTree {
 		}
 		return _node[i].add(color, index);
 	}
-	/// Creates index of result of sortedColors(). TODO comment
+
+	/// Creates index of result of sortedColors().
 	private size_t createIndices(ref size_t index) {
 		if (0 != _level) {
 			_index = index;
@@ -586,7 +589,8 @@ class ColorTree {
 		}
 		return index;
 	}
-	/// Gets sorted array of color. TODO comment
+
+	/// Gets sorted array of colors.
 	@property
 	CRGB[] sortedColors() {
 		return _sorted;
@@ -602,7 +606,8 @@ class ColorTree {
 			}
 		}
 	}
-	/// Search color. TODO comment
+	/// Finds and returns index of color.
+	/// If not found, returns index of closest matching color.
 	size_t searchLose(ref const(CRGB) color) {
 		if (0 != _level && _color == color) {
 			return _index;
@@ -628,7 +633,7 @@ class ColorTree {
 	}
 }
 
-/// TODO comment
+/// Flips image data horizontally or vertically.
 void mirror(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
@@ -661,7 +666,7 @@ void flip(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel)
 	}
 }
 
-/// TODO comment
+/// ditto
 void mirrorRange(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
@@ -674,7 +679,7 @@ void mirrorRange(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T
 	}
 }
 /// ditto
-void mirrorRange(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
+void fripRange(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
 	enforce(0 <= h);
@@ -686,7 +691,8 @@ void mirrorRange(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T
 	}
 }
 
-/// TODO comment
+/// Moves image data in each direction.
+/// Rotates a pixel of bounds.
 void rotateRight(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
@@ -743,7 +749,7 @@ void rotateDown(T)(T delegate(int x, int y) pget, void delegate(int x, int y, T 
 	}
 }
 
-/// Resize image. TODO comment
+/// Resizes image data.
 void resize(T)(int rw, int rh, T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		int sx, int sy, int w, int h) {
 	enforce(0 <= w);
@@ -793,7 +799,7 @@ void resize(T)(int rw, int rh, T delegate(int x, int y) pget, void delegate(int 
 	}
 }
 
-/// Turn image. TODO comment
+/// Turns image data.
 void turn(T)(real r, T delegate(int x, int y) pget, void delegate(int x, int y, T pixel) pset,
 		ref int sx, ref int sy, ref int w, ref int h) {
 	enforce(0 <= w);

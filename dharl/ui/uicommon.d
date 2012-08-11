@@ -1,5 +1,5 @@
 
-/// This module includes functions related to Common. TODO comment
+/// This module includes functions related to user interface.
 module dharl.ui.uicommon;
 
 private import dharl.common;
@@ -12,12 +12,12 @@ private import java.io.ByteArrayInputStream;
 
 private import org.eclipse.swt.all;
 
-/// Creates image from dimg. TODO comment
+/// Creates image from dimg.
 Image cimg(in DImage dimg) {
 	return cimgImpl!Image(dimg, 0, 0);
 }
 
-/// Creates cursor from dimg. TODO comment
+/// Creates cursor from dimg.
 Cursor ccur(in DImage dimg, int hotspotX, int hotspotY) {
 	return cimgImpl!Cursor(dimg, hotspotX, hotspotY);
 }
@@ -30,10 +30,10 @@ private T cimgImpl(T)(in DImage dimg, int hotspotX, int hotspotY) {
 	auto d2 = Display.getCurrent();
 	if (!d2) return null;
 
-	static Display d = null; // The display. TODO comment
-	static T[string] table = null; // Image table at display. TODO comment
+	static Display d = null; // The display.
+	static T[string] table = null; // Table of image in each display.
 
-	// Disposes all images and clears table. TODO comment
+	// Disposes all images and clears table.
 	void clear() {
 		if (!table) return;
 		foreach (id, img; table) {
@@ -43,7 +43,7 @@ private T cimgImpl(T)(in DImage dimg, int hotspotX, int hotspotY) {
 	}
 
 	if (d2 !is d) {
-		// Created new display . TODO comment
+		// A new display created.
 		d = d2;
 		typeof(table) newTable;
 		table = newTable;
@@ -56,7 +56,7 @@ private T cimgImpl(T)(in DImage dimg, int hotspotX, int hotspotY) {
 
 	auto p = dimg.id in table;
 	if (p) return *p;
-	// Creates image from bytes. TODO comment
+	// Creates image from bytes.
 	auto inp = new ByteArrayInputStream(cast(byte[]) dimg.data);
 	auto data = new ImageData(inp);
 	data.transparentPixel = 0;
@@ -69,7 +69,7 @@ private T cimgImpl(T)(in DImage dimg, int hotspotX, int hotspotY) {
 	return img;
 }
 
-/// Creates tone icon. TODO comment
+/// Creates tone icon.
 ImageData toneIcon(in bool[][] tone, uint w, uint h) {
 	enforce(0 < w);
 	enforce(0 < h);
@@ -79,7 +79,7 @@ ImageData toneIcon(in bool[][] tone, uint w, uint h) {
 	if (!tone || 0 == tone.length) {
 		return image;
 	}
-	// out frame TODO comment
+	// border of icon
 	foreach (y; 0 .. h) {
 		if (0 == y || h - 1 == y) {
 			foreach (x; 0 .. w) {
@@ -90,7 +90,7 @@ ImageData toneIcon(in bool[][] tone, uint w, uint h) {
 			image.setPixel(w - 1, y, 1);
 		}
 	}
-	// tone TODO comment
+	// tone
 	foreach (y; 2 .. h - 2) {
 		auto ln = tone[(y - 2) % $];
 		if (!ln || !ln.length) continue;

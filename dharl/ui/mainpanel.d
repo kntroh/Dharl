@@ -47,9 +47,9 @@ private class PImageParams {
 
 /// The main panel for dharl.
 class MainPanel : Composite {
-	/// Status changed receivers. TODO comment
+	/// Receivers of status changed event.
 	void delegate()[] statusChangedReceivers;
-	/// Selected receivers. TODO comment
+	/// Receivers of selected event.
 	void delegate()[] selectedReceivers;
 
 	private DCommon _c = null;
@@ -107,7 +107,7 @@ class MainPanel : Composite {
 			auto rgb = _colorSlider.color;
 			if (rgb == _paletteView.color(pixel)) return;
 
-			// TODO comment
+			// Stores palette data of image on paintArea and imageList.
 			Undoable[] us = [_paletteView];
 			int sel = _imageList.selectedIndex;
 			if (-1 != sel) {
@@ -115,6 +115,7 @@ class MainPanel : Composite {
 			}
 			_um.store(us, null, "Slide color");
 
+			// Reflects color.
 			_paletteView.color(pixel, rgb);
 			_paintArea.color(pixel, rgb);
 			if (-1 != sel) {
@@ -220,58 +221,58 @@ class MainPanel : Composite {
 		enforce(_c, new Exception("MainPanel is no initialized.", __FILE__, __LINE__));
 	}
 
-	/// Creates paint area and palette. TODO comment
+	/// Creates controls of paint area and palette.
 	private void constructPaintArea(Composite parent, UndoManager um) {
 		checkWidget();
 		checkInit();
 
-		// TODO comment
+		// Splitter of paint area and palette.
 		auto ppSash = basicSashForm(parent, SWT.VERTICAL);
 		scope (exit) setRefWeights(paintSash, _c.conf.weightsPaint_Preview.value);
 
-		// TODO comment
+		// Splitter of paintArea and tools.
 		auto paintSash = basicSashForm(ppSash, SWT.HORIZONTAL);
 		scope (exit) setRefWeights(ppSash, _c.conf.weightsPaint_Palette.value);
 
-		// TODO comment
+		// Splitter of preview and toolbar.
 		auto ptSash = basicSashForm(paintSash, SWT.VERTICAL);
 		scope (exit) setRefWeights(ptSash, _c.conf.weightsPreview_Tools.value);
 
-		// TODO comment
+		// Preview of image in drawing.
 		_paintPreview = new PaintPreview(ptSash, SWT.BORDER | SWT.DOUBLE_BUFFERED);
 		_paintPreview.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING);
 
-		// TODO comment
+		// Area of drawing.
 		_paintArea = new PaintArea(paintSash, SWT.BORDER | SWT.DOUBLE_BUFFERED);
 		_paintArea.p_layoutData = GD(GridData.FILL_BOTH).hSpan(2);
 		_paintArea.undoManager = um;
 
 		constructModeToolBar(ptSash);
 
-		// TODO comment
+		// Composite for controls related to color.
 		auto comp = basicComposite(ppSash, GL.window(3, false));
 
-		// TODO comment
+		// Slider for changing color.
 		_colorSlider = new ColorSlider(comp, SWT.VERTICAL);
 		_colorSlider.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING).vSpan(2);
 		auto css = _colorSlider.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 
-		// TODO comment
+		// Viewer of palette.
 		_paletteView = new PaletteView(comp, SWT.BORDER | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
 		_paletteView.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING).vSpan(3);
 
-		// TODO comment
+		// Drawing tools.
 		auto lToolBar = basicToolBar(comp);
 		lToolBar.p_layoutData = GD(GridData.FILL_HORIZONTAL);
 		basicToolItem(lToolBar, _c.text.menu.addLayer, cimg(_c.image.addLayer), &addLayer);
 		basicToolItem(lToolBar, _c.text.menu.removeLayer, cimg(_c.image.removeLayer), &removeLayer);
 
-		// TODO comment
+		// List of layers.
 		_layerList = new LayerList(comp, SWT.BORDER | SWT.DOUBLE_BUFFERED);
 		_layerList.p_layoutData = GD(GridData.FILL_BOTH).vSpan(2);
 		_layerList.undoManager = um;
 
-		// TODO comment
+		// Tools for color control.
 		auto pToolBar = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
 		pToolBar.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING);
 		basicToolItem(pToolBar, _c.text.menu.createGradation,
@@ -292,7 +293,7 @@ class MainPanel : Composite {
 		statusChangedReceivers ~= &refreshPaletteMenu;
 		refreshPaletteMenu();
 
-		// Initializes widgets.
+		// Initializes controls.
 		auto cs = _c.conf.character;
 		_paintArea.init(cs.width, cs.height, _paletteView.createPalette());
 		_paintArea.zoom = 1;
@@ -310,10 +311,10 @@ class MainPanel : Composite {
 		_layerList.init(_paintArea);
 		_colorSlider.color = _paletteView.color(_paletteView.pixel1);
 
-		// TODO comment
+		// Stores image data for undo operation.
 		_pushBase = _paintArea.image.storeData;
 	}
-	/// Creates paint mode tool bar. TODO comment
+	/// Creates paint mode toolbar.
 	private void constructModeToolBar(Composite parent) {
 		auto comp = basicComposite(parent, GL.noMargin(2, false));
 		void createSeparator() {
@@ -325,7 +326,7 @@ class MainPanel : Composite {
 			label.p_layoutData = GD(GridData.FILL_HORIZONTAL);
 		}
 
-		// Creates paint mode tool bar. TODO comment
+		// Creates paint mode toolbar.
 		ToolItem[PaintMode] modeItems;
 		auto mToolBar = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
 		mToolBar.p_layoutData = GD(GridData.FILL_HORIZONTAL).wHint(0).hSpan(2);
@@ -335,13 +336,13 @@ class MainPanel : Composite {
 			}, SWT.RADIO);
 			modeItems[mode] = mt;
 		}
-		// Selection mode. TODO comment
+		// Selection mode.
 		ToolItem tSel;
 		tSel = basicToolItem(mToolBar, _c.text.menu.selection, cimg(_c.image.selection), {
 			_paintArea.rangeSelection = tSel.p_selection;
 		}, SWT.RADIO, _paintArea.rangeSelection);
 
-		// Paint mode. TODO comment
+		// Paint mode.
 		createModeItem(_c.text.menu.freePath, cimg(_c.image.freePath), PaintMode.FreePath);
 		createModeItem(_c.text.menu.straight, cimg(_c.image.straight), PaintMode.Straight);
 		createModeItem(_c.text.menu.ovalLine, cimg(_c.image.ovalLine), PaintMode.OvalLine);
@@ -362,7 +363,7 @@ class MainPanel : Composite {
 
 		createSeparator();
 
-		// Tones tool bar. TODO comment
+		// Toolbar of tones.
 		_tones = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
 		_tones.p_layoutData = GD(GridData.FILL_HORIZONTAL).wHint(0).hSpan(2);
 
@@ -375,7 +376,7 @@ class MainPanel : Composite {
 
 		createSeparator();
 
-		// Zoom and line width. TODO comment
+		// Zoom and line width.
 		createLabel(_c.text.zoom);
 		auto zoom = basicSpinner(comp, 1, PaintArea.ZOOM_MAX);
 		zoom.listeners!(SWT.Selection) ~= {
@@ -392,7 +393,7 @@ class MainPanel : Composite {
 		}
 		statusChangedReceivers ~= &refreshZoomAndLineWidth;
 	}
-	/// Refreshs tones tool bar. TODO comment
+	/// Updates tones toolbar.
 	private void refreshTonesToolBar() {
 		enforce(_tones);
 		checkWidget();
@@ -407,7 +408,7 @@ class MainPanel : Composite {
 			}, SWT.RADIO, tone.value == _paintArea.tone);
 		}
 	}
-	/// Clears tones tool bar. TODO comment
+	/// Clears tones toolbar.
 	private void clearTonesToolBar() {
 		enforce(_tones);
 		checkWidget();
@@ -419,14 +420,14 @@ class MainPanel : Composite {
 		}
 	}
 
-	/// Creates image list. TODO comment
+	/// Creates imageList.
 	private void constructImageList(Composite parent, UndoManager um) {
 		checkWidget();
 		checkInit();
 		_imageList = new PImageList(parent, SWT.BORDER | SWT.DOUBLE_BUFFERED);
 	}
 
-	/// Paint area. TODO comment
+	/// Area of drawing.
 	@property
 	PaintArea paintArea() {
 		checkWidget();
@@ -434,7 +435,7 @@ class MainPanel : Composite {
 		return _paintArea;
 	}
 
-	/// Undo manager. TODO comment
+	/// Manager of undo and redo operation.
 	@property
 	UndoManager undoManager() {
 		checkWidget();
@@ -442,14 +443,14 @@ class MainPanel : Composite {
 		return _um;
 	}
 
-	/// Gets selected index at image list. TODO comment
+	/// Gets selection index at imageList.
 	@property
 	const
 	int selectedIndex() {
 		checkInit();
 		return _imageList.selectedIndex;
 	}
-	/// Gets image name. TODO comment
+	/// Gets image name at index.
 	string imageName(size_t index) {
 		checkWidget();
 		checkInit();
@@ -457,7 +458,7 @@ class MainPanel : Composite {
 		assert (params);
 		return params.name;
 	}
-	/// Gets base file path of image at index. TODO comment
+	/// Gets base file path of image at index.
 	string imagePath(size_t index) {
 		checkWidget();
 		checkInit();
@@ -466,7 +467,7 @@ class MainPanel : Composite {
 		return params.path;
 	}
 
-	/// TODO comment
+	/// Notify modify of image.
 	private void modified(PImageItem item) {
 		checkWidget();
 		checkInit();
@@ -481,7 +482,7 @@ class MainPanel : Composite {
 		}
 	}
 
-	/// Creates new image. TODO comment
+	/// Creates new image.
 	void createNewImage(int width, int height, bool copyPalette) {
 		checkWidget();
 		checkInit();
@@ -494,7 +495,8 @@ class MainPanel : Composite {
 		img.addLayer(_c.text.newLayer);
 		loadImage(img, _c.text.noName, "", 8, false);
 	}
-	/// Loads image from a file. A loaded image adds image list. TODO comment
+	/// Loads image from a file.
+	/// A loaded image adds to image list.
 	bool loadImage() {
 		checkWidget();
 		checkInit();
@@ -533,13 +535,13 @@ class MainPanel : Composite {
 		checkWidget();
 		checkInit();
 		if (_paintArea.empty) {
-			// Creates first layer. TODO comment
+			// Creates first layer.
 			_paintArea.addLayer(_c.text.newLayer);
 		}
 		auto pi = new PImageItem(_imageList, SWT.NONE);
 		pi.p_text = name;
 		pi.image = img;
-		pi.toolTip = path;
+		pi.toolTip = path; // Sets tool tip hint (fullpath of file).
 
 		auto params = new PImageParams;
 		params.saved = saved;
@@ -555,8 +557,8 @@ class MainPanel : Composite {
 		};
 		size_t index = _imageList.imageCount - 1;
 
-		// Sets tool tip hint (full-path). TODO comment
-		// Selects load image now. TODO comment
+		
+		// Selects loaded image.
 		selectImage(index);
 		_imageList.showSelection();
 
@@ -575,8 +577,7 @@ class MainPanel : Composite {
 	}
 
 	/// Saves image to a file.
-	/// Switchs image type from the extention. TODO comment
-	/// bmp, png.
+	/// Switch image type by extention (bmp, png).
 	bool saveImageWithName() {
 		checkWidget();
 		checkInit();
@@ -688,7 +689,7 @@ class MainPanel : Composite {
 		return false;
 	}
 
-	/// Saves all image. TODO comment
+	/// Saves all image.
 	bool saveAll() {
 		checkWidget();
 		checkInit();
@@ -737,7 +738,7 @@ class MainPanel : Composite {
 		statusChangedReceivers.raiseEvent();
 	}
 
-	/// Selects image in image list from index. TODO comment
+	/// Selects image in imageList by index.
 	void selectImage(int index) {
 		checkWidget();
 		checkInit();
@@ -762,7 +763,8 @@ class MainPanel : Composite {
 		selectedReceivers.raiseEvent();
 	}
 
-	/// Paint area can close is returns true. TODO comment
+	/// If can close the paintArea or a image, returns true.
+	/// If modified image existed, asks save to user.
 	@property
 	bool canClosePaintArea() {
 		checkWidget();
@@ -772,7 +774,7 @@ class MainPanel : Composite {
 		int r = MessageBox.showMessageBox(_c.text.paintAreaChanged, _c.text.question, this.p_shell, DLG_STYLE);
 		return SWT.CANCEL != r;
 	}
-	/// Image at index can close is returns true. TODO comment
+	/// ditto
 	bool canCloseImage(size_t index) {
 		checkWidget();
 		checkInit();
@@ -792,7 +794,7 @@ class MainPanel : Composite {
 		return true;
 	}
 
-	/// Resize canvas. TODO comment
+	/// Resizes canvas on imageList.
 	void resizeCanvas(uint w, uint h, bool rescale) {
 		checkWidget();
 		checkInit();
@@ -823,7 +825,7 @@ class MainPanel : Composite {
 		checkInit();
 		int sel = _imageList.selectedIndex;
 
-		// TODO comment
+		// Stores palette data of image on paintArea and imageList.
 		Undoable[] us = [_paletteView];
 		if (-1 != sel) {
 			us ~= _imageList.item(sel).image;
@@ -851,10 +853,11 @@ class MainPanel : Composite {
 			}
 			return mod;
 		});
-		// ColorSlider is no change. TODO comment
+		// pixel1 or pixel2 has been selected certainly,
+		// Update of ColorSlider is not need.
 	}
 
-	/// Edit mask mode. TODO comment
+	/// Is editing color mask?
 	@property
 	const
 	bool maskMode() {
@@ -870,7 +873,7 @@ class MainPanel : Composite {
 		_paletteView.maskMode = v;
 	}
 
-	/// Layer managament. TODO comment
+	/// Layers management.
 	void addLayer() {
 		checkWidget();
 		checkInit();
@@ -884,14 +887,14 @@ class MainPanel : Composite {
 		assert (0 != ls.length);
 		_paintArea.removeLayers(ls[0], ls[$ - 1] + 1);
 	}
-	/// If paint area is changed (don't push), returns true. TODO comment
+	/// If paintArea is changed after push, returns true.
 	@property
 	const
 	bool isPaintAreaChanged() {
 		checkInit();
 		return !_paintArea.image.equalsTo(_pushBase);
 	}
-	/// If have changed (don't save) image, returns true. TODO comment
+	/// If has changed image after save, returns true.
 	bool isChanged(bool includeNewImage) {
 		checkWidget();
 		checkInit();
@@ -904,7 +907,7 @@ class MainPanel : Composite {
 		}
 		return false;
 	}
-	/// If changed (don't save) image, returns true. TODO comment
+	/// If changed image after save, returns true.
 	bool isChanged(size_t index) {
 		checkWidget();
 		checkInit();
@@ -914,7 +917,7 @@ class MainPanel : Composite {
 		assert (params);
 		return params.modify;
 	}
-	/// Gets changed (don't save) image indices. TODO comment
+	/// Gets indices of changed images after save.
 	@property
 	size_t[] changedImages() {
 		checkWidget();
@@ -930,7 +933,7 @@ class MainPanel : Composite {
 		return r;
 	}
 
-	/// Does undo or redo. TODO comment
+	/// Executes undo or redo operation.
 	void undo() {
 		checkWidget();
 		checkInit();
