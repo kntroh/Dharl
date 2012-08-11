@@ -122,49 +122,6 @@ T parseS(T)(string s, lazy T defaultValue) {
 	}
 }
 
-/// Unifies continued same element in-place.
-@property
-T[] unify(T)(ref T[] array) {
-	if (!array.length) return array;
-	size_t j = 0;
-	foreach (i; 1 .. array.length) {
-		if (array[j] != array[i]) {
-			j++;
-			array[j] = array[i];
-		}
-	}
-	array.length = j + 1;
-	return array;
-}
-
-/// Sorts elements of array in-place.
-T[] qsort(alias Less = "a < b", T)(T[] array) {
-	alias binaryFun!Less lessFun;
-	void qsortImpl(size_t f, size_t t) {
-		if (t <= f + 1) return;
-		size_t l = f;
-		size_t r = t;
-		size_t d = t - f;
-		size_t p = f + d / 2;
-		t--;
-		auto pe = array[p];
-		while (true) {
-			while (lessFun(array[f], pe)) f++;
-			while (lessFun(pe, array[t])) t--;
-			if (t <= f) break;
-			swap(array[f], array[t]);
-			t--;
-		}
-		qsortImpl(l, f);
-		qsortImpl(f + 1, r);
-	}
-	qsortImpl(0, array.length);
-	return array;
-} unittest {
-	assert (qsort([1, 4, 8, 5, 2, 3, 1]) == [1, 1, 2, 3, 4, 5, 8]);
-	assert (qsort([10, 9, 8, 7, 6, 5, 4]) == [4, 5, 6, 7, 8, 9, 10]);
-}
-
 /// Search val from in array.
 /// If val not found, this function returns the index closest to the target.
 size_t qsearchLose(alias Less = "a < b", T)(in T[] array, in T val) {

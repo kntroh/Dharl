@@ -11,6 +11,7 @@ private import dharl.ui.mlimage;
 private import dharl.ui.dwtutils;
 
 private import std.algorithm;
+private import std.array;
 private import std.conv;
 private import std.datetime;
 private import std.exception;
@@ -368,9 +369,7 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 
-		auto ls = layers.dup;
-		ls = ls.sort;
-		ls = ls.unify;
+		auto ls = layers.dup.sort().uniq().array();
 		if (_layers == ls) return;
 
 		fixPaste();

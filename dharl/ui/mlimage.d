@@ -10,6 +10,7 @@ private import util.utils;
 private import dharl.ui.dwtutils;
 
 private import std.algorithm;
+private import std.array;
 private import std.exception;
 
 private import org.eclipse.swt.all;
@@ -54,7 +55,7 @@ class MLImage : Undoable {
 		auto layer = colorReduction(image, false);
 		assert (layer.palette.colors.length == 256);
 		_layers.length = 1;
-		_layers[0].image = image;
+		_layers[0].image = layer;
 		_layers[0].name = name;
 		_layers[0].visible = true;
 		_iw = layer.width;
@@ -296,9 +297,7 @@ class MLImage : Undoable {
 		checkInit();
 		size_t[] ls = null;
 		if (layer) {
-			ls = layer.dup;
-			ls = ls.sort;
-			ls = ls.unify;
+			ls = layer.dup.sort().uniq().array();
 		}
 		auto palette = copyPalette();
 		auto data = new ImageData[ls ? ls.length : _layers.length];
@@ -364,9 +363,7 @@ class MLImage : Undoable {
 
 		size_t[] ls = null;
 		if (layer) {
-			ls = layer.dup;
-			ls = ls.sort;
-			ls = ls.unify;
+			ls = layer.dup.sort().uniq().array();
 		}
 		/// Creates new palette.
 		size_t colors = 0x1 << depth;
