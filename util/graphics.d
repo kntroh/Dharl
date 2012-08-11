@@ -809,8 +809,8 @@ void turn(T)(real deg, T delegate(int x, int y) pget, void delegate(int x, int y
 	if (isNaN(deg) || isInfinity(deg) || 0 == w || 0 == h) return;
 	auto rad = radian(deg);
 	if (0 == deg) return;
-	auto dcos = .cos(rad);
-	auto dsin = .sin(rad);
+	int dcos = cast(int) (rad.cos() * (1 << 10)); 
+	int dsin = cast(int) (rad.sin() * (1 << 10)); 
 	auto base = new T[w * h];
 	foreach (x; 0 .. w) {
 		foreach (y; 0 .. h) {
@@ -818,12 +818,14 @@ void turn(T)(real deg, T delegate(int x, int y) pget, void delegate(int x, int y
 			pset(sx + x, sy + y, backgroundPixel);
 		}
 	}
-	real cx = w / 2.0;
-	real cy = h / 2.0;
+	int cx = w / 2;
+	int cy = h / 2;
 	foreach (x; 0 .. w) {
 		foreach (y; 0 .. h) {
-			int ax = cast(int) ((x - cx) * dcos - (y - cy) * dsin + cx);
-			int ay = cast(int) ((x - cx) * dsin + (y - cy) * dcos + cy);
+			int xmcx = x - cx;
+			int ymcy = y - cy;
+			int ax = ((xmcx * dcos - ymcy * dsin) >> 10) + cx;
+			int ay = ((xmcx * dsin + ymcy * dcos) >> 10) + cy;
 			int xx = sx + ax;
 			int yy = sy + ay;
 			if (sx <= xx && ax < w && sy <= yy && ay < h) {
