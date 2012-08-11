@@ -218,91 +218,65 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 /// Params:
 ///  onFillArea = This function receives X, Y
 ///               and returns true if it is fill area.
-void pointsOfFill(void delegate(int, int) dlg, bool delegate(int, int) onFillArea, int sx, int sy, size_t w, size_t h) {
+void pointsOfFill(void delegate(int x, int y) dlg, bool delegate(int x, int y) onFillArea, int sx, int sy, size_t w, size_t h) {
 	if (!onFillArea(sx, sy)) return;
 	if (sx < 0 || w <= sx) return;
 	if (sy < 0 || h <= sy) return;
 
-	auto did = new bool[h * w]; // Information of completed.
+	// Scanline seed fill algorithm.
 
-	// Scans from left of X coordinates to right.
-	// A scanning stops when colliding
-	// with coordinates that are not fill area.
-	int xl = sx;
-	int xr = sx;
-	int y = sy;
-	while (0 < xl && onFillArea(xl - 1, y)) xl--;
-	while (xr + 1 < w && onFillArea(xr + 1, y)) xr++;
-	// Paints a scanned area.
-	pointsOfPath(dlg, PaintMode.Straight, xl, y, xr, y, w, h);
-	did[w * y + xl .. w * y + xr + 1] = true;
-	// Scans to an upper and lower line.
-	if (0 < y) {
-		scanLine(y, dlg, onFillArea, y - 1, xl, xr, w, h, did);
+	auto comp = new bool[w * h]; // Information of completed.
+
+	bool canFill(int x, int y) {
+		return (0 <= x && x < w)
+			&& (0 <= y && y < h)
+			&& onFillArea(x, y)
+			&& !comp[w * y + x];
 	}
-	if (y + 1 < h) {
-		scanLine(y, dlg, onFillArea, y + 1, xl, xr, w, h, did);
-	}
-}
-/// A function of scans a line for pointsOfFill().
-private void scanLine(int y, void delegate(int, int) dlg, bool delegate(int, int) onFillArea, int yc, int xl, int xr, size_t w, size_t h, bool[] did) {
-	int wyc = w * yc;
-	for (int xc = xl; xc <= xr; xc++) {
-		if (did[wyc + xc] || !onFillArea(xc, yc)) continue;
-		int xcFrom = xc;
-		while (xc + 1 < w && !did[wyc + xc + 1] && xc <= xr && onFillArea(xc + 1, yc)) {
-			xc++;
+
+	void procSeed(int sx, int sy) {
+		int wy = w * sy;
+		int xl = sx;
+		int xr = sx;
+		while (canFill(xl - 1, sy)) xl--;
+		while (canFill(xr + 1, sy)) xr++;
+		pointsOfPath(dlg, PaintMode.Straight, xl, sy, xr, sy, w, h);
+		comp[wy + xl .. wy + xr + 1] = true;
+
+		int upX = -1;
+		int downX = -1;
+		int upY = sy - 1;
+		int downY = sy + 1;
+		foreach (nx; xl .. xr + 1) {
+			if (canFill(nx, upY)) {
+				upX = nx;
+			} else {
+				if (-1 != upX) {
+					procSeed(upX, upY);
+				}
+				upX = -1;
+			}
+			if (canFill(nx, downY)) {
+				downX = nx;
+			} else {
+				if (-1 != downX) {
+					procSeed(downX, downY);
+				}
+				downX = -1;
+			}
 		}
-		pointsOfFill(xcFrom, xc, y, dlg, onFillArea, yc, w, h, did);
-	}
-}
-/// Paints and scans a next line.
-/// Ignores scanned coordinates before.
-/// Params:
-///  pxl = Left edge of scanline.
-///  pxr = Right edge of scanline.
-///  py = Y coordinate of a parent line.
-///  y = Y coordinate of a scanline.
-private void pointsOfFill(int pxl, int pxr, int py, void delegate(int, int) dlg, bool delegate(int, int) onFillArea, int y, size_t w, size_t h, bool[] did) {
-	int xl = pxl;
-	int xr = pxr;
-	while (0 < xl && !did[xl - 1] && onFillArea(xl - 1, y)) xl--;
-	while (xr + 1 < w && !did[xr + 1] && onFillArea(xr + 1, y)) xr++;
-	void scanul(int parentY, int notParentY) {
-		// If it is scanned line,
-		// ignores a range from pxl - 1 to pxr + 1.
-		// (Knew already pxl - 1 and pxr + 1
-		// is coordinates of not fill area.)
-		if (0 <= notParentY && notParentY < h) {
-			scanLine(y, dlg, onFillArea, notParentY, xl, xr, w, h, did);
+		if (-1 != upX) {
+			procSeed(upX, upY);
 		}
-		if (xl < pxl && 0 <= pxl - 2) {
-			scanLine(y, dlg, onFillArea, parentY, xl, pxl - 2, w, h, did);
-		}
-		if (pxr < xr && pxr + 2 < w) {
-			scanLine(y, dlg, onFillArea, parentY, pxr + 2, xr, w, h, did);
+		if (-1 != downX) {
+			procSeed(downX, downY);
 		}
 	}
-	int wy = w * y;
-	pointsOfPath(dlg, PaintMode.Straight, pxl, y, pxr, y, w, h);
-	did[wy + pxl .. wy + pxr + 1] = true;
-	if (xl < pxl) {
-		// Paints left area from pxl.
-		pointsOfPath(dlg, PaintMode.Straight, xl, y, pxl - 1, y, w, h);
-		did[wy + xl .. wy + (pxr - 1) + 1] = true;
-	}
-	if (pxr < xr) {
-		// Paints right area from pxr.
-		pointsOfPath(dlg, PaintMode.Straight, pxr + 1, y, xr, y, w, h);
-		did[wy + (pxr + 1) .. wy + xr + 1] = true;
-	}
-	if (y - 1 == py) {
-		scanul(py, y + 1);
-	} else {
-		scanul(py, y - 1);
-	}
+	procSeed(sx, sy);
 }
 unittest {
+	import std.string;
+
 	char[][] img = [
 		"    # ".dup,
 		"#     ".dup,
@@ -320,7 +294,7 @@ unittest {
 		"#@@@@@",
 		" #@@#@",
 		"  #@@@"
-	]);
+	], std.string.join(img, "\n"));
 	// Paints with '#'.
 	pointsOfFill((int x, int y) {
 		img[y][x] = '#';
@@ -332,7 +306,7 @@ unittest {
 		"#@@@@@",
 		"##@@#@",
 		"###@@@"
-	]);
+	], std.string.join(img, "\n"));
 	// Paints with '&'.
 	pointsOfFill((int x, int y) {
 		img[y][x] = '&';
@@ -344,7 +318,7 @@ unittest {
 		"&@@@@@",
 		"&&@@#@",
 		"&&&@@@"
-	]);
+	], std.string.join(img, "\n"));
 	// Paints with ' '.
 	pointsOfFill((int x, int y) {
 		img[y][x] = ' ';
@@ -356,7 +330,7 @@ unittest {
 		"      ",
 		"      ",
 		"      "
-	]);
+	], std.string.join(img, "\n"));
 	img = [
 		"#########".dup,
 		"###   ###".dup,
@@ -384,7 +358,35 @@ unittest {
 		"###@@@###",
 		"###@@@###",
 		"#########"
-	]);
+	], std.string.join(img, "\n"));
+	img = [
+		"#########".dup,
+		"        #".dup,
+		" # #  # #".dup,
+		"#### ####".dup,
+		"###   # #".dup,
+		"####    #".dup,
+		"##  #   #".dup,
+		"#       #".dup,
+		"#########".dup
+	];
+	// Paints with '@'.
+	pointsOfFill((int x, int y) {
+		img[y][x] = '@';
+	}, (int x, int y) {
+		return img[y][x] == ' ';
+	}, 4, 2, img[0].length, img.length);
+	assert (img == [
+		"#########".dup,
+		"@@@@@@@@#".dup,
+		"@#@#@@#@#".dup,
+		"####@####".dup,
+		"###@@@#@#".dup,
+		"####@@@@#".dup,
+		"##@@#@@@#".dup,
+		"#@@@@@@@#".dup,
+		"#########".dup
+	], std.string.join(img, "\n"));
 }
 
 // Does `Median Cut' in-place.
