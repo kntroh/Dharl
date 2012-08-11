@@ -2,7 +2,8 @@
 /// This module includes ColorSlider and members related to it. 
 module dharl.ui.colorslider;
 
-private import dharl.util.utils;
+private import util.utils;
+
 private import dharl.ui.cslider;
 private import dharl.ui.dwtfactory;
 private import dharl.ui.dwtutils;

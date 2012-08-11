@@ -1,9 +1,9 @@
 
 /// This module include common member for graphics.
-module dharl.util.graphics;
+module util.graphics;
 
-private import dharl.util.types;
-private import dharl.util.utils;
+private import util.types;
+private import util.utils;
 
 private import std.algorithm;
 private import std.conv;

@@ -2,7 +2,8 @@
 /// This module includes PImageList and members related to it. 
 module dharl.ui.pimagelist;
 
-private import dharl.util.utils;
+private import util.utils;
+
 private import dharl.ui.mlimage;
 private import dharl.ui.dwtutils;
 private import dharl.ui.dwtfactory;

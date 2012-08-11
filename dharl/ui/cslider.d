@@ -2,13 +2,15 @@
 /// This module includes CSlider and members related to it. 
 module dharl.ui.cslider;
 
-private import dharl.util.utils;
+private import util.utils;
+
 private import dharl.ui.dwtutils;
+
+private import core.thread;
 
 private import std.algorithm;
 private import std.concurrency;
 private import std.datetime;
-private import core.thread;
 
 private import java.lang.System;
 private import java.lang.Runnable;

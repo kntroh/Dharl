@@ -2,10 +2,11 @@
 /// This module includes PaintArea and members related to it. 
 module dharl.ui.paintarea;
 
-private import dharl.util.undomanager;
-private import dharl.util.graphics;
-private import dharl.util.types;
-private import dharl.util.utils;
+private import util.graphics;
+private import util.types;
+private import util.undomanager;
+private import util.utils;
+
 private import dharl.ui.mlimage;
 private import dharl.ui.dwtutils;
 

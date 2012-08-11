@@ -2,10 +2,12 @@
 /// This module includes MainPanel and members related to it. 
 module dharl.ui.mainpanel;
 
+private import util.graphics;
+private import util.undomanager;
+private import util.utils;
+
 private import dharl.common;
-private import dharl.util.undomanager;
-private import dharl.util.graphics;
-private import dharl.util.utils;
+
 private import dharl.ui.mlimage;
 private import dharl.ui.paintarea;
 private import dharl.ui.paletteview;

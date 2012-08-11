@@ -2,8 +2,9 @@
 /// This module includes functions related to user interface.
 module dharl.ui.uicommon;
 
+private import util.utils;
+
 private import dharl.common;
-private import dharl.util.utils;
 
 private import std.exception;
 

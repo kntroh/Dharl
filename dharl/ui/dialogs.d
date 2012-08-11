@@ -2,8 +2,10 @@
 /// This module includes dialogs and members related to it.
 module dharl.ui.dialogs;
 
+private import util.utils;
+
 private import dharl.common;
-private import dharl.util.utils;
+
 private import dharl.ui.uicommon;
 private import dharl.ui.dwtfactory;
 private import dharl.ui.dwtutils;

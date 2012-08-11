@@ -1,8 +1,8 @@
 
 /// This module includes common types and structures.
-module dharl.util.types;
+module util.types;
 
-private import dharl.util.utils : parseS;
+private import util.utils : parseS;
 
 private import std.algorithm;
 private import std.conv;

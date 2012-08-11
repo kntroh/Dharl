@@ -4,9 +4,9 @@ module dharl.ui.dwtutils;
 
 public import dwtutils.utils;
 
-private import dharl.util.graphics;
-private import dharl.util.types;
-private import dharl.util.utils;
+private import util.graphics;
+private import util.types;
+private import util.utils;
 
 private import std.exception;
 private import std.math;

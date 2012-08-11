@@ -1,9 +1,9 @@
 
 /// This module includes property related functions and templates.
-module dharl.util.properties;
+module util.properties;
 
-private import dharl.util.types;
-private import dharl.util.utils : parseS;
+private import util.types;
+private import util.utils : parseS;
 
 private import std.conv;
 private import std.exception;

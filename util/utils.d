@@ -1,5 +1,5 @@
 
-module dharl.util.utils;
+module util.utils;
 
 private import std.algorithm;
 private import std.functional;

@@ -1,8 +1,8 @@
 
 /// This module include UndoManager and members related to it. 
-module dharl.util.undomanager;
+module util.undomanager;
 
-private import dharl.util.utils;
+private import util.utils;
 
 private import std.exception;
 

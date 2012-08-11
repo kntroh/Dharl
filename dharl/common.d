@@ -2,8 +2,8 @@
 /// This module includes Common and members related to it. 
 module dharl.common;
 
-private import dharl.util.types;
-private import dharl.util.properties;
+private import util.types;
+private import util.properties;
 
 private import std.conv;
 private import std.exception;

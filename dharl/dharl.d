@@ -2,9 +2,11 @@
 /// Dharl main.
 module dharl.dharl;
 
+private import util.graphics;
+private import util.utils;
+
 private import dharl.common;
-private import dharl.util.utils;
-private import dharl.util.graphics;
+
 private import dharl.ui.mainpanel;
 private import dharl.ui.paintarea;
 private import dharl.ui.dialogs;
