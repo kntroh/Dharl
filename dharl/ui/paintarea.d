@@ -89,6 +89,9 @@ class PaintArea : Canvas, Undoable {
 	/// Last selected range before caught.
 	private Rectangle _iOldSelRange;
 
+	/// Doesn't send select changed event with same value continuously. 
+	private Rectangle _iOldCursorArea = null;
+
 	/// Paint mode.
 	private PaintMode _mode = PaintMode.FreePath;
 
@@ -180,7 +183,10 @@ class PaintArea : Canvas, Undoable {
 
 	private void raiseSelectChangedEvent() {
 		auto ia = iCursorArea;
-		selectChangedReceivers.raiseEvent(ia.x, ia.y, ia.width, ia.height);
+		if (!_iOldCursorArea || _iOldCursorArea != ia) {
+			_iOldCursorArea = ia;
+			selectChangedReceivers.raiseEvent(ia.x, ia.y, ia.width, ia.height);
+		}
 	}
 
 	/// Initializes this paint area.
@@ -2458,12 +2464,12 @@ class PaintPreview : Canvas {
 		int iw = _paintArea.image.width;
 		int ih = _paintArea.image.height;
 
-		int srcX = _px;
-		int srcY = _py;
+		int srcX = .max(0, _px);
+		int srcY = .max(0, _py);
 		int destX = iw < ca.width ? (ca.width - iw) / 2 : 0;
 		int destY = ih < ca.height ? (ca.height - ih) / 2 : 0;
-		int w = iw - _px;
-		int h = ih - _py;
+		int w = .min(ca.width, iw - srcX);
+		int h = .min(ca.height, ih - srcY);
 
 		foreach (l; 0 .. _paintArea.image.layerCount) {
 			if (!_paintArea.image.layer(l).visible) continue;
@@ -2487,7 +2493,7 @@ class PaintPreview : Canvas {
 		auto ca = this.p_clientArea;
 		int iw = _paintArea.image.width;
 		int ih = _paintArea.image.height;
-		if (iw <= ca.width || ih <= ca.height) return;
+		if (iw <= ca.width && ih <= ca.height) return;
 		if (!_mouseDown) return;
 
 		int px = _mpx + (_mx - e.x);

@@ -11,78 +11,80 @@ private import org.eclipse.swt.all;
 /**
 Wraps a getter and a setter.
 
-This templates add suffix '_' to a property name,
+This templates add prefix 'p_' to a property name,
 in order to avoid conflicts with existing member.
 
 Example:
 ---
 auto shell = new Shell;
-shell.widgetText = "The Application";
-shell.layoutManager = new FillLayout;
+shell.p_text = "The Application";
+shell.p_layout = new FillLayout;
 
 auto label = new Label(shell, SWT.NONE);
-label.widgetText = "a label";
+label.p_text = "a label";
 
-shell.bounds = CRect(50, 50, 100, 100);
-shell.visible = true;
+shell.p_bounds = new Rectangle(50, 50, 100, 100);
+shell.p_visible = true;
 ---
 */
-mixin GetSetWrapper!("Text", systemReturnCodeToN, nToSystemReturnCode);
+mixin GetSetWrapper!("Accelerator"); /// ditto
+mixin GetSetWrapper!("Antialias"); /// ditto
+mixin GetSetWrapper!("Background"); /// ditto
+mixin GetSetWrapper!("BorderWidth"); /// ditto
+mixin GetSetWrapper!("Bounds"); /// ditto
+mixin GetSetWrapper!("Children"); /// ditto
+mixin GetSetWrapper!("ClientArea"); /// ditto
+mixin GetSetWrapper!("Control"); /// ditto
+mixin GetSetWrapper!("Cursor"); /// ditto
 mixin GetSetWrapper!("Data"); /// ditto
-mixin GetSetWrapper!("Visible"); /// ditto
+mixin GetSetWrapper!("Display"); /// ditto
+mixin GetSetWrapper!("Disposed"); /// ditto
+mixin GetSetWrapper!("DoubleClickTime"); /// ditto
+mixin GetSetWrapper!("Empty"); /// ditto
+mixin GetSetWrapper!("Enabled"); /// ditto
+mixin GetSetWrapper!("FileName"); /// ditto
+mixin GetSetWrapper!("FileNames"); /// ditto
+mixin GetSetWrapper!("FilterExtensions"); /// ditto
+mixin GetSetWrapper!("FilterIndex"); /// ditto
+mixin GetSetWrapper!("FilterNames"); /// ditto
+mixin GetSetWrapper!("FilterPath"); /// ditto
+mixin GetSetWrapper!("FocusControl"); /// ditto
+mixin GetSetWrapper!("Font"); /// ditto
+mixin GetSetWrapper!("FontMetrics"); /// ditto
+mixin GetSetWrapper!("Foreground"); /// ditto
+mixin GetSetWrapper!("Height"); /// ditto
+mixin GetSetWrapper!("HorizontalBar"); /// ditto
+mixin GetSetWrapper!("Image"); /// ditto
+mixin GetSetWrapper!("ItemCount"); /// ditto
+mixin GetSetWrapper!("Items"); /// ditto
 mixin GetSetWrapper!("Layout"); /// ditto
 mixin GetSetWrapper!("LayoutData"); /// ditto
-mixin GetSetWrapper!("Style"); /// ditto
-mixin GetSetWrapper!("Control"); /// ditto
-mixin GetSetWrapper!("Items"); /// ditto
-mixin GetSetWrapper!("Disposed"); /// ditto
-mixin GetSetWrapper!("Size"); /// ditto
-mixin GetSetWrapper!("Bounds"); /// ditto
+mixin GetSetWrapper!("LineDash"); /// ditto
+mixin GetSetWrapper!("LineStyle"); /// ditto
+mixin GetSetWrapper!("LineWidth"); /// ditto
+mixin GetSetWrapper!("Maximum"); /// ditto
+mixin GetSetWrapper!("Menu"); /// ditto
+mixin GetSetWrapper!("MenuBar"); /// ditto
+mixin GetSetWrapper!("Minimum"); /// ditto
 mixin GetSetWrapper!("Selection"); /// ditto
 mixin GetSetWrapper!("SelectionIndex"); /// ditto
 mixin GetSetWrapper!("SelectionIndices"); /// ditto
-mixin GetSetWrapper!("Menu"); /// ditto
-mixin GetSetWrapper!("MenuBar"); /// ditto
-mixin GetSetWrapper!("Parent"); /// ditto
-mixin GetSetWrapper!("Image"); /// ditto
-mixin GetSetWrapper!("Accelerator"); /// ditto
-mixin GetSetWrapper!("ToolTipText", systemReturnCodeToN, nToSystemReturnCode); /// ditto
-mixin GetSetWrapper!("Width"); /// ditto
-mixin GetSetWrapper!("TextLimit"); /// ditto
-mixin GetSetWrapper!("Maximum"); /// ditto
-mixin GetSetWrapper!("Minimum"); /// ditto
-mixin GetSetWrapper!("PageIncrement"); /// ditto
-mixin GetSetWrapper!("Redraw"); /// ditto
-mixin GetSetWrapper!("Foreground"); /// ditto
-mixin GetSetWrapper!("Background"); /// ditto
-mixin GetSetWrapper!("Enabled"); /// ditto
-mixin GetSetWrapper!("HorizontalBar"); /// ditto
-mixin GetSetWrapper!("VerticalBar"); /// ditto
-mixin GetSetWrapper!("ClientArea"); /// ditto
-mixin GetSetWrapper!("BorderWidth"); /// ditto
-mixin GetSetWrapper!("LineWidth"); /// ditto
-mixin GetSetWrapper!("Display"); /// ditto
-mixin GetSetWrapper!("Antialias"); /// ditto
-mixin GetSetWrapper!("DoubleClickTime"); /// ditto
-mixin GetSetWrapper!("Weights"); /// ditto
-mixin GetSetWrapper!("LineStyle"); /// ditto
-mixin GetSetWrapper!("LineDash"); /// ditto
-mixin GetSetWrapper!("FileName"); /// ditto
-mixin GetSetWrapper!("FileNames"); /// ditto
-mixin GetSetWrapper!("FilterNames"); /// ditto
-mixin GetSetWrapper!("FilterPath"); /// ditto
-mixin GetSetWrapper!("FilterExtensions"); /// ditto
-mixin GetSetWrapper!("FilterIndex"); /// ditto
-mixin GetSetWrapper!("Overwrite"); /// ditto
-mixin GetSetWrapper!("Thumb"); /// ditto
-mixin GetSetWrapper!("Empty"); /// ditto
-mixin GetSetWrapper!("FontMetrics"); /// ditto
-mixin GetSetWrapper!("Height"); /// ditto
-mixin GetSetWrapper!("Cursor"); /// ditto
-mixin GetSetWrapper!("FocusControl"); /// ditto
-mixin GetSetWrapper!("ItemCount"); /// ditto
 mixin GetSetWrapper!("Shell"); /// ditto
+mixin GetSetWrapper!("Size"); /// ditto
+mixin GetSetWrapper!("Style"); /// ditto
+mixin GetSetWrapper!("Text", systemReturnCodeToN, nToSystemReturnCode);
+mixin GetSetWrapper!("TextLimit"); /// ditto
+mixin GetSetWrapper!("Thumb"); /// ditto
+mixin GetSetWrapper!("ToolTipText", systemReturnCodeToN, nToSystemReturnCode); /// ditto
 mixin GetSetWrapper!("Transfer"); /// ditto
+mixin GetSetWrapper!("Overwrite"); /// ditto
+mixin GetSetWrapper!("PageIncrement"); /// ditto
+mixin GetSetWrapper!("Parent"); /// ditto
+mixin GetSetWrapper!("Redraw"); /// ditto
+mixin GetSetWrapper!("VerticalBar"); /// ditto
+mixin GetSetWrapper!("Visible"); /// ditto
+mixin GetSetWrapper!("Weights"); /// ditto
+mixin GetSetWrapper!("Width"); /// ditto
 
 /**
 Creates small wrapper for methods of widget.
@@ -297,23 +299,23 @@ private template PName(string Name) {
 	immutable PName = "p_" ~ LName!Name;
 }
 
-private void dummy() {}
-
 /// Creates wrap property for a getter and a setter.
-template GetSetWrapper(string Name, alias getterFunc = dummy, alias setterFunc = dummy) {
+template GetSetWrapper(string Name, alias getterFunc = Object, alias setterFunc = Object) {
 	private import std.string;
 	private import std.traits;
 	private static immutable LName = PName!(Name);
-	mixin(`@property void ` ~ LName ~ `(W, Type)(W widget, Type value) {
-		static if (is(typeof(setterFunc(value)))) {
+	mixin(`
+	@property void ` ~ LName ~ `(W, Type)(W widget, Type value) {
+		` ~ (is(setterFunc==Object) ? `` : `static if (is(typeof(setterFunc(value)))) {
 			value = setterFunc(value);
-		}
+		}`) ~ `
 		widget.set` ~ Name ~ `(value);
 	}`);
-	mixin(`@property auto ` ~ LName ~ `(W)(W widget) {
-		static if (is(typeof(getterFunc(value)))) {
+	mixin(`
+	@property auto ` ~ LName ~ `(W)(W widget) {
+		` ~ (is(getterFunc==Object) ? `` : `static if (is(typeof(getterFunc(value)))) {
 			value = getterFunc(value);
-		}
+		}`) ~ `
 		static if (is(typeof(widget.get` ~ Name ~ `()))) {
 			return widget.get` ~ Name ~ `();
 		} else static if (is(typeof(widget.is` ~ Name ~ `()))) {
@@ -390,9 +392,11 @@ private struct TypedListenerWrapperImpl(W, ListenerType, string MethodName) {
 
 	W widget;
 	auto opOpAssign(string s)(void delegate() dlg) if (s == "~") {
+import std.stdio;writeln(__LINE__);
 		return opOpAssign!s((EventType e) {dlg();});
 	}
 	auto opOpAssign(string s)(void delegate(EventType e) dlg) if (s == "~") {
+import std.stdio;writeln(__LINE__);
 		return opOpAssign!s(new class BlackHole!ListenerType {
 			mixin(`override void ` ~ MethodName ~ `(EventType e) {
 				dlg(e);

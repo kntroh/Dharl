@@ -266,7 +266,7 @@ void main() {
 		}
 	};
 
-	shell.p_bounds = CRect(1200, 600, 700, 500);
+	shell.p_bounds = CRect(100, 700, 900, 700);
 	shell.open();
 	while (!shell.p_disposed) {
 		if (!display.readAndDispatch()) {

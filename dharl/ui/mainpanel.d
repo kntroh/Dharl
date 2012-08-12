@@ -13,6 +13,7 @@ private import dharl.ui.paintarea;
 private import dharl.ui.paletteview;
 private import dharl.ui.colorslider;
 private import dharl.ui.pimagelist;
+private import dharl.ui.splitter;
 private import dharl.ui.uicommon;
 private import dharl.ui.dwtfactory;
 private import dharl.ui.dwtutils;
@@ -87,10 +88,10 @@ class MainPanel : Composite {
 		_um = new UndoManager(_c.conf.undoMax);
 
 		/// Splits PImageList and other controls.
-		auto sash = basicSashForm(this, SWT.HORIZONTAL);
-		constructPaintArea(sash, _um);
-		constructImageList(sash, _um);
-		setRefWeights(sash, _c.conf.weightsWork_List.value);
+		auto splitter = basicSplitter(this, SWT.HORIZONTAL);
+		constructPaintArea(splitter, _um);
+		constructImageList(splitter, _um);
+		refSashPos(splitter, _c.conf.sashPosWork_List.value);
 
 		_paletteView.listeners!(SWT.Selection) ~= {
 			_um.resetRetryWord();
@@ -231,30 +232,29 @@ class MainPanel : Composite {
 		auto d = parent.p_display;
 
 		// Splitter of paint area and palette.
-		auto ppSash = basicSashForm(parent, SWT.VERTICAL);
-		scope (exit) setRefWeights(paintSash, _c.conf.weightsPaint_Preview.value);
+		auto ppSplitter = basicSplitter(parent, SWT.VERTICAL);
+		scope (exit) refSashPos(ppSplitter, _c.conf.sashPosPaint_Palette.value);
 
 		// Splitter of paintArea and tools.
-		auto paintSash = basicSashForm(ppSash, SWT.HORIZONTAL);
-		scope (exit) setRefWeights(ppSash, _c.conf.weightsPaint_Palette.value);
+		auto paintSplitter = basicSplitter(ppSplitter, SWT.HORIZONTAL);
+		scope (exit) refSashPos(paintSplitter, _c.conf.sashPosPaint_Preview.value);
 
 		// Splitter of preview and toolbar.
-		auto ptSash = basicSashForm(paintSash, SWT.VERTICAL);
-		scope (exit) setRefWeights(ptSash, _c.conf.weightsPreview_Tools.value);
+		auto ptSplitter = basicSplitter(paintSplitter, SWT.VERTICAL);
+		scope (exit) refSashPos(ptSplitter, _c.conf.sashPosPreview_Tools.value);
 
 		// Preview of image in drawing.
-		_paintPreview = new PaintPreview(ptSash, SWT.BORDER | SWT.DOUBLE_BUFFERED);
-		_paintPreview.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING);
+		_paintPreview = new PaintPreview(ptSplitter, SWT.BORDER | SWT.DOUBLE_BUFFERED);
 
 		// Area of drawing.
-		_paintArea = new PaintArea(paintSash, SWT.BORDER | SWT.DOUBLE_BUFFERED);
+		_paintArea = new PaintArea(paintSplitter, SWT.BORDER | SWT.DOUBLE_BUFFERED);
 		_paintArea.p_layoutData = GD(GridData.FILL_BOTH).hSpan(2);
 		_paintArea.undoManager = um;
 
-		constructModeToolBar(ptSash);
+		constructModeToolBar(ptSplitter);
 
 		// Composite for controls related to color.
-		auto comp = basicComposite(ppSash, GL.window(3, false));
+		auto comp = basicComposite(ppSplitter, GL.window(3, false));
 
 		// Slider for changing color.
 		_colorSlider = new ColorSlider(comp, SWT.VERTICAL);

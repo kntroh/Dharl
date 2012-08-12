@@ -8,6 +8,8 @@ private import util.graphics;
 private import util.types;
 private import util.utils;
 
+private import dharl.ui.splitter;
+
 private import std.exception;
 private import std.math;
 private import std.range;
@@ -16,16 +18,12 @@ private import std.typecons;
 
 private import org.eclipse.swt.all;
 
-/// Sets weights of sash children.
-/// And save weights when disposed sa.
-void setRefWeights(SashForm sa, ref Weights weights) {
-	int[] ws = [weights.l, weights.r];
-	sa.p_weights = ws;
-	sa.listeners!(SWT.Dispose) ~= (Event e) {
-		auto ws = sa.p_weights;
-		enforce(ws.length == 2);
-		weights.l = ws[0];
-		weights.r = ws[1];
+/// Sets position of sash on splitter.
+/// And save value when disposed splitter.
+void refSashPos(Splitter splitter, ref int sashPos) {
+	splitter.p_selection = sashPos;
+	splitter.listeners!(SWT.Dispose) ~= (Event e) {
+		sashPos = splitter.p_selection;
 	};
 }
 

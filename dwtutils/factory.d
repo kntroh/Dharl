@@ -30,7 +30,7 @@ Shell basicShell(string title, Image image = null, Layout layout = null, int sty
 /// ditto
 Shell basicShell(Shell parent, string title, Image image = null, Layout layout = null, int style = SWT.SHELL_TRIM) {
 	auto sh = new Shell(parent, style);
-	sh.p_text = title;
+	sh.p_text(title);
 	sh.p_image = image;
 	sh.p_layout = layout;
 	return sh;
@@ -135,7 +135,7 @@ ToolItem basicToolItem(ToolBar parent, string text, Image image, void delegate(E
 	int tab = text.indexOf("\t");
 	if (-1 != tab) text = text[0 .. tab];
 	if (image) {
-		toolItem.toolTipText = text;
+		toolItem.p_toolTipText = text;
 		toolItem.p_image = image;
 	} else {
 		toolItem.p_text = text;
@@ -527,6 +527,188 @@ struct GD {
 	/// Sets data.heightHint.
 	GD hHint(int hint) {
 		data.heightHint = hint;
+		return this;
+	}
+}
+
+/// A wrapper for settings to a FormLayout.
+struct FL {
+	/// GridLayout.
+	FormLayout data = null;
+	/// ditto
+	alias data this;
+
+	/// Create new FL with wMargin and hMargin.
+	@property
+	static FL opCall(int wMargin = SWT.DEFAULT, int hMargin = SWT.DEFAULT) {
+		FL fl;
+		if (SWT.DEFAULT != wMargin) fl.wMargin = wMargin;
+		if (SWT.DEFAULT != hMargin) fl.hMargin = hMargin;
+		return fl;
+	}
+
+	/// Sets data.marginWidth and data.marginHeight
+	@property
+	FL margin(int margin) {
+		return wMargin(margin).hMargin(margin);
+	}
+	/// Sets data.marginWidth.
+	@property
+	FL wMargin(int margin) {
+		data.marginWidth = margin;
+		return this;
+	}
+	/// Sets data.marginHeight.
+	@property
+	FL hMargin(int margin) {
+		data.marginHeight = margin;
+		return this;
+	}
+}
+
+/// A wrapper for settings to a FormData.
+struct FD {
+	/// FormData.
+	FormData data = null;
+	/// ditto
+	alias data this;
+
+	/// Creates new FD with size.
+	static FD opCall(int width = SWT.DEFAULT, int height = SWT.DEFAULT) {
+		FD fd;
+		fd.data = new FormData;
+		if (SWT.DEFAULT != width)  fd.width  = width;
+		if (SWT.DEFAULT != height) fd.height = height;
+		return fd;
+	}
+	/// Creates new FD with FormAttachment.
+	/// Sets null to be not used direction.
+	static FD opCall(FormAttachment top, FormAttachment right, FormAttachment bottom, FormAttachment left) {
+		FD fd;
+		fd.data = new FormData;
+
+		fd.top    = top;
+		fd.right  = right;
+		fd.bottom = bottom;
+		fd.left   = left;
+
+		return fd;
+	}
+
+	/// Sets data.width and data.height.
+	FD size(int width, int height) {
+		return this.width(width).height(height);
+	}
+	/// ditto
+	@property
+	FD width(int width) {
+		data.width = width;
+		return this;
+	}
+	/// ditto
+	@property
+	FD height(int height) {
+		data.height = height;
+		return this;
+	}
+
+	/// Sets data.top and data.right and data.bottom and data.left.
+	FD atachment(FormAttachment top, FormAttachment right, FormAttachment bottom, FormAttachment left) {
+		return this.top(top).right(right).bottom(bottom).left(left);
+	}
+	/// ditto
+	@property
+	FD top(FormAttachment top) {
+		data.top = top;
+		return this;
+	}
+	/// ditto
+	@property
+	FD right(FormAttachment right) {
+		data.right = right;
+		return this;
+	}
+	/// ditto
+	@property
+	FD bottom(FormAttachment bottom) {
+		data.bottom = bottom;
+		return this;
+	}
+	/// ditto
+	@property
+	FD left(FormAttachment left) {
+		data.left = left;
+		return this;
+	}
+}
+
+
+/// A wrapper for settings to a FormAttachment.
+struct FA {
+	/// FormAttachment.
+	FormAttachment data = null;
+	/// ditto
+	alias data this;
+
+	/// Creates new FA with parameters.
+	static FA opCall(Control control) {
+		FA fa;
+		fa.data = new FormAttachment(control);
+		return fa;
+	}
+	/// ditto
+	static FA opCall(Control control, int offset) {
+		auto fa = FA(control);
+		fa.offset = offset;
+		return fa;
+	}
+	/// ditto
+	static FA opCall(Control control, int offset, int alignment) {
+		auto fa = FA(control, offset);
+		fa.alignment = alignment;
+		return fa;
+	}
+	/// ditto
+	static FA opCall(int numerator, int offset = 0) {
+		FA fa;
+		fa.data = new FormAttachment(numerator, offset);
+		return fa;
+	}
+	/// ditto
+	static FA opCall(int numerator, int denominator, int offset) {
+		auto fa = FA(numerator, offset);
+		fa.denominator = denominator;
+		return fa;
+	}
+
+	/// Sets data.numerator.
+	@property
+	FA numerator(int numerator) {
+		data.numerator = numerator;
+		return this;
+	}
+	/// Sets data.denominator.
+	@property
+	FA denominator(int denominator) {
+		data.denominator = denominator;
+		return this;
+	}
+	/// Sets data.offset.
+	@property
+	FA offset(int offset) {
+		data.offset = offset;
+		return this;
+	}
+	/// Sets data.control.
+	@property
+	FA control(Control control) {
+		data.control = control;
+		return this;
+	}
+	/// Sets data.alignment.
+	@property
+	FA alignment(int alignment) {
+		data.alignment = alignment;
 		return this;
 	}
 }

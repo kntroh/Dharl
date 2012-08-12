@@ -232,10 +232,10 @@ class DConfig {
 			[0, 0],
 		]),
 	]));
-	mixin Prop!("weightsWork_List", Weights, Weights(3, 2));
-	mixin Prop!("weightsPaint_Preview", Weights, Weights(1, 4));
-	mixin Prop!("weightsPreview_Tools", Weights, Weights(1, 4));
-	mixin Prop!("weightsPaint_Palette", Weights, Weights(3, 2));
+	mixin Prop!("sashPosWork_List", int, 550);
+	mixin Prop!("sashPosPaint_Preview", int, 100);
+	mixin Prop!("sashPosPreview_Tools", int, 200);
+	mixin Prop!("sashPosPaint_Palette", int, 400);
 
 	mixin Prop!("dialogButtonWidth", uint, 200, true);
 
