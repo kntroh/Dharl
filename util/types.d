@@ -231,6 +231,53 @@ struct PBounds {
 	}
 }
 
+/// Parameters of window.
+struct WindowParameter {
+	/// Bounds.
+	PBounds bounds;
+	alias bounds this;
+
+	/// Maximized and minimized.
+	bool maximized = false;
+	/// ditto
+	bool minimized = false;
+
+	/// Creates instance.
+	static WindowParameter opCall(in PBounds bounds, bool maximized = false, bool minimized = false) {
+		WindowParameter wp;
+		wp.bounds = bounds;
+		wp.maximized = maximized;
+		wp.minimized = minimized;
+		return wp;
+	}
+	/// ditto
+	static WindowParameter opCall(int x = int.min, int y = int.min, uint w = 0, uint h = 0, bool maximized = false, bool minimized = false) {
+		return WindowParameter(PBounds(x, y, w, h), maximized, minimized);
+	}
+
+	/// Creates instance from ep.
+	static WindowParameter fromElement(ElementParser ep) {
+		auto r = WindowParameter(PBounds.fromElement(ep));
+		auto p = "maximized" in ep.tag.attr;
+		if (p) r.maximized = safeParse!bool(*p, r.maximized);
+		p = "minimized" in ep.tag.attr;
+		if (p) r.minimized = safeParse!bool(*p, r.minimized);
+		return r;
+	}
+	/// Creates XML element from this instance.
+	const
+	Element toElement(string tagName) {
+		auto e = new Element(tagName);
+		e.tag.attr["x"] = text(x);
+		e.tag.attr["y"] = text(y);
+		e.tag.attr["width"] = text(width);
+		e.tag.attr["height"] = text(height);
+		if (maximized) e.tag.attr["maximized"] = text(maximized);
+		if (minimized) e.tag.attr["minimized"] = text(minimized);
+		return e;
+	}
+}
+
 /// Coordinate.
 struct PPoint {
 	/// Value of coordinate.

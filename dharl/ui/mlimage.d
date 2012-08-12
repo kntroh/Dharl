@@ -589,6 +589,8 @@ class MLImage : Undoable {
 		string[] name = null;
 		/// Visibility of layers.
 		bool[] visible = null;
+		/// Is this include palette data?
+		bool includePalette = true;
 	}
 
 	/// Checks this is equal to o.
@@ -599,9 +601,11 @@ class MLImage : Undoable {
 		if (!data) return false;
 		if (_iw != data.width || _ih != data.height) return false;
 		if (_layers.length != data.layers.length) return false;
-		foreach (i, ref rgb; data.palette) {
-			auto c = _palette.colors[i];
-			if (c.red != rgb.r || c.green != rgb.g || c.blue != rgb.b) return false;
+		if (data.includePalette) {
+			foreach (i, ref rgb; data.palette) {
+				auto c = _palette.colors[i];
+				if (c.red != rgb.r || c.green != rgb.g || c.blue != rgb.b) return false;
+			}
 		}
 		foreach (i, ref l; _layers) {
 			if (l.image.data != data.layers[i]) return false;
@@ -611,16 +615,19 @@ class MLImage : Undoable {
 		return true;
 	}
 
+	/// Creates now state data.
 	@property
-	override Object storeData() {
+	Object storeData(bool includePalette) {
 		auto data = new StoreData;
 		data.width = _iw;
 		data.height = _ih;
-		foreach (i, ref rgb; data.palette) {
-			auto c = _palette.colors[i];
-			rgb.r = cast(ubyte) c.red;
-			rgb.g = cast(ubyte) c.green;
-			rgb.b = cast(ubyte) c.blue;
+		if (includePalette) {
+			foreach (i, ref rgb; data.palette) {
+				auto c = _palette.colors[i];
+				rgb.r = cast(ubyte) c.red;
+				rgb.g = cast(ubyte) c.green;
+				rgb.b = cast(ubyte) c.blue;
+			}
 		}
 		data.layers = new byte[][_layers.length];
 		data.name = new string[_layers.length];
@@ -630,7 +637,12 @@ class MLImage : Undoable {
 			data.name[i] = l.name;
 			data.visible[i] = l.visible;
 		}
+		data.includePalette = includePalette;
 		return data;
+	}
+	@property
+	override Object storeData() {
+		return storeData(true);
 	}
 	override void restore(Object data, UndoMode mode) {
 		auto st = cast(StoreData) data;

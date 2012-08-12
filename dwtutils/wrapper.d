@@ -1,4 +1,5 @@
 
+/// This module includes D-style wrapper for DWT widgets and events.
 module dwtutils.wrapper;
 
 private import std.algorithm;
@@ -62,9 +63,11 @@ mixin GetSetWrapper!("LayoutData"); /// ditto
 mixin GetSetWrapper!("LineDash"); /// ditto
 mixin GetSetWrapper!("LineStyle"); /// ditto
 mixin GetSetWrapper!("LineWidth"); /// ditto
+mixin GetSetWrapper!("Maximized"); /// ditto
 mixin GetSetWrapper!("Maximum"); /// ditto
 mixin GetSetWrapper!("Menu"); /// ditto
 mixin GetSetWrapper!("MenuBar"); /// ditto
+mixin GetSetWrapper!("Minimized"); /// ditto
 mixin GetSetWrapper!("Minimum"); /// ditto
 mixin GetSetWrapper!("Selection"); /// ditto
 mixin GetSetWrapper!("SelectionIndex"); /// ditto

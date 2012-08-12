@@ -2,6 +2,7 @@
 /// Dharl main.
 module dharl.dharl;
 
+private import util.environment;
 private import util.graphics;
 private import util.utils;
 
@@ -14,6 +15,9 @@ private import dharl.ui.uicommon;
 private import dharl.ui.dwtfactory;
 private import dharl.ui.dwtutils;
 
+private import std.algorithm;
+private import std.array;
+private import std.file;
 private import std.path;
 private import std.string;
 
@@ -21,8 +25,25 @@ private import org.eclipse.swt.all;
 
 private import java.lang.all;
 
-void main() {
+void main(string[] args) {
+	string exe = .moduleFileName(args[0]);
+	string appData = .appData(exe.dirName(), true).buildPath("dharl").buildPath("settings.xml");
+	version (Console) {
+		writefln("Execute: %s", exe);
+		writefln("AppData: %s", appData);
+	}
+
+	// Load application configuration.
 	auto c = new DCommon;
+	if (appData.exists()) {
+		try {
+			c.conf.readXMLFile(appData);
+		} catch (Exception e) {
+			version (Console) {
+				writefln("Read failure: %s", appData);
+			}
+		}
+	}
 
 	auto display = new Display;
 	auto shell = basicShell(c.text.appName, null, GL.window);
@@ -36,7 +57,12 @@ void main() {
 		if (-1 == i) {
 			shell.p_text = c.text.appName;
 		} else {
-			string title = c.text.fAppNameWithImage;
+			string title;
+			if (mainPanel.modified(i)) {
+				title = c.text.fAppNameWithImageChanged;
+			} else {
+				title = c.text.fAppNameWithImage;
+			}
 			shell.p_text = title.format(mainPanel.imageName(i));
 		}
 	}
@@ -44,6 +70,7 @@ void main() {
 	mainPanel.p_layoutData = GD(GridData.FILL_BOTH);
 
 	auto mFile = basicDropDownMenu(shell, c.text.menu.file);
+	int mFileHistFrom, mFileHistTo;
 	auto mEdit = basicDropDownMenu(shell, c.text.menu.edit);
 	auto mMode = basicDropDownMenu(shell, c.text.menu.mode);
 	auto mPalette = basicDropDownMenu(shell, c.text.menu.palette);
@@ -68,6 +95,8 @@ void main() {
 		mainPanel.saveAll();
 	});
 	separator(mFile);
+	mFileHistFrom = mFile.getItemCount();
+	mFileHistTo   = mFileHistFrom;
 	auto exit = basicMenuItem(mFile, c.text.menu.exit, cimg(c.image.exit), &shell.close);
 
 	MenuItem[PaintMode] modeItems;
@@ -218,6 +247,26 @@ void main() {
 	tUndo.p_enabled = mainPanel.undoManager.canUndo;
 	tRedo.p_enabled = mainPanel.undoManager.canRedo;
 
+	void refreshFileMenu() {
+		foreach_reverse (i; mFileHistFrom .. mFileHistTo) {
+			mFile.getItem(i).dispose();
+		}
+
+		if (c.conf.fileHistory.length) {
+			void createItem(int index, string file) {
+				basicMenuItem(mFile, file.omitPath(c.conf.fileHistoryOmitLength), null, {
+					mainPanel.loadImage(file);
+				}, SWT.PUSH, false, mFileHistFrom + index);
+			}
+			foreach (i, file; c.conf.fileHistory) {
+				createItem(i, file);
+			}
+			separator(mFile, mFileHistFrom + c.conf.fileHistory.length);
+			mFileHistTo = mFileHistFrom + c.conf.fileHistory.length + 1;
+		} else {
+			mFileHistTo = mFileHistFrom;
+		}
+	}
 	void refreshMenu() {
 		refreshTitle();
 
@@ -250,6 +299,34 @@ void main() {
 		tResizeC.p_enabled = -1 != index;
 	}
 	mainPanel.statusChangedReceivers ~= &refreshMenu;
+
+	foreach (file; c.conf.lastOpenedFiles) {
+		try {
+			mainPanel.loadImage(file);
+		} catch (Exception e) {
+			writefln("Load failure: %s", file);
+		}
+	}
+
+	mainPanel.loadedReceivers ~= (string file) {
+		file = file.absolutePath().buildNormalizedPath();
+
+		with (c.conf.fileHistory) {
+			auto index = value.countUntil(file);
+			if (-1 == index) {
+				if (c.conf.fileHistoryMax <= value.length) {
+					value.popBack();
+				}
+				value.insertInPlace(0, file);
+			} else {
+				value = value.remove(index);
+				value.insertInPlace(0, file);
+			}
+		}
+
+		refreshFileMenu();
+	};
+	refreshFileMenu();
 	refreshMenu();
 
 	shell.listeners!(SWT.Close) ~= (Event e) {
@@ -264,9 +341,18 @@ void main() {
 				return;
 			}
 		}
+
+		string[] openFiles;
+		foreach (i; 0 .. mainPanel.imageCount) {
+			auto path = mainPanel.imagePath(i);
+			if (path.length) {
+				openFiles ~= path.absolutePath().buildNormalizedPath();
+			}
+		}
+		c.conf.lastOpenedFiles = openFiles;
 	};
 
-	shell.p_bounds = CRect(100, 700, 900, 700);
+	shell.refWindow(c.conf.mainWindow.value);
 	shell.open();
 	while (!shell.p_disposed) {
 		if (!display.readAndDispatch()) {
@@ -274,4 +360,17 @@ void main() {
 		}
 	}
 	display.dispose();
+
+	// Save application configuration.
+	try {
+		auto appDir = appData.dirName();
+		if (!appDir.exists()) appDir.mkdirRecurse();
+
+		c.conf.writeXMLFile(appData);
+
+	} catch (Exception e) {
+		version (Console) {
+			writefln("Write failure: %s", appData);
+		}
+	}
 }

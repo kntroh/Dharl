@@ -114,6 +114,7 @@ class DText {
 	/// Messages.
 	mixin MsgProp!("appName", "pa");
 	mixin MsgProp!("fAppNameWithImage", "%s - pa"); /// ditto
+	mixin MsgProp!("fAppNameWithImageChanged", "%s* - pa"); /// ditto
 
 	mixin MsgProp!("ok", "&OK"); /// ditto
 	mixin MsgProp!("cancel", "&Cancel"); /// ditto
@@ -232,12 +233,22 @@ class DConfig {
 			[0, 0],
 		]),
 	]));
-	mixin Prop!("sashPosWork_List", int, 550);
-	mixin Prop!("sashPosPaint_Preview", int, 100);
-	mixin Prop!("sashPosPreview_Tools", int, 200);
-	mixin Prop!("sashPosPaint_Palette", int, 400);
 
-	mixin Prop!("dialogButtonWidth", uint, 200, true);
+	/// Parameters of layout.
+	mixin Prop!("mainWindow", WindowParameter, WindowParameter(100, 700, 900, 700));
+
+	mixin Prop!("sashPosWork_List",     int, 550); /// ditto
+	mixin Prop!("sashPosPaint_Preview", int, 100); /// ditto
+	mixin Prop!("sashPosPreview_Tools", int, 150); /// ditto
+	mixin Prop!("sashPosPaint_Palette", int, 400); /// ditto
+
+	mixin Prop!("dialogButtonWidth", uint, 200, true); /// ditto
+
+	mixin Prop!("fileHistory", PArray!("path", string), PArray!("path", string).init);
+	mixin Prop!("fileHistoryMax", uint, 15);
+	mixin Prop!("fileHistoryOmitLength", uint, 50, true);
+
+	mixin Prop!("lastOpenedFiles", PArray!("path", string), PArray!("path", string).init);
 
 	mixin PropIO!("config");
 }

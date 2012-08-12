@@ -18,6 +18,23 @@ private import std.typecons;
 
 private import org.eclipse.swt.all;
 
+/// Sets parameters to shell from param.
+/// And save parameters when disposed shell.
+void refWindow(Shell shell, ref WindowParameter param) {
+	shell.p_bounds = CRect(param.x, param.y, param.width, param.height);
+	shell.p_maximized = param.maximized;
+	shell.p_minimized = param.minimized;
+	shell.listeners!(SWT.Dispose) ~= (Event e) {
+		auto b = shell.p_bounds;
+		param.x      = b.x;
+		param.y      = b.y;
+		param.width  = b.width;
+		param.height = b.height;
+		param.maximized = shell.p_maximized;
+		param.minimized = shell.p_minimized;
+	};
+}
+
 /// Sets position of sash on splitter.
 /// And save value when disposed splitter.
 void refSashPos(Splitter splitter, ref int sashPos) {

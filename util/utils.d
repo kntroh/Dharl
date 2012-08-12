@@ -1,10 +1,12 @@
 
+/// This module includes common utility functions.
 module util.utils;
 
 private import std.algorithm;
 private import std.conv;
 private import std.functional;
 private import std.math;
+private import std.path;
 private import std.traits;
 
 version (Console) {
@@ -76,7 +78,7 @@ RetType raiseEvent(RetType, Args ...)(RetType delegate(Args)[] receivers, Args a
 	} else {
 		if (!receivers) return;
 	}
-	foreach (receiver; receivers) {
+	foreach (i, receiver; receivers) {
 		if (!receiver) continue;
 		static if (!is(RetType == void)) {
 			ret = receiver(args);
@@ -163,4 +165,48 @@ size_t qsearchLose(alias Less = "a < b", T)(in T[] array, in T val) {
 	assert (r == 2 || r == 3);
 	r = qsearchLose([1, 2, 5, 8, 12, 44], 45);
 	assert (r == 5);
+}
+
+/**
+Omit longer path.
+Example:
+---
+version (Windows) {
+	assert (omitPath(`C:\longlonglonglong\longlong\long\path.txt`, 30) == `C:\longlonglonglon...\path.txt`, omitPath(`C:\longlonglonglong\longlong\long\path.txt`, 30));
+	assert (omitPath(`C:\short\val.txt`, 15) == `C:\s...\val.txt`);
+	assert (omitPath(`C:\short\va.txt`, 15) == `C:\short\va.txt`);
+	assert (omitPath(`C:\short\val.txt`, 5) == `C:\...\val.txt`);
+} else {
+	assert (omitPath(`/longlonglonglong/longlong/long/path.txt`, 30) == `/longlonglonglong/.../path.txt`);
+	assert (omitPath(`/short/path`, 10) == `/s.../path`);
+	assert (omitPath(`/short/pat`, 10) == `/short/pat`);
+	assert (omitPath(`/short/path`, 5) == `/.../path`);
+}
+---
+*/
+string omitPath(string path, size_t length, string omitString = "...") {
+	auto dpath = path.to!dstring();
+	auto domit = omitString.to!dstring();
+	if (length < dpath.length) {
+		auto drive = dpath.driveName();
+		int rlen = drive.length + 1;
+		int flen = dpath.baseName().length + 1;
+		int plen = length - flen - rlen;
+		if (plen < rlen) plen = rlen;
+		return (dpath[0 .. plen] ~ domit ~ dpath[$ - flen .. $]).to!string();
+	} else {
+		return path;
+	}
+} unittest {
+	version (Windows) {
+		assert (omitPath(`C:\longlonglonglong\longlong\long\path.txt`, 30) == `C:\longlonglonglon...\path.txt`, omitPath(`C:\longlonglonglong\longlong\long\path.txt`, 30));
+		assert (omitPath(`C:\short\val.txt`, 15) == `C:\s...\val.txt`);
+		assert (omitPath(`C:\short\va.txt`, 15) == `C:\short\va.txt`);
+		assert (omitPath(`C:\short\val.txt`, 5) == `C:\...\val.txt`);
+	} else {
+		assert (omitPath(`/longlonglonglong/longlong/long/path.txt`, 30) == `/longlonglonglong/.../path.txt`);
+		assert (omitPath(`/short/path`, 10) == `/s.../path`);
+		assert (omitPath(`/short/pat`, 10) == `/short/pat`);
+		assert (omitPath(`/short/path`, 5) == `/.../path`);
+	}
 }

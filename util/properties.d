@@ -26,34 +26,35 @@ private import std.xml;
 /// ---
 mixin template Prop(string Name, Type, Type DefaultValue = Type.init, bool ReadOnly = false) {
 	/// A property.
-	mixin("PropValue!(Name, Type, DefaultValue, ReadOnly) " ~ Name ~ ";");
+	mixin("auto " ~ Name ~ " = PropValue!(Type, ReadOnly)(Name, DefaultValue);");
 }
 /// ditto
 mixin template MsgProp(string Name, string Value) {
 	/// A property.
-	mixin Prop!(Name, string, Value);
+	mixin Prop!(Name, string, Value, true);
 }
 /// ditto
 mixin template PropIO(string RootName) {
 	/// Reads all properties from file.
 	void readXMLFile(string file) {
-		char[] s = cast(char[]) std.file.read(file);
+		char[] s = cast(char[]) std.file.readText(file);
 		readXML(std.exception.assumeUnique(s));
 	}
 	/// Reads all properties from xml.
 	void readXML(string xml) {
 		auto parser = new std.xml.DocumentParser(xml);
-		parser.onStartTag[RootName] = (std.xml.ElementParser ep) {
-			readElement(ep);
+		if (RootName != parser.tag.name) return;
+		readElement(parser);
+	}
+	private void read(T)(ref T fld, std.xml.ElementParser ep) {
+		ep.onStartTag[fld.NAME] = (std.xml.ElementParser ep) {
+			fld = .fromElementFunc!(typeof(fld.value))(ep);
 		};
-		parser.parse();
 	}
 	/// Reads all properties from ep.
 	void readElement(std.xml.ElementParser ep) {
-		foreach (fld; this.tupleof) {
-			ep.onStartTag[fld.NAME] = (std.xml.ElementParser ep) {
-				fld = .fromElement!(typeof(fld.value))(ep);
-			};
+		foreach (ref fld; this.tupleof) {
+			this.read(fld, ep);
 		}
 		ep.parse();
 	}
@@ -76,41 +77,48 @@ mixin template PropIO(string RootName) {
 	const
 	string writeXML() {
 		auto doc = toElement(RootName);
-		return std.string.join(doc.pretty(1), "\n");
+		return doc.prolog ~ "\n" ~ std.string.join(doc.pretty(1), "\n");
 	}
 	/// Creates XML element include all properties data.
 	const
-	std.xml.Element toElement(string tagName) {
-		auto r = new std.xml.Element(tagName);
+	std.xml.Document toElement(string tagName) {
+		auto r = new std.xml.Document(new Tag(tagName));
 		foreach (fld; this.tupleof) {
-			if (fld.READ_ONLY && fld.INIT == fld.value) {
+			if (fld.READ_ONLY || fld.INIT == fld.value) {
 				// If fld is read only or fld value isn't changed,
 				// no creates element.
 				continue;
 			}
-			r ~= .toElement(fld.NAME, fld.value);
+			r ~= .toElementFunc(fld.NAME, fld.value);
 		}
 		return r;
 	}
 }
 /// ditto
-struct PropValue(string Name, Type, Type DefaultValue, bool ReadOnly) {
-	/// Property name.
-	static const NAME = Name;
+struct PropValue(Type, bool ReadOnly) {
 	/// Is property read only?
-	static const READ_ONLY = ReadOnly;
+	static immutable READ_ONLY = ReadOnly;
+	/// Property name.
+	string NAME;
 	/// Initializing value of property.
-	static const INIT = DefaultValue;
+	Type INIT;
 
 	/// Value of property.
-	Type value = DefaultValue;
+	Type value;
 	/// ditto
 	alias value this;
+
+	/// Creates instance.
+	this (string name, Type defaultValue) {
+		NAME = name;
+		INIT = defaultValue;
+		value = defaultValue;
+	}
 }
 
 /// Creates T from ep.
 /// T.fromElement(ep) or T.fromString(string) or to!T(string) is required.
-T fromElement(T)(ElementParser ep) {
+T fromElementFunc(T)(ElementParser ep) {
 	static if (is(typeof(T.fromElement(ep)))) {
 		return T.fromElement(ep);
 	} else static if (is(typeof(T.fromString("")))) {
@@ -132,7 +140,7 @@ T fromElement(T)(ElementParser ep) {
 
 /// Creates XML element from value.
 /// value.toElement(tagName) or to!string(value) is required.
-Element toElement(T)(string tagName, in T value) {
+Element toElementFunc(T)(string tagName, in T value) {
 	static if (is(typeof(value.toElement(tagName)))) {
 		return value.toElement(tagName);
 	} else static if (is(typeof(to!string(value)))) {
@@ -151,7 +159,7 @@ struct PArray(string ValueName, ValueType) {
 	static PArray fromElement(ElementParser ep) {
 		PArray r;
 		ep.onStartTag[ValueName] = (ElementParser ep) {
-			r.array ~= .fromElement!ValueType(ep);
+			r.array ~= .fromElementFunc!ValueType(ep);
 		};
 		ep.parse();
 		return r;
@@ -161,7 +169,7 @@ struct PArray(string ValueName, ValueType) {
 	Element toElement(string tagName) {
 		auto e = new Element(tagName);
 		foreach (value; array) {
-			e ~= .toElement!ValueType(ValueName, value);
+			e ~= .toElementFunc!ValueType(ValueName, value);
 		}
 		return e;
 	}

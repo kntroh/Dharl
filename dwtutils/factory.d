@@ -62,18 +62,26 @@ Label separator(Composite parent, int style = SWT.HORIZONTAL) {
 	return new Label(parent, style | SWT.SEPARATOR);
 }
 /// ditto
-ToolItem separator(ToolBar parent) {
-	return new ToolItem(parent, SWT.SEPARATOR);
+MenuItem separator(Menu parent, int index = -1) {
+	if (index < 0) {
+		return new MenuItem(parent, SWT.SEPARATOR);
+	} else {
+		return new MenuItem(parent, SWT.SEPARATOR, index);
+	}
 }
 /// ditto
-MenuItem separator(Menu parent) {
-	return new MenuItem(parent, SWT.SEPARATOR);
+ToolItem separator(ToolBar parent, int index = -1) {
+	if (index < 0) {
+		return new ToolItem(parent, SWT.SEPARATOR);
+	} else {
+		return new ToolItem(parent, SWT.SEPARATOR, index);
+	}
 }
 /// ditto
-MTItem separator(Menu menu, ToolBar tool) {
+MTItem separator(Menu menu, ToolBar tool, int menuIndex = -1, int toolIndex = -1) {
 	typeof(return) result;
-	result.menuItem = new MenuItem(menu, SWT.SEPARATOR);
-	result.toolItem = new ToolItem(tool, SWT.SEPARATOR);
+	result.menuItem = .separator(menu, menuIndex);
+	result.toolItem = .separator(tool, toolIndex);
 	return result;
 }
 
@@ -99,8 +107,13 @@ Menu basicDropDownMenu(Shell parent, string text) {
 	return basicDropDownMenu(parent.p_menuBar, text);
 }
 /// Creates basic style menu item.
-MenuItem basicMenuItem(Menu parent, string text, Image image, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false) {
-	auto menuItem = new MenuItem(parent, style);
+MenuItem basicMenuItem(Menu parent, string text, Image image, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false, int index = -1) {
+	MenuItem menuItem;
+	if (index < 0) {
+		menuItem = new MenuItem(parent, style);
+	} else {
+		menuItem = new MenuItem(parent, style, index);
+	}
 	menuItem.p_text = text;
 	menuItem.p_image = image;
 	menuItem.p_accelerator = acceleratorKey(text);
@@ -111,18 +124,18 @@ MenuItem basicMenuItem(Menu parent, string text, Image image, void delegate(Even
 	return menuItem;
 }
 /// ditto
-MenuItem basicMenuItem(Menu parent, string text, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false) {
-	return basicMenuItem(parent, text, null, listener, style, selection);
+MenuItem basicMenuItem(Menu parent, string text, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false, int index = -1) {
+	return basicMenuItem(parent, text, null, listener, style, selection, index);
 }
 /// ditto
-MenuItem basicMenuItem(Menu parent, string text, Image image, void delegate() listener, int style = SWT.PUSH, bool selection = false) {
+MenuItem basicMenuItem(Menu parent, string text, Image image, void delegate() listener, int style = SWT.PUSH, bool selection = false, int index = -1) {
 	return basicMenuItem(parent, text, image, listener ? (Event) {
 		listener();
-	} : null, style, selection);
+	} : null, style, selection, index);
 }
 /// ditto
-MenuItem basicMenuItem(Menu parent, string text, void delegate() listener, int style = SWT.PUSH, bool selection = false) {
-	return basicMenuItem(parent, text, null, listener, style, selection);
+MenuItem basicMenuItem(Menu parent, string text, void delegate() listener, int style = SWT.PUSH, bool selection = false, int index = -1) {
+	return basicMenuItem(parent, text, null, listener, style, selection, index);
 }
 
 /// Creates basic style tool bar.
@@ -130,8 +143,13 @@ ToolBar basicToolBar(Composite parent, int style = SWT.FLAT | SWT.HORIZONTAL) {
 	return new ToolBar(parent, style);
 }
 /// Creates basic style tool item.
-ToolItem basicToolItem(ToolBar parent, string text, Image image, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false) {
-	auto toolItem = new ToolItem(parent, style);
+ToolItem basicToolItem(ToolBar parent, string text, Image image, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false, int index = -1) {
+	ToolItem toolItem;
+	if (index < 0) {
+		toolItem = new ToolItem(parent, style);
+	} else {
+		toolItem = new ToolItem(parent, style, index);
+	}
 	int tab = text.indexOf("\t");
 	if (-1 != tab) text = text[0 .. tab];
 	if (image) {
@@ -147,22 +165,27 @@ ToolItem basicToolItem(ToolBar parent, string text, Image image, void delegate(E
 	return toolItem;
 }
 /// ditto
-ToolItem basicToolItem(ToolBar parent, string text, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false) {
-	return basicToolItem(parent, text, null, listener, style, selection);
+ToolItem basicToolItem(ToolBar parent, string text, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false, int index = -1) {
+	return basicToolItem(parent, text, null, listener, style, selection, index);
 }
 /// ditto
-ToolItem basicToolItem(ToolBar parent, string text, Image image, void delegate() listener, int style = SWT.PUSH, bool selection = false) {
+ToolItem basicToolItem(ToolBar parent, string text, Image image, void delegate() listener, int style = SWT.PUSH, bool selection = false, int index = -1) {
 	return basicToolItem(parent, text, image, listener ? (Event) {
 		listener();
-	} : null, style, selection);
+	} : null, style, selection, index);
 }
 /// ditto
-ToolItem basicToolItem(ToolBar parent, string text, void delegate() listener, int style = SWT.PUSH, bool selection = false) {
-	return basicToolItem(parent, text, null, listener, style, selection);
+ToolItem basicToolItem(ToolBar parent, string text, void delegate() listener, int style = SWT.PUSH, bool selection = false, int index = -1) {
+	return basicToolItem(parent, text, null, listener, style, selection, index);
 }
 /// ditto
-ToolItem basicToolItem(ToolBar parent, Control control) {
-	auto toolItem = new ToolItem(parent, SWT.SEPARATOR);
+ToolItem basicToolItem(ToolBar parent, Control control, int index = -1) {
+	ToolItem toolItem;
+	if (index < 0) {
+		toolItem = new ToolItem(parent, SWT.SEPARATOR);
+	} else {
+		toolItem = new ToolItem(parent, SWT.SEPARATOR, index);
+	}
 	toolItem.control = control;
 	auto cs = control.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 	toolItem.p_width = cs.x;
@@ -170,11 +193,11 @@ ToolItem basicToolItem(ToolBar parent, Control control) {
 }
 
 /// Creates basic style a menu item and a tool item bound.
-MTItem basicMenuItem(Menu menu, ToolBar tool, string text, Image image, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false) {
+MTItem basicMenuItem(Menu menu, ToolBar tool, string text, Image image, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false, int menuIndex = -1, int toolIndex = -1) {
 	typeof(return) result;
 	void delegate(Event e) nl = null;
-	result.menuItem = basicMenuItem(menu, text, image, nl, style, selection);
-	result.toolItem = basicToolItem(tool, text, image, nl, style, selection);
+	result.menuItem = basicMenuItem(menu, text, image, nl, style, selection, menuIndex);
+	result.toolItem = basicToolItem(tool, text, image, nl, style, selection, toolIndex);
 	bindMenu(result.menuItem, result.toolItem);
 	if (listener) {
 		result.menuItem.listeners!(SWT.Selection) ~= listener;
@@ -183,18 +206,18 @@ MTItem basicMenuItem(Menu menu, ToolBar tool, string text, Image image, void del
 	return result;
 }
 /// ditto
-MTItem basicMenuItem(Menu menu, ToolBar tool, string text, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false) {
-	return basicMenuItem(menu, tool, text, null, listener, style, selection);
+MTItem basicMenuItem(Menu menu, ToolBar tool, string text, void delegate(Event e) listener, int style = SWT.PUSH, bool selection = false, int menuIndex = -1, int toolIndex = -1) {
+	return basicMenuItem(menu, tool, text, null, listener, style, selection, menuIndex, toolIndex);
 }
 /// ditto
-MTItem basicMenuItem(Menu menu, ToolBar tool, string text, Image image, void delegate() listener, int style = SWT.PUSH, bool selection = false) {
+MTItem basicMenuItem(Menu menu, ToolBar tool, string text, Image image, void delegate() listener, int style = SWT.PUSH, bool selection = false, int menuIndex = -1, int toolIndex = -1) {
 	return basicMenuItem(menu, tool, text, image, listener ? (Event) {
 		listener();
-	} : null, style, selection);
+	} : null, style, selection, menuIndex, toolIndex);
 }
 /// ditto
-MTItem basicMenuItem(Menu menu, ToolBar tool, string text, void delegate() listener, int style = SWT.PUSH, bool selection = false) {
-	return basicMenuItem(menu, tool, text, null, listener, style, selection);
+MTItem basicMenuItem(Menu menu, ToolBar tool, string text, void delegate() listener, int style = SWT.PUSH, bool selection = false, int menuIndex = -1, int toolIndex = -1) {
+	return basicMenuItem(menu, tool, text, null, listener, style, selection, menuIndex, toolIndex);
 }
 
 /// Creates basic style Label.

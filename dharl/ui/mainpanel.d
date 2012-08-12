@@ -3,6 +3,7 @@
 module dharl.ui.mainpanel;
 
 private import util.graphics;
+private import util.types;
 private import util.undomanager;
 private import util.utils;
 
@@ -54,6 +55,8 @@ class MainPanel : Composite {
 	void delegate()[] statusChangedReceivers;
 	/// Receivers of selected event.
 	void delegate()[] selectedReceivers;
+	/// Receivers of loaded event.
+	void delegate(string file)[] loadedReceivers;
 
 	private DCommon _c = null;
 
@@ -91,7 +94,7 @@ class MainPanel : Composite {
 		auto splitter = basicSplitter(this, SWT.HORIZONTAL);
 		constructPaintArea(splitter, _um);
 		constructImageList(splitter, _um);
-		refSashPos(splitter, _c.conf.sashPosWork_List.value);
+		splitter.refSashPos(_c.conf.sashPosWork_List.value);
 
 		_paletteView.listeners!(SWT.Selection) ~= {
 			_um.resetRetryWord();
@@ -143,7 +146,7 @@ class MainPanel : Composite {
 				_um.store(item.image, {
 					_paintArea.fixPaste();
 					if (item.pushImage(_paintArea.image)) {
-						_pushBase = _paintArea.image.storeData;
+						_pushBase = _paintArea.image.storeData(false);
 						modified(item);
 						return true;
 					}
@@ -158,7 +161,7 @@ class MainPanel : Composite {
 				_paintArea.pushImage(image, bounds.x, bounds.y);
 				_paintPreview.redraw();
 				_layerList.redraw();
-				_pushBase = _paintArea.image.storeData;
+				_pushBase = _paintArea.image.storeData(false);
 				break;
 			default: assert (0);
 			}
@@ -233,15 +236,15 @@ class MainPanel : Composite {
 
 		// Splitter of paint area and palette.
 		auto ppSplitter = basicSplitter(parent, SWT.VERTICAL);
-		scope (exit) refSashPos(ppSplitter, _c.conf.sashPosPaint_Palette.value);
+		ppSplitter.refSashPos(_c.conf.sashPosPaint_Palette.value);
 
 		// Splitter of paintArea and tools.
 		auto paintSplitter = basicSplitter(ppSplitter, SWT.HORIZONTAL);
-		scope (exit) refSashPos(paintSplitter, _c.conf.sashPosPaint_Preview.value);
+		paintSplitter.refSashPos(_c.conf.sashPosPaint_Preview.value);
 
 		// Splitter of preview and toolbar.
 		auto ptSplitter = basicSplitter(paintSplitter, SWT.VERTICAL);
-		scope (exit) refSashPos(ptSplitter, _c.conf.sashPosPreview_Tools.value);
+		ptSplitter.refSashPos(_c.conf.sashPosPreview_Tools.value);
 
 		// Preview of image in drawing.
 		_paintPreview = new PaintPreview(ptSplitter, SWT.BORDER | SWT.DOUBLE_BUFFERED);
@@ -320,11 +323,12 @@ class MainPanel : Composite {
 		_paintArea.cursorDropper = dropper;
 		_paintArea.cursorSelRange = cross;
 		_paintPreview.init(_paintArea);
+		_paletteView.p_cursor = dropper;
 		_layerList.init(_paintArea);
 		_colorSlider.color = _paletteView.color(_paletteView.pixel1);
 
 		// Stores image data for undo operation.
-		_pushBase = _paintArea.image.storeData;
+		_pushBase = _paintArea.image.storeData(false);
 	}
 	/// Creates paint mode toolbar.
 	private void constructModeToolBar(Composite parent) {
@@ -413,11 +417,14 @@ class MainPanel : Composite {
 
 		clearTonesToolBar();
 
-		foreach (tone; _c.conf.tones.array) {
+		void toneItem(in Tone tone) {
 			auto icon = toneIcon(tone.value, 16, 16);
 			basicToolItem(_tones, tone.name, new Image(d, icon), {
 				_paintArea.tone = tone.value;
 			}, SWT.RADIO, tone.value == _paintArea.tone);
+		}
+		foreach (tone; _c.conf.tones.array) {
+			toneItem(tone);
 		}
 	}
 	/// Clears tones toolbar.
@@ -462,6 +469,13 @@ class MainPanel : Composite {
 		checkInit();
 		return _imageList.selectedIndex;
 	}
+	/// Count of open image.
+	@property
+	const
+	size_t imageCount() {
+		checkInit();
+		return _imageList.imageCount;
+	}
 	/// Gets image name at index.
 	string imageName(size_t index) {
 		checkWidget();
@@ -494,6 +508,26 @@ class MainPanel : Composite {
 		}
 	}
 
+	/// If image is modified, returns true.
+	bool modified(size_t index) {
+		checkInit();
+		auto params = _imageList.item(index).dataTo!PImageParams;
+		return params.modCountS != params.modCount;
+	}
+
+	/// Returns file path of directory of selection image.
+	@property
+	private string currentDir() {
+		int i = selectedIndex;
+		if (-1 != i) {
+			auto path = imagePath(i);
+			if (path.length) {
+				return path.dirName();
+			}
+		}
+		return "";
+	}
+
 	/// Creates new image.
 	void createNewImage(int width, int height, bool copyPalette) {
 		checkWidget();
@@ -517,6 +551,8 @@ class MainPanel : Composite {
 		string type = _c.text.fLoadImageType.value;
 		dlg.p_filterNames = [type.format(FILTER)];
 		dlg.p_filterExtensions = [FILTER];
+		auto cur = currentDir;
+		if (cur.length) dlg.p_filterPath = cur;
 		if (!dlg.open()) return false;
 		auto fPath = dlg.p_filterPath;
 		auto names = dlg.p_fileNames;
@@ -586,6 +622,9 @@ class MainPanel : Composite {
 		};
 
 		statusChangedReceivers.raiseEvent();
+		if (path.length) {
+			loadedReceivers.raiseEvent(path.absolutePath().buildNormalizedPath());
+		}
 	}
 
 	/// Saves image to a file.
@@ -641,6 +680,8 @@ class MainPanel : Composite {
 		}
 		dlg.p_filterIndex = fi;
 		dlg.p_overwrite = true;
+		auto cur = currentDir;
+		if (cur.length) dlg.p_filterPath = cur;
 		if (!dlg.open()) return false;
 		if (!dlg.p_fileName || !dlg.p_fileName.length) return false;
 		auto fPath = dlg.p_filterPath;
