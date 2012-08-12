@@ -142,53 +142,53 @@ int acceleratorKey(string text) {
 	if (-1 != i && i + 1 < text.length) {
 		text = text[i + 1 .. $];
 	}
-	string key1;
-	int key2 = 0;
-	i = text.indexOf("+");
-	if (-1 != i && i + 1 < text.length) {
-		key1 = text[0 .. i];
-		key2 = std.ascii.toUpper(text[i + 1]);
-	} else {
-		key1 = text;
+
+	int accelerator = 0;
+	foreach (key; text.split("+")) {
+		switch (key.toUpper()) {
+		case "CTRL"        : accelerator += SWT.CTRL;        break;
+		case "ALT"         : accelerator += SWT.ALT;         break;
+		case "SHIFT"       : accelerator += SWT.SHIFT;       break;
+		case "COMMAND"     : accelerator += SWT.COMMAND;     break;
+		case "BACKSPACE"   : accelerator += SWT.BS;          break;
+		case "TAB"         : accelerator += SWT.TAB;         break;
+		case "RETURN"      : accelerator += SWT.CR;          break;
+		case "ENTER"       : accelerator += SWT.CR;          break;
+		case "ESCAPE"      : accelerator += SWT.ESC;         break;
+		case "ESC"         : accelerator += SWT.ESC;         break;
+		case "DELETE"      : accelerator += 127;             break;
+		case "SPACE"       : accelerator += ' ';             break;
+		case "ARROW_UP"    : accelerator += SWT.ARROW_UP;    break;
+		case "ARROW_DOWN"  : accelerator += SWT.ARROW_DOWN;  break;
+		case "ARROW_LEFT"  : accelerator += SWT.ARROW_LEFT;  break;
+		case "ARROW_RIGHT" : accelerator += SWT.ARROW_RIGHT; break;
+		case "PAGE_UP"     : accelerator += SWT.PAGE_UP;     break;
+		case "PAGE_DOWN"   : accelerator += SWT.PAGE_DOWN;   break;
+		case "HOME"        : accelerator += SWT.HOME;        break;
+		case "END"         : accelerator += SWT.END;         break;
+		case "INSERT"      : accelerator += SWT.INSERT;      break;
+		case "F1"          : accelerator += SWT.F1;          break;
+		case "F2"          : accelerator += SWT.F2;          break;
+		case "F3"          : accelerator += SWT.F3;          break;
+		case "F4"          : accelerator += SWT.F4;          break;
+		case "F5"          : accelerator += SWT.F5;          break;
+		case "F6"          : accelerator += SWT.F6;          break;
+		case "F7"          : accelerator += SWT.F7;          break;
+		case "F8"          : accelerator += SWT.F8;          break;
+		case "F9"          : accelerator += SWT.F9;          break;
+		case "F10"         : accelerator += SWT.F10;         break;
+		case "F11"         : accelerator += SWT.F11;         break;
+		case "F12"         : accelerator += SWT.F12;         break;
+		default:
+			accelerator += key.length ? cast(int) std.ascii.toUpper(key[0]) : 0;
+			break;
+		}
 	}
-	switch (key1.toUpper()) {
-	case "CTRL"        : return key2 + SWT.CTRL;
-	case "ALT"         : return key2 + SWT.ALT;
-	case "SHIFT"       : return key2 + SWT.SHIFT;
-	case "COMMAND"     : return key2 + SWT.COMMAND;
-	case "BACKSPACE"   : return key2 + SWT.BS;
-	case "TAB"         : return key2 + SWT.TAB;
-	case "RETURN"      : return key2 + SWT.CR;
-	case "ENTER"       : return key2 + SWT.CR;
-	case "ESCAPE"      : return key2 + SWT.ESC;
-	case "ESC"         : return key2 + SWT.ESC;
-	case "DELETE"      : return key2 + 127;
-	case "SPACE"       : return key2 + ' ';
-	case "ARROW_UP"    : return key2 + SWT.ARROW_UP;
-	case "ARROW_DOWN"  : return key2 + SWT.ARROW_DOWN;
-	case "ARROW_LEFT"  : return key2 + SWT.ARROW_LEFT;
-	case "ARROW_RIGHT" : return key2 + SWT.ARROW_RIGHT;
-	case "PAGE_UP"     : return key2 + SWT.PAGE_UP;
-	case "PAGE_DOWN"   : return key2 + SWT.PAGE_DOWN;
-	case "HOME"        : return key2 + SWT.HOME;
-	case "END"         : return key2 + SWT.END;
-	case "INSERT"      : return key2 + SWT.INSERT;
-	case "F1"          : return key2 + SWT.F1;
-	case "F2"          : return key2 + SWT.F2;
-	case "F3"          : return key2 + SWT.F3;
-	case "F4"          : return key2 + SWT.F4;
-	case "F5"          : return key2 + SWT.F5;
-	case "F6"          : return key2 + SWT.F6;
-	case "F7"          : return key2 + SWT.F7;
-	case "F8"          : return key2 + SWT.F8;
-	case "F9"          : return key2 + SWT.F9;
-	case "F10"         : return key2 + SWT.F10;
-	case "F11"         : return key2 + SWT.F11;
-	case "F12"         : return key2 + SWT.F12;
-	default: return 0;
-	}
+
+	return accelerator;
 } unittest {
 	assert (acceleratorKey("&Save\tCtrl+S") == SWT.CTRL + 'S');
+	assert (acceleratorKey("&Save\tCtrl+Shift+S") == SWT.CTRL + SWT.SHIFT + 'S');
 }
 
 /// Adds drag functions to control.
