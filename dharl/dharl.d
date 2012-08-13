@@ -28,9 +28,8 @@ private import java.lang.all : ArrayWrapperString2;
 
 /// Entry point of program.
 void main(string[] args) {
-	version (Console) {
-		writefln("Execute: %s", exe);
-	}
+	string exe = .moduleFileName(args[0]);
+	.consoleoutf("Execute: %s", exe);
 
 	// Pipe name for process communication.
 	static immutable PIPE_NAME = "dharl";
@@ -67,19 +66,14 @@ void main(string[] args) {
 	}
 
 	// Load application configuration.
-	string exe = .moduleFileName(args[0]);
 	string appData = .appData(exe.dirName(), true).buildPath("dharl").buildPath("settings.xml");
-	version (Console) {
-		writefln("AppData: %s", appData);
-	}
+	.consoleoutf("AppData: %s", appData);
 	auto c = new DCommon;
 	if (appData.exists()) {
 		try {
 			c.conf.readXMLFile(appData);
 		} catch (Exception e) {
-			version (Console) {
-				writefln("Read failure: %s", appData);
-			}
+			.erroroutf("Read failure: %s", appData);
 		}
 	}
 
@@ -93,9 +87,7 @@ void main(string[] args) {
 		try {
 			mainPanel.loadImage(file);
 		} catch (Exception e) {
-			version (Console) {
-				writefln("Load failure: %s", file);
-			}
+			.erroroutf("Load failure: %s", file);
 		}
 	}
 
@@ -116,9 +108,7 @@ void main(string[] args) {
 				try {
 					mainPanel.loadImage(file);
 				} catch (Exception e) {
-					version (Console) {
-						writefln("Load failure: %s", file);
-					}
+					.erroroutf("Load failure: %s", file);
 				}
 			});
 			return MSG_GET_ARGUMENT;
@@ -127,9 +117,7 @@ void main(string[] args) {
 	}, false, 1000);
 	if (!startServer) {
 		auto msg = .format("Pipe creation failure: %s", PIPE_NAME);
-		version (Console) {
-			writeln(msg);
-		}
+		.erroroutf(msg);
 		throw new Exception(msg);
 	}
 
@@ -151,9 +139,7 @@ void main(string[] args) {
 		c.conf.writeXMLFile(appData);
 
 	} catch (Exception e) {
-		version (Console) {
-			writefln("Write failure: %s", appData);
-		}
+		.erroroutf("Write failure: %s", appData);
 	}
 }
 
@@ -446,7 +432,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		try {
 			mainPanel.loadImage(file);
 		} catch (Exception e) {
-			writefln("Load failure: %s", file);
+			.erroroutf("Load failure: %s", file);
 		}
 	}
 

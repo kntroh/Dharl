@@ -12,14 +12,30 @@ private import std.traits;
 version (Console) {
 	import std.stdio;
 	/// Prints debug message.
-	alias std.stdio.writeln writeln;
+	void consoleoutf(T...)(string msgf, T args) {
+		writefln(msgf, args);
+	}
 	/// ditto
-	alias std.stdio.writefln writefln;
+	void consoleout(string msg) {
+		writeln(msg);
+	}
+	/// Outputs error message.
+	void erroroutf(T...)(string msgf, T args) {
+		writefln(msgf, args);
+	}
+	/// ditto
+	void errorout(string msg) {
+		writeln(msg);
+	}
 } else {
 	/// Prints debug message.
-	void writeln(Args...)(Args args) {}
+	void consoleoutf(T...)(string msgf, T args) { /* Do nothing */ }
 	/// ditto
-	void writefln(Args...)(string format, Args args) {}
+	void consoleout(string msg) { /* Do nothing */ }
+	/// Outputs error message.
+	void erroroutf(T...)(string msgf, T args) { /* Do nothing */ }
+	/// ditto
+	void errorout(string msg) { /* Do nothing */ }
 }
 
 debug private import std.datetime;
