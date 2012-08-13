@@ -9,6 +9,8 @@ private import std.traits;
 
 private import org.eclipse.swt.all;
 
+private import java.lang.all : Runnable;
+
 /**
 Wraps a getter and a setter.
 
@@ -179,6 +181,23 @@ auto listeners(int Type, W)(W widget) {
 @property
 D dataTo(D : Object)(Widget widget) {
 	return cast(D) widget.data;
+}
+
+/// Calls display.syncExec() or display.asyncExec() with dlg.
+void syncExecWith(T...)(Display display, void delegate(T args) dlg, T args) {
+	display.syncExec(new class Runnable {
+		override void run() {
+			dlg(args);
+		}
+	});
+}
+/// ditto
+void asyncExecWith(T...)(Display display, void delegate(T args) dlg, T args) {
+	display.asyncExec(new class Runnable {
+		override void run() {
+			dlg(args);
+		}
+	});
 }
 
 /// Converts from std.string.newline to "\n".

@@ -17,9 +17,9 @@ version (Console) {
 	alias std.stdio.writefln writefln;
 } else {
 	/// Prints debug message.
-	void writeln(Args...)(Args args);
+	void writeln(Args...)(Args args) {}
 	/// ditto
-	void writefln(Args...)(string format, Args args);
+	void writefln(Args...)(string format, Args args) {}
 }
 
 debug private import std.datetime;

@@ -114,7 +114,7 @@ class DText {
 	/// Messages.
 	mixin MsgProp!("appName", "pa");
 	mixin MsgProp!("fAppNameWithImage", "%s - pa"); /// ditto
-	mixin MsgProp!("fAppNameWithImageChanged", "%s* - pa"); /// ditto
+	mixin MsgProp!("fAppNameWithImageChanged", "*%s - pa"); /// ditto
 
 	mixin MsgProp!("ok", "&OK"); /// ditto
 	mixin MsgProp!("cancel", "&Cancel"); /// ditto
@@ -123,7 +123,7 @@ class DText {
 	mixin MsgProp!("apply", "&Apply"); /// ditto
 
 	mixin MsgProp!("noName", "(No name)"); /// ditto
-	mixin MsgProp!("fChanged", "%s*"); /// ditto
+	mixin MsgProp!("fChanged", "*%s"); /// ditto
 	mixin MsgProp!("newLayer", "(New layer)"); /// ditto
 	mixin MsgProp!("layerName", "Name"); /// ditto
 	mixin MsgProp!("layerVisible", "Visible"); /// ditto
@@ -196,10 +196,10 @@ struct DMenuText {
 	mixin MsgProp!("mirrorVertical", "M&irror vertical"); /// ditto
 	mixin MsgProp!("flipHorizontal", "&Flip horizontal"); /// ditto
 	mixin MsgProp!("flipVertical", "Fli&p vertical"); /// ditto
-	mixin MsgProp!("rotateRight", "Rotate &right"); /// ditto
-	mixin MsgProp!("rotateLeft", "Rotate &left"); /// ditto
-	mixin MsgProp!("rotateUp", "Rotate &up"); /// ditto
-	mixin MsgProp!("rotateDown", "Rotate &down"); /// ditto
+	mixin MsgProp!("rotateRight", "Rotate &right\tCtrl+Arrow_Right"); /// ditto
+	mixin MsgProp!("rotateLeft", "Rotate &left\tCtrl+Arrow_Left"); /// ditto
+	mixin MsgProp!("rotateUp", "Rotate &up\tCtrl+Arrow_Up"); /// ditto
+	mixin MsgProp!("rotateDown", "Rotate &down\tCtrl+Arrow_Down"); /// ditto
 	mixin MsgProp!("turn", "&Turn"); /// ditto
 
 	mixin MsgProp!("configuration", "&Configuration..."); /// ditto

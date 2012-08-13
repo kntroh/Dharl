@@ -32,6 +32,11 @@ class Splitter : Composite {
 	/// Width of sash.
 	private int _sashWidth = 5;
 
+	/// When resized this splitter, this control will be resized.
+	private Control _resizable = null;
+	/// Width or height of before resizing.
+	private int _oldSize = -1;
+
 	/// The only constructor.
 	/// The default splitting style is SWT.HORIZONTAL.
 	this (Composite parent, int style) {
@@ -66,26 +71,44 @@ class Splitter : Composite {
 			checkWidget();
 			auto children = this.p_children;
 			if (2 > children.length) return;
+			auto ca = this.p_clientArea;
+
+			int oldSize = _oldSize;
+			int newSize;
+			if (SWT.VERTICAL == splitStyle) {
+				newSize = ca.height;
+			} else {
+				newSize = ca.width;
+			}
+			_oldSize = newSize;
+
 			auto a = children[0];
 			auto b = children[1];
-
-			auto ca = this.p_clientArea;
 
 			if (_selection < 0) {
 				// initialize
 				this.p_selection = SWT.DEFAULT;
 			}
 
-			if (b.p_visible) return;
+			scope (exit) raiseSelectionEvent(e);
 
-			auto bw = this.p_borderWidth;
-			if (SWT.VERTICAL == splitStyle) {
-				this.p_selection = ca.height - bw;
+			if (_resizable is a) {
+				if (-1 == oldSize) return;
+				if (!a.p_visible) return;
+
+				// Resizes top or left control.
+				this.p_selection = this.p_selection + (newSize - oldSize);
 			} else {
-				this.p_selection = ca.width - bw;
-			}
+				// Only if B is minimized.
+				if (b.p_visible) return;
 
-			raiseSelectionEvent(e);
+				auto bw = this.p_borderWidth;
+				if (SWT.VERTICAL == splitStyle) {
+					this.p_selection = ca.height - bw;
+				} else {
+					this.p_selection = ca.width - bw;
+				}
+			}
 		};
 	}
 
@@ -189,6 +212,23 @@ class Splitter : Composite {
 		return _selection;
 	}
 
+	/// When resized this splitter, c will be resized.
+	/// Default value is null.
+	@property
+	void resizable(Control c) {
+		checkWidget();
+		if (this !is c.p_parent) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		_resizable = c;
+	}
+	/// ditto
+	@property
+	Control resizable() {
+		checkWidget();
+		return _resizable;
+	}
+
 	/// Minimum width of splitted one area.
 	@property
 	void dragMinimum(int value) {
@@ -277,6 +317,8 @@ class Splitter : Composite {
 
 			auto bw = composite.p_borderWidth;
 			if (SWT.VERTICAL == splitStyle) {
+				_oldSize = ca.height;
+
 				int y = bw;
 				if (a.p_visible) {
 					a.setBounds(0, y, ca.width, _selection);
@@ -291,6 +333,8 @@ class Splitter : Composite {
 					_sash.setBounds(0, y, ca.width, sashWidth);
 				}
 			} else {
+				_oldSize = ca.width;
+
 				int x = bw;
 				if (a.p_visible) {
 					a.setBounds(x, 0, _selection, ca.height);

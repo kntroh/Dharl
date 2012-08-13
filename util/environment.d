@@ -1,5 +1,5 @@
 
-/// This module includes functions with result for each environment
+/// This module includes functions with result for each environment.
 module util.environment;
 
 private import std.conv;
@@ -15,13 +15,14 @@ alias shared(void)* libHandle;
 private immutable MAX_PATH = 0x8000;
 
 version (Windows) {
+
 	private import std.utf;
 	private import core.sys.windows.windows;
 
 	/// Handle of shell32.dll or shell64.dll.
 	private libHandle _dllShell = null;
 	extern (Windows) {
-		/// Functions of shell32.dll.
+		/// Functions and constant values of the shell32.dll.
 		private alias HRESULT function(
 			/* in  */ HWND   hwndOwner,
 			/* in  */ INT    nFolder,
@@ -29,15 +30,17 @@ version (Windows) {
 			/* in  */ DWORD  dwFlags,
 			/* out */ LPWSTR pszPath
 		) SHGetFolderPathW;
-
-		private immutable S_OK               = 0x0000;
-		private immutable CSIDL_APPDATA      = 0x001A;
-		private immutable SHGFP_TYPE_CURRENT = 0x0000;
+		private immutable S_OK               = 0x0000; /// ditto
+		private immutable CSIDL_APPDATA      = 0x001A; /// ditto
+		private immutable SHGFP_TYPE_CURRENT = 0x0000; /// ditto
 	}
 
 	shared static ~this () {
 		if (_dllShell) .dlclose(_dllShell);
 	}
+
+
+	/* ----- Shared library -------------------------------------------- */
 
 	/// Load shared library.
 	libHandle dlopen(string lib) {
@@ -57,6 +60,9 @@ version (Windows) {
 		if (result) lib = null;
 		return 0 != result;
 	}
+
+
+	/* ----- File and directory ---------------------------------------- */
 
 	/// Gets default application data directory from the environment.
 	string appData(string defaultValue, bool freeLibrary) {
@@ -91,10 +97,14 @@ version (Windows) {
 	}
 
 } else version (Posix) {
+
 	private static import core.sys.posix.dlfcn;
 
-	private import core.sys.posix.unistd;
 	private import core.sys.posix.pwd;
+	private import core.sys.posix.unistd;
+
+
+	/* ----- Shared library -------------------------------------------- */
 
 	/// Load shared library.
 	libHandle dlopen(string lib) {
@@ -114,6 +124,9 @@ version (Windows) {
 		if (0 == result) lib = null;
 		return 0 == result;
 	}
+
+
+	/* ----- File and directory ---------------------------------------- */
 
 	/// Gets default application data directory from the environment.
 	string appData(string defaultValue, bool freeLibrary) {

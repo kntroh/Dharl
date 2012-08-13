@@ -241,6 +241,7 @@ class MainPanel : Composite {
 		// Splitter of paintArea and tools.
 		auto paintSplitter = basicSplitter(ppSplitter, SWT.HORIZONTAL);
 		paintSplitter.refSashPos(_c.conf.sashPosPaint_Preview.value);
+		ppSplitter.resizable = paintSplitter;
 
 		// Splitter of preview and toolbar.
 		auto ptSplitter = basicSplitter(paintSplitter, SWT.VERTICAL);
