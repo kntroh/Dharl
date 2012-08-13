@@ -13,7 +13,6 @@ private import dharl.ui.mainpanel;
 private import dharl.ui.paintarea;
 private import dharl.ui.dialogs;
 private import dharl.ui.uicommon;
-private import dharl.ui.dwtfactory;
 private import dharl.ui.dwtutils;
 
 private import std.algorithm;

@@ -17,6 +17,23 @@ private import java.lang.Runnable;
 
 private import org.eclipse.swt.all;
 
+/// Creates basic style CSlider.
+CSlider basicCSlider(Composite parent, int style, int min, int max, int pageIncrement) {
+	auto slider = new CSlider(parent, style);
+	slider.p_minimum = min;
+	slider.p_maximum = max;
+	slider.p_pageIncrement = pageIncrement;
+	return slider;
+}
+/// ditto
+CSlider basicHCSlider(Composite parent, int min, int max, int increment) {
+	return basicCSlider(parent, SWT.HORIZONTAL, min, max, increment);
+}
+/// ditto
+CSlider basicVCSlider(Composite parent, int min, int max, int increment) {
+	return basicCSlider(parent, SWT.VERTICAL, min, max, increment);
+}
+
 /// Custom slider.
 /// A purpose of this class, is a solution to problem
 /// of Scale size and a improvement to usability.

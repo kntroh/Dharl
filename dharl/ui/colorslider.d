@@ -5,12 +5,24 @@ module dharl.ui.colorslider;
 private import util.utils;
 
 private import dharl.ui.cslider;
-private import dharl.ui.dwtfactory;
 private import dharl.ui.dwtutils;
 
 private import std.conv;
 
 private import org.eclipse.swt.all;
+
+/// Creates basic style ColorSlider.
+ColorSlider basicColorSlider(Composite parent, int style) {
+	return new ColorSlider(parent, style);
+}
+/// ditto
+ColorSlider basicHColorSlider(Composite parent) {
+	return basicColorSlider(parent, SWT.HORIZONTAL);
+}
+/// ditto
+ColorSlider basicVColorSlider(Composite parent) {
+	return basicColorSlider(parent, SWT.VERTICAL);
+}
 
 /// A color model.
 enum ColorModel {

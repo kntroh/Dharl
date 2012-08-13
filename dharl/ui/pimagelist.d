@@ -6,7 +6,6 @@ private import util.utils;
 
 private import dharl.ui.mlimage;
 private import dharl.ui.dwtutils;
-private import dharl.ui.dwtfactory;
 
 private import std.algorithm;
 private import std.conv;

@@ -16,7 +16,6 @@ private import dharl.ui.colorslider;
 private import dharl.ui.pimagelist;
 private import dharl.ui.splitter;
 private import dharl.ui.uicommon;
-private import dharl.ui.dwtfactory;
 private import dharl.ui.dwtutils;
 
 private import std.algorithm;
@@ -264,7 +263,7 @@ class MainPanel : Composite {
 		auto comp = basicComposite(ppSplitter, GL.window(3, false));
 
 		// Slider for changing color.
-		_colorSlider = new ColorSlider(comp, SWT.VERTICAL);
+		_colorSlider = basicVColorSlider(comp);
 		_colorSlider.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING).vSpan(2);
 		auto css = _colorSlider.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 
