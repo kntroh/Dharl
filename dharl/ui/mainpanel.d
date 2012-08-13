@@ -26,8 +26,6 @@ private import std.traits;
 
 private import org.eclipse.swt.all;
 
-private import java.lang.all;
-
 /// Parameter for PImage management.
 private class PImageParams {
 	/// Is saved?

@@ -13,6 +13,23 @@ private import std.typecons;
 
 private import org.eclipse.swt.all;
 
+/// Computes text size on drawable.
+Point computeTextSize(Drawable drawable, string text) {
+	auto tgc = new GC(drawable);
+	scope (exit) tgc.dispose();
+	return tgc.textExtent(text);
+}
+/// Computes text size with font.
+Point computeTextSize(Font font, string text) {
+	auto d = Display.getCurrent();
+	auto img = new Image(d, 1, 1);
+	scope (exit) img.dispose();
+	auto tgc = new GC(img);
+	scope (exit) tgc.dispose();
+	tgc.p_font = font;
+	return tgc.textExtent(text);
+}
+
 /// A floating text box on a Composite.
 class Editor {
 	/// The parent of text box.

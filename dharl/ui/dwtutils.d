@@ -79,13 +79,6 @@ void drawShade(GC gc, in Rectangle clientArea) {
 	}
 }
 
-/// Computes text size on drawable.
-Point computeTextSize(Drawable drawable, string text) {
-	auto tgc = new GC(drawable);
-	scope (exit) tgc.dispose();
-	return tgc.textExtent(text);
-}
-
 /// Converts image to 8-bit indexed color.
 ImageData colorReduction(ImageData image, bool errorDiffusion = true) {
 	if (image.depth == 8 && !image.palette.isDirect && image.palette.colors.length == 256) {

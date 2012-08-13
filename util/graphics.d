@@ -33,18 +33,18 @@ real distance(real x1, real y1, real x2, real y2) {
 	return sqrt(d1 * d1 + d2 * d2);
 }
 
-/// Calls dlg(X, Y) with points of path.
+/// Calls setPoint(X, Y) with points of path.
 /// If mode is PaintMode.Fill, please use pointsOfFill().
-void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, int x2, int y2, size_t w, size_t h, uint size = 1) {
+void pointsOfPath(void delegate(int, int) setPoint, PaintMode mode, int x1, int y1, int x2, int y2, size_t w, size_t h, uint size = 1) {
 	if (0 == size) return;
 
 	int s = size - 1;
-	// Calls dlg on around x, y.
+	// Calls setPoint on around x, y.
 	void around(int x, int y) {
 		assert (isEnabledSize(mode));
 		if (1 == size) {
 			if (0 <= x && x < w && 0 <= y && y < h) {
-				dlg(x, y);
+				setPoint(x, y);
 			}
 		} else {
 			int xFrom = x - s;
@@ -59,7 +59,7 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 			yTo = max(0, yTo);
 			foreach (xa; xFrom .. xTo + 1) {
 				foreach (ya; yFrom .. yTo + 1) {
-					dlg(xa, ya);
+					setPoint(xa, ya);
 				}
 			}
 		}
@@ -69,7 +69,7 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 		if (isEnabledSize(mode)) {
 			around(x1, y1);
 		} else {
-			dlg(x1, y1);
+			setPoint(x1, y1);
 		}
 		return;
 	}
@@ -79,7 +79,7 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 	int mny = min(y1, y2);
 
 	// Common function for oval.
-	void oval(void delegate(int, int, int, int) dlg2) {
+	void oval(void delegate(int, int, int, int) setPoint2) {
 		// Bresenham
 		int a = (mxx - mnx) / 2;
 		int b = (mxy - mny) / 2;
@@ -100,7 +100,7 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 		int y = 0;
 		// Only 1/4 is calculated.
 		while (x >= 0) {
-			dlg2(cx, cy, x, y);
+			setPoint2(cx, cy, x, y);
 			if (f >= 0) {
 				x--;
 				f -= bb4 * x;
@@ -187,13 +187,13 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 			// Draws line from upper right to lower right.
 			int xa = cx + x;
 			if (0 <= xa && xa < w) {
-				pointsOfPath(dlg, PaintMode.Straight, xa, y1, xa, y2, w, h, size);
+				pointsOfPath(setPoint, PaintMode.Straight, xa, y1, xa, y2, w, h, size);
 			}
 
 			// Draws line from upper left to lower left.
 			int xb = cx - x;
 			if (0 <= xb && xb < w) {
-				pointsOfPath(dlg, PaintMode.Straight, xb, y1, xb, y2, w, h, size);
+				pointsOfPath(setPoint, PaintMode.Straight, xb, y1, xb, y2, w, h, size);
 			}
 		});
 		break;
@@ -205,7 +205,7 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 		mny = max(cast(int) (size - 1), mny);
 		mxy = min(cast(int) (h - (size - 1)), mxy);
 		foreach (x; mnx .. mxx + 1) {
-			pointsOfPath(dlg, PaintMode.Straight, x, mny, x, mxy, w, h, size);
+			pointsOfPath(setPoint, PaintMode.Straight, x, mny, x, mxy, w, h, size);
 		}
 		break;
 	case PaintMode.Fill:
@@ -214,11 +214,11 @@ void pointsOfPath(void delegate(int, int) dlg, PaintMode mode, int x1, int y1, i
 	}
 }
 
-/// Calls dlg(X, Y) with points of fill area.
+/// Calls setPoint(X, Y) with points of fill area.
 /// Params:
 ///  onFillArea = This function receives X, Y
 ///               and returns true if it is fill area.
-void pointsOfFill(void delegate(int x, int y) dlg, bool delegate(int x, int y) onFillArea, int sx, int sy, size_t w, size_t h) {
+void pointsOfFill(void delegate(int x, int y) setPoint, bool delegate(int x, int y) onFillArea, int sx, int sy, size_t w, size_t h) {
 	if (!onFillArea(sx, sy)) return;
 	if (sx < 0 || w <= sx) return;
 	if (sy < 0 || h <= sy) return;
@@ -240,7 +240,7 @@ void pointsOfFill(void delegate(int x, int y) dlg, bool delegate(int x, int y) o
 		int xr = sx;
 		while (canFill(xl - 1, sy)) xl--;
 		while (canFill(xr + 1, sy)) xr++;
-		pointsOfPath(dlg, PaintMode.Straight, xl, sy, xr, sy, w, h);
+		pointsOfPath(setPoint, PaintMode.Straight, xl, sy, xr, sy, w, h);
 		comp[wy + xl .. wy + xr + 1] = true;
 
 		int upX = -1;
