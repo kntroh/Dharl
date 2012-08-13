@@ -34,6 +34,8 @@ class PaintArea : Canvas, Undoable {
 	void delegate()[] restoreReceivers;
 	/// Receivers of changed layer event.
 	void delegate()[] changedLayerReceivers;
+	/// Receivers of area resized event.
+	void delegate(int w, int h)[] resizeReceivers;
 
 	/// ID of this instance.
 	private string _id;
@@ -1229,11 +1231,28 @@ class PaintArea : Canvas, Undoable {
 		drawReceivers.raiseEvent();
 	}
 
-	/// Resizes image.
-	void resize(int newW, int newH) {
+	/// Resizes paint area.
+	void resize(int w, int h) {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
+
+		if (_image.width == w && _image.height == h) return;
+
+		if (_um) _um.store(this);
+		resetPasteParams();
+		_image.resize(w, h, backgroundPixel);
+
+		resizeReceivers.raiseEvent(w, h);
+		drawReceivers.raiseEvent();
+	}
+
+	/// Change image scale.
+	void scaledTo(int newW, int newH) {
+		checkWidget();
+		checkInit();
+		if (_image.empty) return;
+
 		int iNewW = newW;
 		int iNewH = newH;
 		int iw, ih;

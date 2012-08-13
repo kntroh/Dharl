@@ -112,9 +112,9 @@ class DText {
 	mixin Prop!("menu", DMenuText);
 
 	/// Messages.
-	mixin MsgProp!("appName", "pa");
-	mixin MsgProp!("fAppNameWithImage", "%s - pa"); /// ditto
-	mixin MsgProp!("fAppNameWithImageChanged", "*%s - pa"); /// ditto
+	mixin MsgProp!("appName", "Dharl");
+	mixin MsgProp!("fAppNameWithImage", "%s - %s"); /// ditto
+	mixin MsgProp!("fAppNameWithImageChanged", "*%s - %s"); /// ditto
 
 	mixin MsgProp!("ok", "&OK"); /// ditto
 	mixin MsgProp!("cancel", "&Cancel"); /// ditto
@@ -242,7 +242,7 @@ class DConfig {
 	mixin Prop!("sashPosPreview_Tools", int, 150); /// ditto
 	mixin Prop!("sashPosPaint_Palette", int, 400); /// ditto
 
-	mixin Prop!("dialogButtonWidth", uint, 200, true); /// ditto
+	mixin Prop!("dialogButtonWidth", uint, 80, true); /// ditto
 
 	mixin Prop!("fileHistory", PArray!("path", string), PArray!("path", string).init);
 	mixin Prop!("fileHistoryMax", uint, 15);

@@ -175,7 +175,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 			} else {
 				title = c.text.fAppNameWithImage;
 			}
-			shell.p_text = title.format(mainPanel.imageName(i));
+			shell.p_text = title.format(mainPanel.imageName(i), c.text.appName);
 		}
 	}
 	mainPanel.selectedReceivers ~= &refreshTitle;
@@ -350,8 +350,10 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto mConf = basicMenuItem(mTool, c.text.menu.configuration, cimg(c.image.configuration), {
 		auto dlg = new ConfigDialog(shell, c);
 		dlg.appliedReceivers ~= {
+			// Character (paint area) size.
+			// Default character size doesn't undo even if user undo.
 			auto s = c.conf.character;
-			mainPanel.paintArea.setCanvasSize(s.width, s.height);
+			mainPanel.paintArea.resize(s.width, s.height);
 		};
 		dlg.open();
 	});
@@ -375,7 +377,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tResize = basicToolItem(toolBar, c.text.menu.resize, cimg(c.image.resize), {
 		int w = resizeW.p_selection;
 		int h = resizeH.p_selection;
-		mainPanel.paintArea.resize(w, h);
+		mainPanel.paintArea.scaledTo(w, h);
 	});
 
 

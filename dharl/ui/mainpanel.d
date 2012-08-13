@@ -175,6 +175,9 @@ class MainPanel : Composite {
 		_paintArea.selectChangedReceivers ~= (int x, int y, int w, int h) {
 			statusChangedReceivers.raiseEvent();
 		};
+		_paintArea.resizeReceivers ~= (int w, int h) {
+			_imageList.setPieceSize(w, h);
+		};
 		_paletteView.statusChangedReceivers ~= {
 			statusChangedReceivers.raiseEvent();
 		};
@@ -445,6 +448,8 @@ class MainPanel : Composite {
 		checkWidget();
 		checkInit();
 		_imageList = new PImageList(parent, SWT.BORDER | SWT.DOUBLE_BUFFERED);
+		auto cs = _c.conf.character;
+		_imageList.setPieceSize(cs.width, cs.height);
 	}
 
 	/// Area of drawing.

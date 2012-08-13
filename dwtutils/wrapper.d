@@ -40,6 +40,7 @@ mixin GetSetWrapper!("ClientArea"); /// ditto
 mixin GetSetWrapper!("Control"); /// ditto
 mixin GetSetWrapper!("Cursor"); /// ditto
 mixin GetSetWrapper!("Data"); /// ditto
+mixin GetSetWrapper!("DefaultButton"); /// ditto
 mixin GetSetWrapper!("Display"); /// ditto
 mixin GetSetWrapper!("Disposed"); /// ditto
 mixin GetSetWrapper!("DoubleClickTime"); /// ditto

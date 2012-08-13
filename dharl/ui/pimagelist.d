@@ -255,13 +255,13 @@ class PImageList : Canvas {
 		}
 		_pieceSize = CPoint(w, h);
 
-		if (-1 != _selected) {
-			auto selImg = _images[_selected];
-			selImg.redrawPieceFrame();
-			selImg._selectedPiece.x = -1;
-			selImg._selectedPiece.y = -1;
-			selImg._selectedPiece.width = w;
-			selImg._selectedPiece.height = h;
+		foreach (img; _images) {
+			img.redrawPieceFrame();
+			img._selectedPiece.x = -1;
+			img._selectedPiece.y = -1;
+			img._selectedPiece.width = w - 1;
+			img._selectedPiece.height = h - 1;
+			img.redrawPieceFrame();
 		}
 	}
 

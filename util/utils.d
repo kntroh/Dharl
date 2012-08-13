@@ -10,7 +10,8 @@ private import std.path;
 private import std.traits;
 
 version (Console) {
-	import std.stdio;
+	private import std.stdio;
+
 	/// Prints debug message.
 	void consoleoutf(T...)(string msgf, T args) {
 		writefln(msgf, args);
@@ -40,12 +41,12 @@ version (Console) {
 
 debug private import std.datetime;
 
-debug TickDuration performance[128];
-debug size_t performanceCount[128];
+debug __gshared TickDuration performance[128];
+debug __gshared size_t performanceCount[128];
 debug {
-	const BPerfS = `debug auto performanceCounter = std.datetime.StopWatch(std.datetime.AutoStart.yes);`;
+	immutable BPerfS = `debug auto performanceCounter = std.datetime.StopWatch(std.datetime.AutoStart.yes);`;
 } else {
-	const BPerfS = ``;
+	immutable BPerfS = ``;
 }
 template BPerf(size_t I) {
 	const BPerf =

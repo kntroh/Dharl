@@ -114,6 +114,11 @@ struct PropValue(Type, bool ReadOnly) {
 		INIT = defaultValue;
 		value = defaultValue;
 	}
+
+	static if (is(typeof(.text(Type.init)))) {
+		const
+		string toString() { return .text(value); }
+	}
 }
 
 /// Creates T from ep.
