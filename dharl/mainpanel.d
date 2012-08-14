@@ -46,7 +46,7 @@ private class PImageParams {
 	bool modify() { return modCount != modCountS; }
 }
 
-/// The main panel for dharl.
+/// The main panel of dharl.
 class MainPanel : Composite {
 	/// Receivers of status changed event.
 	void delegate()[] statusChangedReceivers;
