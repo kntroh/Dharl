@@ -334,7 +334,7 @@ class PaintArea : Canvas, Undoable {
 			from++;
 			auto ib = CRect(0, 0, _image.width, _image.height);
 			iFillRect((int ix, int iy) {
-				iSetPixel(ix, iy, _backPixel, 0);
+				iSetPixel(ix, iy, _backPixel, 0, true);
 			}, ib);
 			if (from == to) {
 				clearCache();
@@ -985,7 +985,7 @@ class PaintArea : Canvas, Undoable {
 				foreach (iy; 0 .. _pasteLayer.height) {
 					int pixel = pll.getPixel(ix, iy);
 					if (!enabledBackColor || pixel != backPixel) {
-						iSetPixel(_iSelRange.x + ix, _iSelRange.y + iy, pixel, l);
+						iSetPixel(_iSelRange.x + ix, _iSelRange.y + iy, pixel, l, false);
 					}
 				}
 			}
@@ -1652,12 +1652,12 @@ class PaintArea : Canvas, Undoable {
 		redraw(ixtocx(ix), iytocy(iy), itoc(1), itoc(1), false);
 	}
 	/// ditto
-	private void iSetPixel(int ix, int iy, int pixel, int layer) {
+	private void iSetPixel(int ix, int iy, int pixel, int layer, bool force) {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
 		if (!iInImage(ix, iy)) return;
-		if (!iCanDraw(ix, iy, layer)) return;
+		if (!force && !iCanDraw(ix, iy, layer)) return;
 		_image.layer(layer).image.setPixel(ix, iy, pixel);
 		clearCache();
 		redraw(ixtocx(ix), iytocy(iy), itoc(1), itoc(1), false);
@@ -2165,7 +2165,7 @@ class PaintArea : Canvas, Undoable {
 										if (_um) _um.store(this);
 										first = false;
 									}
-									iSetPixel(ix, iy, _pixel, l);
+									iSetPixel(ix, iy, _pixel, l, false);
 								}
 							}, (int ix, int iy) {
 								return iInImage(ix, iy) && iGetPixel(ix, iy, l) == pixel;

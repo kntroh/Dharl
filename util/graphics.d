@@ -33,53 +33,61 @@ real distance(real x1, real y1, real x2, real y2) {
 	return sqrt(d1 * d1 + d2 * d2);
 }
 
-/// Calls setPoint(X, Y) with points of path.
+/// Calls dlg(X, Y) or dlg(X, Y, Width, Height) with points of path.
 /// If mode is PaintMode.Fill, please use pointsOfFill().
-void pointsOfPath(void delegate(int, int) setPoint, PaintMode mode, int x1, int y1, int x2, int y2, size_t w, size_t h, uint size = 1) {
+void pointsOfPath(void delegate(int x, int y) dlg, PaintMode mode, int x1, int y1, int x2, int y2, size_t w, size_t h, uint size = 1) {
+	pointsOfPath((int x, int y, int w, int h) {
+		foreach (ix; x .. w + x) {
+			foreach (iy; y .. h + y) {
+				dlg(ix, iy);
+			}
+		}
+	}, mode, x1, y1, x2, y2, w, h, size);
+}
+/// ditto
+void pointsOfPath(void delegate(int x, int y, int w, int h) dlg, PaintMode mode, int x1, int y1, int x2, int y2, size_t w, size_t h, uint size = 1) {
 	if (0 == size) return;
 
 	int s = size - 1;
-	// Calls setPoint on around x, y.
-	void around(int x, int y) {
+
+	// Calls dlg on around x, y.
+	void around(int x, int y, int xw, int yh) {
 		assert (isEnabledSize(mode));
-		if (1 == size) {
+		if (1 == size && 1 == xw && 1 == yh) {
 			if (0 <= x && x < w && 0 <= y && y < h) {
-				setPoint(x, y);
+				dlg(x, y, xw, yh);
 			}
 		} else {
 			int xFrom = x - s;
-			int xTo = x + s;
+			int xTo = x + xw + s;
 			if (xTo < 0 || cast(int) w <= xFrom) return;
 			int yFrom = y - s;
-			int yTo = y + s;
+			int yTo = y + yh + s;
 			if (yTo < 0 || cast(int) h <= yFrom) return;
-			xFrom = min(cast(int) w - 1, xFrom);
-			xTo = max(0, xTo);
-			yFrom = min(cast(int) h - 1, yFrom);
-			yTo = max(0, yTo);
-			foreach (xa; xFrom .. xTo + 1) {
-				foreach (ya; yFrom .. yTo + 1) {
-					setPoint(xa, ya);
-				}
-			}
+			xTo = min(cast(int) w, xTo);
+			xFrom = max(0, xFrom);
+			yTo = min(cast(int) h, yTo);
+			yFrom = max(0, yFrom);
+			dlg(xFrom, yFrom, xTo - xFrom, yTo - yFrom);
 		}
 	}
 
 	if (x1 == x2 && y1 == y2) {
 		if (isEnabledSize(mode)) {
-			around(x1, y1);
+			around(x1, y1, 1, 1);
 		} else {
-			setPoint(x1, y1);
+			dlg(x1, y1, 1, 1);
 		}
 		return;
 	}
+
 	int mxx = max(x1, x2);
 	int mnx = min(x1, x2);
 	int mxy = max(y1, y2);
 	int mny = min(y1, y2);
 
 	// Common function for oval.
-	void oval(void delegate(int, int, int, int) setPoint2) {
+	void oval(void delegate(int cx, int cy, int x, int y) dlg2) {
 		// Bresenham
 		int a = (mxx - mnx) / 2;
 		int b = (mxy - mny) / 2;
@@ -100,7 +108,7 @@ void pointsOfPath(void delegate(int, int) setPoint, PaintMode mode, int x1, int 
 		int y = 0;
 		// Only 1/4 is calculated.
 		while (x >= 0) {
-			setPoint2(cx, cy, x, y);
+			dlg2(cx, cy, x, y);
 			if (f >= 0) {
 				x--;
 				f -= bb4 * x;
@@ -121,79 +129,70 @@ void pointsOfPath(void delegate(int, int) setPoint, PaintMode mode, int x1, int 
 			assert (ss >= 1);
 			int to = min(cast(int) (w - (size - 1)), mxx);
 			int x = max(cast(int) (size - 1), mnx);
-			for (; x <= to; x += ss) {
-				around(x, y1);
-			}
-			if (x - ss < to) around(to, y2);
+			around(x, y1, to + 1 - x, 1);
 		} else if (x1 == x2) {
 			// vertical
 			int ss = size * 2 - 1;
 			assert (ss >= 1);
 			int to = min(cast(int) (h - (size - 1)), mxy);
 			int y = max(cast(int) (size - 1), mny);
-			for (; y <= to; y += ss) {
-				around(x1, y);
-			}
-			if (y - ss < to) around(x2, to);
+			around(x1, y, 1, to + 1 - y);
 		} else {
 			// diagonal line
 			size_t len = max(mxx - mnx, mxy - mny);
 			// from
-			around(x1, y1);
+			// TODO
+			around(x1, y1, 1, 1);
 			foreach (i; 1 .. len) {
 				// among
 				real dt = cast(real) i / len;
 				int x = roundTo!(int)((x2 - x1) * dt);
 				int y = roundTo!(int)((y2 - y1) * dt);
-				around(x1 + x, y1 + y);
+				around(x1 + x, y1 + y, 1, 1);
 			}
 			// to
-			around(x2, y2);
+			around(x2, y2, 1, 1);
 		}
 		break;
 	case PaintMode.OvalLine:
 		oval((int cx, int cy, int x, int y) {
-			around(cx + x, cy + y);
-			around(cx + x, cy - y);
-			around(cx - x, cy + y);
-			around(cx - x, cy - y);
+			around(cx + x, cy + y, 1, 1);
+			around(cx + x, cy - y, 1, 1);
+			around(cx - x, cy + y, 1, 1);
+			around(cx - x, cy - y, 1, 1);
 		});
 		break;
 	case PaintMode.RectLine:
 		if (mxx < 0 || cast(int) w <= mnx) return;
 		if (mxy < 0 || cast(int) h <= mny) return;
-		mnx = max(cast(int) (size - 1), mnx);
-		mxx = min(cast(int) (w - (size - 1)), mxx);
-		mny = max(cast(int) (size - 1), mny);
-		mxy = min(cast(int) (h - (size - 1)), mxy);
-		foreach (x; mnx .. mxx + 1) {
-			around(x, y1);
-			around(x, y2);
-		}
-		foreach (y; mny + 1 .. mxy) {
-			around(x1, y);
-			around(x2, y);
-		}
+		mnx = min(x1, x2);
+		mxx = max(x1, x2);
+		mny = min(y1, y2);
+		mxy = max(y1, y2);
+		around(mnx, mny, mxx + 1 - mnx, 1);
+		around(mnx, mxy, mxx + 1 - mnx, 1);
+		around(mnx, mny + s * 2, 1, mxy + 1 - mny - s * 4);
+		around(mxx, mny + s * 2, 1, mxy + 1 - mny - s * 4);
 		break;
 	case PaintMode.OvalFill:
 		int i = 0;
 		oval((int cx, int cy, int x, int y) {
-			int iy1 = cy - y;
-			int iy2 = cy + y;
-			if (iy2 < 0 || cast(int) h <= iy1) return;
-			int y1 = max(cast(int) (size - 1), iy1);
-			int y2 = min(cast(int) (h - (size - 1)), iy2);
+			int ix1 = cx - x;
+			int ix2 = cx + x;
+			if (ix2 < 0 || cast(int) w <= ix1) return;
+			int x1 = max(cast(int) (size - 1), ix1);
+			int x2 = min(cast(int) (w - (size - 1)), ix2);
 
-			// Draws line from upper right to lower right.
-			int xa = cx + x;
-			if (0 <= xa && xa < w) {
-				pointsOfPath(setPoint, PaintMode.Straight, xa, y1, xa, y2, w, h, size);
+			// Draws line from top left to top right.
+			int ya = cy + y;
+			if (0 <= ya && ya < h) {
+				pointsOfPath(dlg, PaintMode.Straight, x1, ya, x2, ya, w, h, size);
 			}
 
-			// Draws line from upper left to lower left.
-			int xb = cx - x;
-			if (0 <= xb && xb < w) {
-				pointsOfPath(setPoint, PaintMode.Straight, xb, y1, xb, y2, w, h, size);
+			// Draws line from bottom left to bottom right.
+			int yb = cy - y;
+			if (0 <= yb && yb < h) {
+				pointsOfPath(dlg, PaintMode.Straight, x1, yb, x2, yb, w, h, size);
 			}
 		});
 		break;
@@ -204,8 +203,8 @@ void pointsOfPath(void delegate(int, int) setPoint, PaintMode mode, int x1, int 
 		mxx = min(cast(int) (w - (size - 1)), mxx);
 		mny = max(cast(int) (size - 1), mny);
 		mxy = min(cast(int) (h - (size - 1)), mxy);
-		foreach (x; mnx .. mxx + 1) {
-			pointsOfPath(setPoint, PaintMode.Straight, x, mny, x, mxy, w, h, size);
+		foreach (y; mny .. mxy + 1) {
+			pointsOfPath(dlg, PaintMode.Straight, mnx, y, mxx, y, w, h, size);
 		}
 		break;
 	case PaintMode.Fill:
@@ -213,12 +212,64 @@ void pointsOfPath(void delegate(int, int) setPoint, PaintMode mode, int x1, int 
 		break;
 	}
 }
+unittest {
+	import std.string;
 
-/// Calls setPoint(X, Y) with points of fill area.
+	char[][] img = [
+		"      ".dup,
+		"      ".dup,
+		"      ".dup,
+		"      ".dup
+	];
+	// Straight line (vertical) with '#'.
+	pointsOfPath((int x, int y) {
+		img[y][x] = '#';
+	}, PaintMode.Straight, 0, 0, 0, 3, 6, 4, 1);
+	assert (img == [
+		"#     ",
+		"#     ",
+		"#     ",
+		"#     "
+	], "\n" ~ std.string.join(img, "\n"));
+
+	// Straight line (horizontal) with '@'.
+	pointsOfPath((int x, int y) {
+		img[y][x] = '@';
+	}, PaintMode.Straight, 1, 1, 3, 1, 6, 4, 2);
+	assert (img == [
+		"@@@@@ ",
+		"@@@@@ ",
+		"@@@@@ ",
+		"#     "
+	], "\n" ~ std.string.join(img, "\n"));
+
+	// Rectangle with '?'.
+	pointsOfPath((int x, int y) {
+		img[y][x] = '?';
+	}, PaintMode.RectLine, 0, -1, 5, 3, 6, 4, 2);
+	assert (img == [
+		"??????",
+		"??@@??",
+		"??????",
+		"??????"
+	], "\n" ~ std.string.join(img, "\n"));
+}
+
+/// Calls dlg(X, Y) or dlg(X, Y, Width, Height) with points of fill area.
 /// Params:
 ///  onFillArea = This function receives X, Y
 ///               and returns true if it is fill area.
-void pointsOfFill(void delegate(int x, int y) setPoint, bool delegate(int x, int y) onFillArea, int sx, int sy, size_t w, size_t h) {
+void pointsOfFill(void delegate(int x, int y) dlg, bool delegate(int x, int y) onFillArea, int sx, int sy, size_t w, size_t h) {
+	pointsOfFill((int x, int y, int w, int h) {
+		foreach (ix; x .. w + x) {
+			foreach (iy; y .. h + y) {
+				dlg(ix, iy);
+			}
+		}
+	}, onFillArea, sx, sy, w, h);
+}
+/// ditto
+void pointsOfFill(void delegate(int x, int y, int w, int h) dlg, bool delegate(int x, int y) onFillArea, int sx, int sy, size_t w, size_t h) {
 	if (!onFillArea(sx, sy)) return;
 	if (sx < 0 || w <= sx) return;
 	if (sy < 0 || h <= sy) return;
@@ -240,7 +291,7 @@ void pointsOfFill(void delegate(int x, int y) setPoint, bool delegate(int x, int
 		int xr = sx;
 		while (canFill(xl - 1, sy)) xl--;
 		while (canFill(xr + 1, sy)) xr++;
-		pointsOfPath(setPoint, PaintMode.Straight, xl, sy, xr, sy, w, h);
+		pointsOfPath(dlg, PaintMode.Straight, xl, sy, xr, sy, w, h);
 		comp[wy + xl .. wy + xr + 1] = true;
 
 		int upX = -1;
@@ -294,7 +345,7 @@ unittest {
 		"#@@@@@",
 		" #@@#@",
 		"  #@@@"
-	], std.string.join(img, "\n"));
+	], "\n" ~ std.string.join(img, "\n"));
 	// Paints with '#'.
 	pointsOfFill((int x, int y) {
 		img[y][x] = '#';
@@ -306,7 +357,7 @@ unittest {
 		"#@@@@@",
 		"##@@#@",
 		"###@@@"
-	], std.string.join(img, "\n"));
+	], "\n" ~ std.string.join(img, "\n"));
 	// Paints with '&'.
 	pointsOfFill((int x, int y) {
 		img[y][x] = '&';
@@ -318,7 +369,7 @@ unittest {
 		"&@@@@@",
 		"&&@@#@",
 		"&&&@@@"
-	], std.string.join(img, "\n"));
+	], "\n" ~ std.string.join(img, "\n"));
 	// Paints with ' '.
 	pointsOfFill((int x, int y) {
 		img[y][x] = ' ';
@@ -330,7 +381,7 @@ unittest {
 		"      ",
 		"      ",
 		"      "
-	], std.string.join(img, "\n"));
+	], "\n" ~ std.string.join(img, "\n"));
 	img = [
 		"#########".dup,
 		"###   ###".dup,
@@ -358,7 +409,7 @@ unittest {
 		"###@@@###",
 		"###@@@###",
 		"#########"
-	], std.string.join(img, "\n"));
+	], "\n" ~ std.string.join(img, "\n"));
 	img = [
 		"#########".dup,
 		"        #".dup,
@@ -386,7 +437,7 @@ unittest {
 		"##@@#@@@#".dup,
 		"#@@@@@@@#".dup,
 		"#########".dup
-	], std.string.join(img, "\n"));
+	], "\n" ~ std.string.join(img, "\n"));
 }
 
 // Does `Median Cut' in-place.
