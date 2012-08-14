@@ -363,7 +363,10 @@ class PaletteView : Canvas, Undoable {
 	private void piProcRange(void delegate(int pixel) dlg, int piFrom, int piTo) {
 		if (-1 == piFrom) return;
 		if (-1 == piTo) return;
-		if (piFrom == piTo) return;
+		if (piFrom == piTo) {
+			dlg(piFrom);
+			return;
+		}
 		checkWidget();
 		if (piFrom > piTo) swap(piFrom, piTo);
 		size_t tiCol1, tiRow1, tiCol2, tiRow2;

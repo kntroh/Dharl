@@ -1905,7 +1905,7 @@ class PaintArea : Canvas, Undoable {
 			auto oldLineStyle = e.gc.p_lineStyle;
 			e.gc.p_lineStyle = SWT.LINE_DOT;
 			scope (exit) e.gc.p_lineStyle = oldLineStyle;
-			e.gc.drawRectangle(cca.x, cca.y, cca.width, cca.height);
+			e.gc.drawRectangle(cca.x, cca.y, cca.width - 1, cca.height - 1);
 		} else {
 			// Draws cursor.
 			if (showCursor && 1 != _mouseDown && _mouseEnter && 0 != _layers.length) {
