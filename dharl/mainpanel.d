@@ -1,6 +1,6 @@
 
 /// This module includes MainPanel and members related to it. 
-module dharl.ui.mainpanel;
+module dharl.mainpanel;
 
 private import util.graphics;
 private import util.types;
@@ -91,7 +91,7 @@ class MainPanel : Composite {
 		auto splitter = basicSplitter(this, SWT.HORIZONTAL);
 		constructPaintArea(splitter, _um);
 		constructImageList(splitter, _um);
-		splitter.refSashPos(_c.conf.sashPosWork_List.value);
+		_c.conf.sashPosWork_List.value.refSelection(splitter);
 
 		_paletteView.listeners!(SWT.Selection) ~= {
 			_um.resetRetryWord();
@@ -236,16 +236,16 @@ class MainPanel : Composite {
 
 		// Splitter of paint area and palette.
 		auto ppSplitter = basicSplitter(parent, SWT.VERTICAL);
-		ppSplitter.refSashPos(_c.conf.sashPosPaint_Palette.value);
+		_c.conf.sashPosPaint_Palette.value.refSelection(ppSplitter);
 
 		// Splitter of paintArea and tools.
 		auto paintSplitter = basicSplitter(ppSplitter, SWT.HORIZONTAL);
-		paintSplitter.refSashPos(_c.conf.sashPosPaint_Preview.value);
+		_c.conf.sashPosPaint_Preview.value.refSelection(paintSplitter);
 		ppSplitter.resizable = paintSplitter;
 
 		// Splitter of preview and toolbar.
 		auto ptSplitter = basicSplitter(paintSplitter, SWT.VERTICAL);
-		ptSplitter.refSashPos(_c.conf.sashPosPreview_Tools.value);
+		_c.conf.sashPosPreview_Tools.value.refSelection(ptSplitter);
 
 		// Preview of image in drawing.
 		_paintPreview = new PaintPreview(ptSplitter, SWT.BORDER | SWT.DOUBLE_BUFFERED);
@@ -254,8 +254,7 @@ class MainPanel : Composite {
 		_paintArea = new PaintArea(paintSplitter, SWT.BORDER | SWT.DOUBLE_BUFFERED);
 		_paintArea.p_layoutData = GD(GridData.FILL_BOTH).hSpan(2);
 		_paintArea.undoManager = um;
-
-		constructModeToolBar(ptSplitter);
+		_paintArea.enabledBackColor = _c.conf.enabledBackColor;
 
 		// Composite for controls related to color.
 		auto comp = basicComposite(ppSplitter, GL.window(3, false));
@@ -268,6 +267,7 @@ class MainPanel : Composite {
 		// Viewer of palette.
 		_paletteView = new PaletteView(comp, SWT.BORDER | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
 		_paletteView.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING).vSpan(3);
+		_paletteView.maskMode = _c.conf.maskMode;
 
 		// Drawing tools.
 		auto lToolBar = basicToolBar(comp);
@@ -290,10 +290,12 @@ class MainPanel : Composite {
 		tMask = basicToolItem(pToolBar, _c.text.menu.maskMode, cimg(_c.image.maskMode), {
 			maskMode = tMask.p_selection;
 		}, SWT.CHECK);
+		_c.conf.maskMode.value.refSelection(tMask);
 		ToolItem tBack;
 		tBack = basicToolItem(pToolBar, _c.text.menu.enabledBackColor, cimg(_c.image.enabledBackColor), {
 			_paintArea.enabledBackColor = tBack.p_selection;
 		}, SWT.CHECK);
+		_c.conf.enabledBackColor.value.refSelection(tBack);
 		void refreshPaletteMenu() {
 			tMask.p_selection = maskMode;
 			tBack.p_selection = _paintArea.enabledBackColor;
@@ -304,9 +306,9 @@ class MainPanel : Composite {
 		// Initializes controls.
 		auto cs = _c.conf.character;
 		_paintArea.init(cs.width, cs.height, _paletteView.createPalette());
-		_paintArea.zoom = 1;
+		_paintArea.zoom = _c.conf.zoom;
 		_paintArea.mode = PaintMode.FreePath;
-		_paintArea.cursorSize = 1;
+		_paintArea.cursorSize = _c.conf.lineWidth;
 		_paintArea.pixel = _paletteView.pixel1;
 		_paintArea.backgroundPixel = _paletteView.pixel2;
 		_paintArea.addLayer(_c.text.newLayer);
@@ -327,6 +329,8 @@ class MainPanel : Composite {
 		_paletteView.p_cursor = dropper;
 		_layerList.init(_paintArea);
 		_colorSlider.color = _paletteView.color(_paletteView.pixel1);
+
+		constructModeToolBar(ptSplitter);
 
 		// Stores image data for undo operation.
 		_pushBase = _paintArea.image.storeData(false);
@@ -352,12 +356,18 @@ class MainPanel : Composite {
 				_paintArea.mode = mode;
 			}, SWT.RADIO);
 			modeItems[mode] = mt;
+			if (_c.conf.tool == mToolBar.p_itemCount - 1) {
+				_paintArea.mode = mode;
+			}
 		}
 		// Selection mode.
 		ToolItem tSel;
 		tSel = basicToolItem(mToolBar, _c.text.menu.selection, cimg(_c.image.selection), {
 			_paintArea.rangeSelection = tSel.p_selection;
 		}, SWT.RADIO, _paintArea.rangeSelection);
+		if (_c.conf.tool == mToolBar.p_itemCount - 1) {
+			_paintArea.rangeSelection = true;
+		}
 
 		// Paint mode.
 		createModeItem(_c.text.menu.freePath, cimg(_c.image.freePath), PaintMode.FreePath);
@@ -368,6 +378,18 @@ class MainPanel : Composite {
 		createModeItem(_c.text.menu.rectFill, cimg(_c.image.rectFill), PaintMode.RectFill);
 		createModeItem(_c.text.menu.fillArea, cimg(_c.image.fillArea), PaintMode.Fill);
 
+		statusChangedReceivers ~= {
+			if (_paintArea.rangeSelection) {
+				_c.conf.tool = 0;
+			} else {
+				foreach (i, mode; EnumMembers!PaintMode) {
+					if (mode is _paintArea.mode) {
+						_c.conf.tool = i + 1;
+						break;
+					}
+				}
+			}
+		};
 		void refreshModeMenu() {
 			bool range = _paintArea.rangeSelection;
 			tSel.p_selection = range;
@@ -386,9 +408,14 @@ class MainPanel : Composite {
 
 		auto noTone = basicToolItem(_tones, _c.text.noTone, cimg(_c.image.noTone), {
 			_paintArea.tone = null;
-		}, SWT.RADIO, true);
+			_c.conf.tone = 0;
+		}, SWT.RADIO, 0 == _c.conf.tone);
 		_tones.listeners!(SWT.Dispose) ~= &clearTonesToolBar;
 
+		auto toneIndex = cast(int) _c.conf.tone - 1;
+		if (0 <= toneIndex && toneIndex < _c.conf.tones.length) {
+			_paintArea.tone = _c.conf.tones[toneIndex].value;
+		}
 		refreshTonesToolBar();
 
 		createSeparator();
@@ -396,11 +423,13 @@ class MainPanel : Composite {
 		// Zoom and line width.
 		createLabel(_c.text.zoom);
 		auto zoom = basicSpinner(comp, 1, PaintArea.ZOOM_MAX);
+		_c.conf.zoom.value.refSelection(zoom);
 		zoom.listeners!(SWT.Selection) ~= {
 			_paintArea.zoom = zoom.p_selection;
 		};
 		createLabel(_c.text.lineWidth);
 		auto lineWidth = basicSpinner(comp, 1, 16);
+		_c.conf.lineWidth.refSelection(lineWidth);
 		lineWidth.listeners!(SWT.Selection) ~= {
 			_paintArea.cursorSize = lineWidth.p_selection;
 		};
@@ -418,20 +447,31 @@ class MainPanel : Composite {
 
 		clearTonesToolBar();
 
-		void toneItem(in Tone tone) {
+		bool useTone = false;
+		void toneItem(size_t index, in Tone tone) {
+			bool useIt = tone.value == _paintArea.tone;
 			auto icon = toneIcon(tone.value, 16, 16);
 			basicToolItem(_tones, tone.name, new Image(d, icon), {
 				_paintArea.tone = tone.value;
-			}, SWT.RADIO, tone.value == _paintArea.tone);
+				_c.conf.tone = index + 1;
+			}, SWT.RADIO, useIt);
+			if (useIt) useTone = true;
 		}
-		foreach (tone; _c.conf.tones.array) {
-			toneItem(tone);
+		foreach (i, tone; _c.conf.tones.array) {
+			toneItem(i, tone);
+		}
+		if (useTone) {
+			_tones.getItem(0).p_selection = false;
+		} else {
+			_tones.getItem(0).p_selection = true;
+			_paintArea.tone = null;
 		}
 	}
 	/// Clears tones toolbar.
 	private void clearTonesToolBar() {
 		enforce(_tones);
 		checkWidget();
+		_tones.getItem(0).p_selection = true;
 		foreach_reverse (i; 1 .. _tones.p_itemCount) {
 			auto item = _tones.getItem(i);
 			auto img = item.p_image;

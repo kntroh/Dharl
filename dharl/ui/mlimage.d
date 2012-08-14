@@ -41,7 +41,13 @@ class MLImage : Undoable {
 	/// If doesn't initialized instance, throws exception.
 	const
 	private void checkInit() {
-		enforce(_palette, new Exception("MLImage is no initialized.", __FILE__, __LINE__));
+		enforce(isInitialized, new Exception("MLImage is no initialized.", __FILE__, __LINE__));
+	}
+	/// Is initialized?
+	@property
+	const
+	bool isInitialized() {
+		return _palette !is null;
 	}
 
 	/// Initializes this image.

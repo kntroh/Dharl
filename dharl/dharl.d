@@ -8,10 +8,9 @@ private import util.graphics;
 private import util.utils;
 
 private import dharl.common;
+private import dharl.dialogs;
+private import dharl.mainpanel;
 
-private import dharl.ui.mainpanel;
-private import dharl.ui.paintarea;
-private import dharl.ui.dialogs;
 private import dharl.ui.uicommon;
 private import dharl.ui.dwtutils;
 
@@ -267,11 +266,10 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 	separator(toolBar);
 	auto resizeCW = basicSpinner(toolBar, 1, 9999);
-	resizeCW.p_selection = 16;
 	auto tResizeCW = basicToolItem(toolBar, resizeCW);
 	auto resizeCH = basicSpinner(toolBar, 1, 9999);
-	resizeCH.p_selection = 16;
 	auto tResizeCH = basicToolItem(toolBar, resizeCH);
+	c.conf.scaled.value.refSize(resizeCW, resizeCH);
 	auto tResizeC = basicToolItem(toolBar, c.text.menu.resizeCanvas, cimg(c.image.resizeCanvas), {
 		int w = resizeCW.p_selection;
 		int h = resizeCH.p_selection;
@@ -358,21 +356,20 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	});
 
 	separator(toolBar);
-	auto turnDeg = basicSpinner(toolBar, 0, 360);
-	turnDeg.p_selection = 90;
-	basicToolItem(toolBar, turnDeg);
+	auto turnDegree = basicSpinner(toolBar, 0, 360);
+	c.conf.turnDegree.value.refSelection(turnDegree);
+	basicToolItem(toolBar, turnDegree);
 	basicToolItem(toolBar, c.text.menu.turn, cimg(c.image.turn), {
-		int deg = turnDeg.p_selection;
+		int deg = turnDegree.p_selection;
 		mainPanel.paintArea.turn(deg);
 	});
 
 	separator(toolBar);
 	auto resizeW = basicSpinner(toolBar, 1, 9999);
-	resizeW.p_selection = 50;
 	auto tResizeW = basicToolItem(toolBar, resizeW);
 	auto resizeH = basicSpinner(toolBar, 1, 9999);
-	resizeH.p_selection = 50;
 	auto tResizeH = basicToolItem(toolBar, resizeH);
+	c.conf.resizeCanvas.value.refSize(resizeW, resizeH);
 	auto tResize = basicToolItem(toolBar, c.text.menu.resize, cimg(c.image.resize), {
 		int w = resizeW.p_selection;
 		int h = resizeH.p_selection;
@@ -481,7 +478,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	// Update state.
 	refreshFileMenu();
 	refreshMenu();
-	shell.refWindow(c.conf.mainWindow.value);
+	c.conf.mainWindow.value.refWindow(shell);
 
 	return mainPanel;
 }

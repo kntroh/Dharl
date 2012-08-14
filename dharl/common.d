@@ -244,11 +244,30 @@ class DConfig {
 
 	mixin Prop!("dialogButtonWidth", uint, 80, true); /// ditto
 
+	/// History of files.
 	mixin Prop!("fileHistory", PArray!("path", string), PArray!("path", string).init);
-	mixin Prop!("fileHistoryMax", uint, 15);
-	mixin Prop!("fileHistoryOmitLength", uint, 50, true);
+	mixin Prop!("fileHistoryMax", uint, 15); /// ditto
+	mixin Prop!("fileHistoryOmitLength", uint, 50, true); /// ditto
 
-	mixin Prop!("lastOpenedFiles", PArray!("path", string), PArray!("path", string).init);
+	mixin Prop!("lastOpenedFiles", PArray!("path", string), PArray!("path", string).init); /// ditto
+
+	/// Resizing values.
+	mixin Prop!("scaled", PSize, PSize(16, 16));
+	mixin Prop!("turnDegree", int, 90); /// ditto
+	mixin Prop!("resizeCanvas", PSize, PSize(100, 100)); /// ditto
+
+	/// Selected drawing tool. 0 is range select mode.
+	mixin Prop!("tool", uint, 1);
+	/// Selected tone. 0 is not used tone.
+	mixin Prop!("tone", uint, 0);
+	/// Zoom magnification.
+	mixin Prop!("zoom", uint, 1);
+	/// Line width.
+	mixin Prop!("lineWidth", uint, 1);
+
+	/// Palette state.
+	mixin Prop!("enabledBackColor", bool, false);
+	mixin Prop!("maskMode", bool, false); /// ditto
 
 	mixin PropIO!("config");
 }

@@ -180,7 +180,13 @@ class PaintArea : Canvas, Undoable {
 	/// If doesn't initialized throws exception.
 	const
 	private void checkInit() {
-		enforce(_image, new Exception("PantArea is no initialized.", __FILE__, __LINE__));
+		enforce(isInitialized, new Exception("PantArea is no initialized.", __FILE__, __LINE__));
+	}
+	/// Is initialized?
+	@property
+	const
+	bool isInitialized() {
+		return _image !is null;
 	}
 
 	private void raiseSelectChangedEvent() {

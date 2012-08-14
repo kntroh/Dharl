@@ -20,7 +20,7 @@ private import org.eclipse.swt.all;
 
 /// Sets parameters to shell from param.
 /// And save parameters when disposed shell.
-void refWindow(Shell shell, ref WindowParameter param) {
+void refWindow(ref WindowParameter param, Shell shell) {
 	shell.p_bounds = CRect(param.x, param.y, param.width, param.height);
 	shell.p_maximized = param.maximized;
 	shell.p_minimized = param.minimized;
@@ -35,12 +35,25 @@ void refWindow(Shell shell, ref WindowParameter param) {
 	};
 }
 
-/// Sets position of sash on splitter.
-/// And save value when disposed splitter.
-void refSashPos(Splitter splitter, ref int sashPos) {
-	splitter.p_selection = sashPos;
-	splitter.listeners!(SWT.Dispose) ~= (Event e) {
-		sashPos = splitter.p_selection;
+/// Sets width and height to two spinners.
+/// And save value when disposed spinners.
+void refSize(ref PSize size, Spinner width, Spinner height) {
+	width.p_selection  = size.width;
+	height.p_selection = size.height;
+	width.listeners!(SWT.Dispose) ~= (Event e) {
+		size.width  = width.p_selection;
+	};
+	height.listeners!(SWT.Dispose) ~= (Event e) {
+		size.height = height.p_selection;
+	};
+}
+
+/// Sets value to control.
+/// And save value when disposed control.
+void refSelection(C, V)(ref V value, C control) {
+	control.p_selection = value;
+	control.listeners!(SWT.Dispose) ~= (Event e) {
+		value = control.p_selection;
 	};
 }
 

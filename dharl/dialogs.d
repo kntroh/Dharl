@@ -1,6 +1,6 @@
 
 /// This module includes dialogs and members related to it.
-module dharl.ui.dialogs;
+module dharl.dialogs;
 
 private import dwtutils.utils;
 

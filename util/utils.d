@@ -17,26 +17,26 @@ version (Console) {
 		writefln(msgf, args);
 	}
 	/// ditto
-	void consoleout(string msg) {
-		writeln(msg);
+	void consoleout(T...)(T args) {
+		writeln(args);
 	}
 	/// Outputs error message.
 	void erroroutf(T...)(string msgf, T args) {
 		writefln(msgf, args);
 	}
 	/// ditto
-	void errorout(string msg) {
-		writeln(msg);
+	void errorout(T...)(T args) {
+		writeln(args);
 	}
 } else {
 	/// Prints debug message.
 	void consoleoutf(T...)(string msgf, T args) { /* Do nothing */ }
 	/// ditto
-	void consoleout(string msg) { /* Do nothing */ }
+	void consoleout(T...)(T args) { /* Do nothing */ }
 	/// Outputs error message.
 	void erroroutf(T...)(string msgf, T args) { /* Do nothing */ }
 	/// ditto
-	void errorout(string msg) { /* Do nothing */ }
+	void errorout(T...)(T args) { /* Do nothing */ }
 }
 
 debug private import std.datetime;
