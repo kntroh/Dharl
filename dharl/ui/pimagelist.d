@@ -468,6 +468,7 @@ class PImageList : Canvas {
 			}
 			initRect(img, img._cBounds);
 			if (iRect.contains(e.x, e.y) || iRect.contains(_oldX, _oldY)) {
+				toolTip = img.toolTip;
 				img.redrawCloseButton();
 			}
 		}

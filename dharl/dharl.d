@@ -401,6 +401,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	void refreshMenu() {
 		refreshTitle();
 
+		int selCanvas = mainPanel.selectedIndex;
 		auto selArea = mainPanel.paintArea.selectedArea;
 		bool sel = selArea.width > 0 && selArea.height > 0;
 		bool alive = !mainPanel.paintArea.empty;
@@ -427,12 +428,18 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		tSaveAll.p_enabled = mainPanel.isChanged(false);
 		resizeCW.p_enabled = -1 != index;
 		resizeCH.p_enabled = -1 != index;
+		if (-1 != selCanvas) {
+			auto size = mainPanel.canvasSize(selCanvas);
+			resizeCW.p_selection = size.width;
+			resizeCH.p_selection = size.height;
+		}
 		tResizeC.p_enabled = -1 != index;
 
 		tUpLayer.p_enabled = mainPanel.canUpLayer;
 		tDownLayer.p_enabled = mainPanel.canDownLayer;
 	}
 	mainPanel.statusChangedReceivers ~= &refreshMenu;
+	mainPanel.selectedReceivers ~= &refreshMenu;
 
 	// Open last opened files.
 	foreach (file; c.conf.lastOpenedFiles) {

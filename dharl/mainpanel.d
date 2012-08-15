@@ -545,6 +545,13 @@ class MainPanel : Composite {
 		assert (params);
 		return params.path;
 	}
+	/// Gets canvas size at index.
+	PSize canvasSize(size_t index) {
+		checkWidget();
+		checkInit();
+		auto item = _imageList.item(index);
+		return PSize(item.image.width, item.image.height);
+	}
 
 	/// Notify modify of image.
 	private void modified(PImageItem item) {
@@ -924,6 +931,7 @@ class MainPanel : Composite {
 		if (index == _imageList.selectedIndex) {
 			_paintArea.setCanvasSize(w, h);
 		}
+		modified(item);
 	}
 
 	/// Creates gradation colors from selected pixel 1 to pixel 2.
