@@ -630,6 +630,33 @@ class PaletteView : Canvas, Undoable {
 			}
 		}
 	}
+	/// ditto
+	private void onMouseWheel(Event e) {
+		checkWidget();
+		if (0 == e.count) return;
+
+		int pixel;
+		if (e.stateMask & SWT.SHIFT) {
+			pixel = pixel2;
+		} else {
+			pixel = pixel1;
+		}
+		if (e.count > 0) {
+			// up
+			if (pixel <= 0) return;
+			pixel--;
+		} else {
+			assert (e.count < 0);
+			// down
+			if (_colors.length <= pixel + 1) return;
+			pixel++;
+		}
+		if (e.stateMask & SWT.SHIFT) {
+			pixel2 = pixel;
+		} else {
+			pixel1 = pixel;
+		}
+	}
 
 	/// Handling key traversal.
 	private void onTraverse(Event e) {

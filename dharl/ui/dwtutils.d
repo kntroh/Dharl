@@ -35,7 +35,10 @@ void initMouseWheel(Shell shell) {
 		auto w = cast(Control) e.widget;
 		if (!w) return;
 		if (c.p_shell !is shell) return;
-		if (c is w) return;
+		if (c is w) {
+			e.doit = false;
+			return;
+		}
 
 		auto se = new Event;
 		se.type = e.type;
@@ -51,7 +54,6 @@ void initMouseWheel(Shell shell) {
 		se.count = e.count;
 
 		c.notifyListeners(se.type, se);
-		e.doit = false;
 	};
 }
 
