@@ -157,7 +157,7 @@ mixin CreateTypedListenerWrapper!(TextChangeListener); /// ditto
 mixin CreateTypedListenerWrapper!(VerifyKeyListener); /// ditto
 
 /**
-Wraps Widget#addListener().
+Wraps Widget#addListener() and Display.addFilter().
 
 Example:
 ---
@@ -173,7 +173,12 @@ info.remove(); // remove the dispose listener.
 */
 @property
 auto listeners(int Type, W)(W widget) {
-	return ListenerWrapper!(Type, W)(widget);
+	return ListenerWrapper!(Type, W, false)(widget);
+}
+/// ditto
+@property
+auto p_filters(int Type)(Display display) {
+	return ListenerWrapper!(Type, Display, true)(display);
 }
 
 
@@ -416,11 +421,9 @@ private struct TypedListenerWrapperImpl(W, ListenerType, string MethodName) {
 
 	W widget;
 	auto opOpAssign(string s)(void delegate() dlg) if (s == "~") {
-import std.stdio;writeln(__LINE__);
 		return opOpAssign!s((EventType e) {dlg();});
 	}
 	auto opOpAssign(string s)(void delegate(EventType e) dlg) if (s == "~") {
-import std.stdio;writeln(__LINE__);
 		return opOpAssign!s(new class BlackHole!ListenerType {
 			mixin(`override void ` ~ MethodName ~ `(EventType e) {
 				dlg(e);
@@ -436,7 +439,7 @@ import std.stdio;writeln(__LINE__);
 }
 
 /// Creates wrapper for org.eclipse.swt.widget.Listener#handleEvent().
-private struct ListenerWrapper(int Type, W) {
+private struct ListenerWrapper(int Type, W, bool Filter) {
 	W widget;
 	auto opOpAssign(string s)(void delegate() dlg) if (s == "~") {
 		return opOpAssign!s((Event e) {dlg();});
@@ -449,9 +452,16 @@ private struct ListenerWrapper(int Type, W) {
 		});
 	}
 	auto opOpAssign(string s)(Listener l) if (s == "~") {
-		widget.addListener(Type, l);
-		return ListenerInfo!(W, Listener)(widget, l, {
-			widget.removeListener(Type, l);
-		});
+		static if (Filter) {
+			widget.addFilter(Type, l);
+			return ListenerInfo!(W, Listener)(widget, l, {
+				widget.removeFilter(Type, l);
+			});
+		} else {
+			widget.addListener(Type, l);
+			return ListenerInfo!(W, Listener)(widget, l, {
+				widget.removeListener(Type, l);
+			});
+		}
 	}
 }

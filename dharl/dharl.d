@@ -77,6 +77,7 @@ void main(string[] args) {
 
 	// Creates window and controls.
 	auto shell = basicShell(c.text.appName, null, GL.window);
+	shell.initMouseWheel();
 	auto display = shell.p_display;
 	auto mainPanel = initialize(c, shell);
 

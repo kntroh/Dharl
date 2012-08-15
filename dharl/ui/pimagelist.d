@@ -425,6 +425,24 @@ class PImageList : Canvas {
 			}
 		}
 	}
+	/// ditto
+	private void onMouseWheel(Event e) {
+		checkWidget();
+		if (0 == e.count) return;
+
+		int sel =  selectedIndex;
+		if (-1 == sel) {
+			selectedIndex = indexOfLose(e.x, e.y);
+		} else if (e.count > 0) {
+			// up
+			if (0 < sel) selectedIndex = sel - 1;
+		} else {
+			assert (e.count < 0);
+			// down
+			if (sel + 1 < imageCount) selectedIndex = sel + 1;
+		}
+		raiseSelectionEvent(e);
+	}
 
 	/// Moves rectangle of select piece.
 	private void onMouseMove(Event e) {

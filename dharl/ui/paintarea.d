@@ -708,10 +708,8 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		if (v == _zoom) return;
-		auto ip = iCenter;
 		_zoom = v;
 		calcScrollParams();
-		iCenter = ip;
 
 		clearCache();
 		redraw();
@@ -864,6 +862,13 @@ class PaintArea : Canvas, Undoable {
 			return _cursorSelRange;
 		}
 		return cursor(this.mode);
+	}
+	/// ditto
+	private Cursor iCursorNow(int ix, int iy) {
+		if (iCursorArea.contains(ix, iy)) {
+			return this.p_display.getSystemCursor(SWT.CURSOR_HAND);
+		}
+		return cursorNow;
 	}
 
 	/// Dropper mode?
@@ -1996,7 +2001,10 @@ class PaintArea : Canvas, Undoable {
 		if (_image.empty) return;
 		int ix = cxtoix(e.x);
 		int iy = cytoiy(e.y);
+		auto d = this.p_display;
+
 		if (1 == _mouseDown) {
+			scope (exit) this.p_cursor = iCursorNow(ix, iy);
 			if (_pasteLayer) {
 				int isx = ix - _iPCatchX;
 				int isy = iy - _iPCatchY;
@@ -2077,12 +2085,14 @@ class PaintArea : Canvas, Undoable {
 			}
 			redrawCursorArea();
 		} else {
-			if (_pasteLayer) return;
+			if (_pasteLayer) {
+				this.p_cursor = iCursorNow(ix, iy);
+				return;
+			}
 			if (_rangeSel) {
 				// Set cursor according to state.
 				bool no, ea, so, we;
 				cIsCatchedFocus(e.x, e.y, no, ea, so, we);
-				auto d = this.p_display;
 				if ((no && ea) || (so && we)) {
 					this.p_cursor = d.getSystemCursor(SWT.CURSOR_SIZENESW);
 				} else if ((no && we) || (ea && so)) {
@@ -2092,11 +2102,11 @@ class PaintArea : Canvas, Undoable {
 				} else if (ea || we) {
 					this.p_cursor = d.getSystemCursor(SWT.CURSOR_SIZEWE);
 				} else {
-					this.p_cursor = cursorNow;
+					this.p_cursor = iCursorNow(ix, iy);
 				}
 				return;
 			}
-			this.p_cursor = cursorNow;
+			this.p_cursor = iCursorNow(ix, iy);
 			if (_iCurFrom.x == ix && _iCurFrom.y == iy) {
 				return;
 			}
@@ -2118,7 +2128,7 @@ class PaintArea : Canvas, Undoable {
 		switch (e.button) {
 		case 1:
 			if (1 == _mouseDown) return;
-			scope (exit) this.p_cursor = cursorNow;
+			scope (exit) this.p_cursor = iCursorNow(cxtoix(e.x), cytoiy(e.y));
 			_mouseDown = 1;
 			if (_pasteLayer) {
 				auto ca = cCursorArea;
@@ -2217,7 +2227,7 @@ class PaintArea : Canvas, Undoable {
 			}
 			break;
 		case 3:
-			scope (exit) this.p_cursor = cursorNow;
+			scope (exit) this.p_cursor = iCursorNow(cxtoix(e.x), cytoiy(e.y));
 			_mouseDown = 3;
 			break;
 		default:
@@ -2234,7 +2244,7 @@ class PaintArea : Canvas, Undoable {
 		if (_image.empty) return;
 		switch (e.button) {
 		case 1:
-			scope (exit) this.p_cursor = cursorNow;
+			scope (exit) this.p_cursor = iCursorNow(cxtoix(e.x), cytoiy(e.y));
 			_mouseDown = -1;
 			if (_pasteLayer) return;
 			if (_rangeSel) {
@@ -2258,7 +2268,7 @@ class PaintArea : Canvas, Undoable {
 			break;
 		case 3:
 			// Do dropper.
-			scope (exit) this.p_cursor = cursorNow;
+			scope (exit) this.p_cursor = iCursorNow(cxtoix(e.x), cytoiy(e.y));
 			_mouseDown = -1;
 			if (cInImage(e.x, e.y)) {
 				int ix = cxtoix(e.x);
@@ -2300,10 +2310,13 @@ class PaintArea : Canvas, Undoable {
 		} else {
 			count = max(e.count / 3, 1);
 		}
+
 		zoom = max(1, min(cast(int) zoom + count, ZOOM_MAX));
+
 		if (zoom != old) {
 			statusChangedReceivers.raiseEvent();
 		}
+		e.doit = false;
 	}
 
 	/// Adds or removes a listener for selection event (got color).

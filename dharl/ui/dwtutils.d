@@ -3,6 +3,7 @@
 module dharl.ui.dwtutils;
 
 public import dwtutils.utils;
+public import dwtutils.wrapper;
 
 private import util.graphics;
 private import util.types;
@@ -17,6 +18,42 @@ private import std.string;
 private import std.typecons;
 
 private import org.eclipse.swt.all;
+
+/// A MouseWheel event send to a control under the cursor always.
+void initMouseWheel(Shell shell) {
+	auto d = shell.p_display;
+	bool inProc = false;
+	d.p_filters!(SWT.MouseWheel) ~= (Event e) {
+		.enforce(SWT.MouseWheel == e.type);
+
+		if (inProc) return;
+		inProc = true;
+		scope (exit) inProc = false;
+
+		auto c = d.getCursorControl();
+		if (!c) return;
+		auto w = cast(Control) e.widget;
+		if (!w) return;
+		if (c.p_shell !is shell) return;
+		if (c is w) return;
+
+		auto se = new Event;
+		se.type = e.type;
+		se.widget = c;
+		se.time = e.time;
+		se.stateMask = e.stateMask;
+		se.doit = e.doit;
+
+		auto p = c.toControl(w.toDisplay(e.x, e.y));
+		se.button = e.button;
+		se.x = p.x;
+		se.y = p.y;
+		se.count = e.count;
+
+		c.notifyListeners(se.type, se);
+		e.doit = false;
+	};
+}
 
 /// Sets parameters to shell from param.
 /// And save parameters when disposed shell.

@@ -289,7 +289,7 @@ class MainPanel : Composite {
 
 		// Tools for color control.
 		auto pToolBar = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
-		pToolBar.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING);
+		pToolBar.p_layoutData = GD(GridData.VERTICAL_ALIGN_CENTER);
 		basicToolItem(pToolBar, _c.text.menu.createGradation,
 			cimg(_c.image.createGradation),
 			&createGradation);
