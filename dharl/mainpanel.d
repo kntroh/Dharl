@@ -842,6 +842,7 @@ class MainPanel : Composite {
 		item.p_text = params.name;
 
 		statusChangedReceivers.raiseEvent();
+		loadedReceivers.raiseEvent(file.absolutePath().buildNormalizedPath());
 	}
 
 	/// Selects image in imageList by index.
