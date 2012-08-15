@@ -30,7 +30,7 @@ Shell basicShell(string title, Image image = null, Layout layout = null, int sty
 /// ditto
 Shell basicShell(Shell parent, string title, Image image = null, Layout layout = null, int style = SWT.SHELL_TRIM) {
 	auto sh = new Shell(parent, style);
-	sh.p_text(title);
+	sh.p_text = title;
 	sh.p_image = image;
 	sh.p_layout = layout;
 	return sh;

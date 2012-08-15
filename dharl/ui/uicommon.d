@@ -29,7 +29,9 @@ private T cimgImpl(T)(in DImage dimg, int hotspotX, int hotspotY) {
 	enforce(dimg.data);
 
 	auto d2 = Display.getCurrent();
-	if (!d2) return null;
+	if (!d2) {
+		d2 = new Display;
+	}
 
 	static Display d = null; // The display.
 	static T[string] table = null; // Table of image in each display.

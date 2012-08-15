@@ -76,7 +76,7 @@ void main(string[] args) {
 	}
 
 	// Creates window and controls.
-	auto shell = basicShell(c.text.appName, null, GL.window);
+	auto shell = basicShell(c.text.appName, .cimg(c.image.dharl), GL.window);
 	shell.initMouseWheel();
 	auto display = shell.p_display;
 	auto mainPanel = initialize(c, shell);
@@ -187,7 +187,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 		if (c.conf.fileHistory.length) {
 			void createItem(int index, string file) {
-				basicMenuItem(mFile, file.omitPath(c.conf.fileHistoryOmitLength), null, {
+				basicMenuItem(mFile, file.omitPath(c.conf.fileHistoryOmitLength), .cimg(c.image.imageFile), {
 					mainPanel.loadImage(file);
 				}, SWT.PUSH, false, mFileHistFrom + index);
 			}

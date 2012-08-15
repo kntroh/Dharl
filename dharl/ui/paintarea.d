@@ -865,7 +865,7 @@ class PaintArea : Canvas, Undoable {
 	}
 	/// ditto
 	private Cursor iCursorNow(int ix, int iy) {
-		if (iCursorArea.contains(ix, iy)) {
+		if (rangeSelection && iCursorArea.contains(ix, iy)) {
 			return this.p_display.getSystemCursor(SWT.CURSOR_HAND);
 		}
 		return cursorNow;
@@ -2004,8 +2004,9 @@ class PaintArea : Canvas, Undoable {
 		auto d = this.p_display;
 
 		if (1 == _mouseDown) {
-			scope (exit) this.p_cursor = iCursorNow(ix, iy);
+			auto cursor = iCursorNow(ix, iy);
 			if (_pasteLayer) {
+				scope (exit) this.p_cursor = cursor;
 				int isx = ix - _iPCatchX;
 				int isy = iy - _iPCatchY;
 				if (_iSelRange.x != isx || _iSelRange.y != isy) {
@@ -2026,6 +2027,7 @@ class PaintArea : Canvas, Undoable {
 			if (_iCurTo.x == ix && _iCurTo.y == iy) {
 				return;
 			}
+			scope (exit) this.p_cursor = cursor;
 			clearCache();
 			redrawCursorArea();
 			int iOldX = _iCurTo.x;
@@ -2061,6 +2063,7 @@ class PaintArea : Canvas, Undoable {
 					_iSelRange.y = min(_iCurFrom.y, _iCurTo.y);
 					_iSelRange.width = max(_iCurFrom.x, _iCurTo.x) - _iSelRange.x;
 					_iSelRange.height = max(_iCurFrom.y, _iCurTo.y) - _iSelRange.y;
+					cursor = cursorNow;
 				}
 				iScroll(ix, iy);
 				raiseSelectChangedEvent();

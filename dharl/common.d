@@ -53,6 +53,12 @@ private DImage importImage(string File)() {
 
 /// All images ID and data in the application.
 class DImages {
+	/// Application icon.
+	const DImage dharl = importImage!("dharl.png");
+
+	/// Image file icon.
+	const DImage imageFile = importImage!("image_file.png");
+
 	/// Image data for cursors.
 	const DImage cursorPen = importImage!("cursor_pen.png");
 	const DImage cursorDropper = importImage!("cursor_dropper.png"); /// ditto
