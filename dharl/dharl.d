@@ -263,6 +263,12 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tRemoveLayer = basicMenuItem(mEdit, c.text.menu.removeLayer, cimg(c.image.removeLayer), {
 		mainPanel.removeLayer();
 	});
+	auto tUpLayer = basicMenuItem(mEdit, c.text.menu.upLayer, cimg(c.image.upLayer), {
+		mainPanel.upLayer();
+	});
+	auto tDownLayer = basicMenuItem(mEdit, c.text.menu.downLayer, cimg(c.image.downLayer), {
+		mainPanel.downLayer();
+	});
 
 	separator(toolBar);
 	auto resizeCW = basicSpinner(toolBar, 1, 9999);
@@ -422,6 +428,9 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		resizeCW.p_enabled = -1 != index;
 		resizeCH.p_enabled = -1 != index;
 		tResizeC.p_enabled = -1 != index;
+
+		tUpLayer.p_enabled = mainPanel.canUpLayer;
+		tDownLayer.p_enabled = mainPanel.canDownLayer;
 	}
 	mainPanel.statusChangedReceivers ~= &refreshMenu;
 

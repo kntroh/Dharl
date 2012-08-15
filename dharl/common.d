@@ -75,6 +75,8 @@ class DImages {
 	const DImage selectAll = importImage!("select_all.png"); /// ditto
 	const DImage addLayer = importImage!("add_layer.png"); /// ditto
 	const DImage removeLayer = importImage!("remove_layer.png"); /// ditto
+	const DImage upLayer = importImage!("up_layer.png"); /// ditto
+	const DImage downLayer = importImage!("down_layer.png"); /// ditto
 	const DImage resizeCanvas = importImage!("resize_canvas.png"); /// ditto
 
 	const DImage createGradation = importImage!("create_gradation.png"); /// ditto
@@ -173,6 +175,8 @@ struct DMenuText {
 	mixin MsgProp!("selectAll", "Select&All\tCtrl+A"); /// ditto
 	mixin MsgProp!("addLayer", "Add &Layer"); /// ditto
 	mixin MsgProp!("removeLayer", "Remove La&yer"); /// ditto
+	mixin MsgProp!("upLayer", "&Up Layer"); /// ditto
+	mixin MsgProp!("downLayer", "&Down Layer"); /// ditto
 	mixin MsgProp!("resizeCanvas", "R&esize Canvas"); /// ditto
 
 	mixin MsgProp!("mode", "&Mode"); /// ditto

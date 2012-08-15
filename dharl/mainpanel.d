@@ -274,11 +274,18 @@ class MainPanel : Composite {
 		lToolBar.p_layoutData = GD(GridData.FILL_HORIZONTAL);
 		basicToolItem(lToolBar, _c.text.menu.addLayer, cimg(_c.image.addLayer), &addLayer);
 		basicToolItem(lToolBar, _c.text.menu.removeLayer, cimg(_c.image.removeLayer), &removeLayer);
+		auto tUpLayer = basicToolItem(lToolBar, _c.text.menu.upLayer, cimg(_c.image.upLayer), &upLayer);
+		auto tDownLayer = basicToolItem(lToolBar, _c.text.menu.downLayer, cimg(_c.image.downLayer), &downLayer);
 
 		// List of layers.
 		_layerList = new LayerList(comp, SWT.BORDER | SWT.DOUBLE_BUFFERED);
 		_layerList.p_layoutData = GD(GridData.FILL_BOTH).vSpan(2);
 		_layerList.undoManager = um;
+		_layerList.listeners!(SWT.Selection) ~= {
+			tUpLayer.p_enabled = canUpLayer;
+			tDownLayer.p_enabled = canDownLayer;
+			statusChangedReceivers.raiseEvent();
+		};
 
 		// Tools for color control.
 		auto pToolBar = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
@@ -329,6 +336,9 @@ class MainPanel : Composite {
 		_paletteView.p_cursor = dropper;
 		_layerList.init(_paintArea);
 		_colorSlider.color = _paletteView.color(_paletteView.pixel1);
+
+		tUpLayer.p_enabled = canUpLayer;
+		tDownLayer.p_enabled = canDownLayer;
 
 		constructModeToolBar(ptSplitter);
 
@@ -983,6 +993,43 @@ class MainPanel : Composite {
 		assert (0 != ls.length);
 		_paintArea.removeLayers(ls[0], ls[$ - 1] + 1);
 	}
+	/// ditto
+	void upLayer() {
+		checkWidget();
+		checkInit();
+		if (!canUpLayer) return;
+		auto layers = _paintArea.selectedLayers.sort;
+		foreach (l; layers) {
+			if (0 == l) break;
+			_paintArea.swapLayers(l - 1, l);
+		}
+	}
+	/// ditto
+	@property
+	const
+	bool canUpLayer() {
+		checkInit();
+		return 0 != _paintArea.selectedLayers[0];
+	}
+	/// ditto
+	void downLayer() {
+		checkWidget();
+		checkInit();
+		if (!canDownLayer) return;
+		auto layers = _paintArea.selectedLayers.sort;
+		foreach_reverse (l; layers) {
+			if (_paintArea.image.layerCount == l + 1) break;
+			_paintArea.swapLayers(l + 1, l);
+		}
+	}
+	/// ditto
+	@property
+	const
+	bool canDownLayer() {
+		checkInit();
+		return _paintArea.image.layerCount != _paintArea.selectedLayers[$ - 1] + 1;
+	}
+
 	/// If paintArea is changed after push, returns true.
 	@property
 	const

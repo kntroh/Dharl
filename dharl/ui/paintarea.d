@@ -19,6 +19,8 @@ private import std.string;
 
 private import org.eclipse.swt.all;
 
+private import java.lang.all : System;
+
 /// This class has a image by division layers,
 /// Edit from user to each layer is accepted. 
 class PaintArea : Canvas, Undoable {
@@ -364,6 +366,35 @@ class PaintArea : Canvas, Undoable {
 			}
 			_layers[0] = index;
 		}
+		clearCache();
+		redraw();
+		drawReceivers.raiseEvent();
+		changedLayerReceivers.raiseEvent();
+		statusChangedReceivers.raiseEvent();
+	}
+	/// Swap layer index.
+	void swapLayers(size_t index1, size_t index2) {
+		if (_image.layerCount < index1) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (_image.layerCount < index2) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkWidget();
+		checkInit();
+		if (index1 == index2) return;
+		if (_um) _um.store(this);
+		_image.swapLayers(index1, index2);
+
+		int sel1 = _layers.countUntil(index1);
+		int sel2 = _layers.countUntil(index2);
+		if (sel1 != -1 && sel2 == -1) {
+			selectedLayers = _layers.remove!(SwapStrategy.stable)(sel1) ~ index2;
+		}
+		if (sel1 == -1 && sel2 != -1) {
+			selectedLayers = _layers.remove!(SwapStrategy.stable)(sel2) ~ index1;
+		}
+
 		clearCache();
 		redraw();
 		drawReceivers.raiseEvent();
@@ -826,11 +857,11 @@ class PaintArea : Canvas, Undoable {
 	/// Cursor in use.
 	@property
 	Cursor cursorNow() {
-		if (rangeSelection && _cursorSelRange) {
-			return _cursorSelRange;
-		}
 		if (dropperMode && _cursorDropper) {
 			return _cursorDropper;
+		}
+		if (rangeSelection && _cursorSelRange) {
+			return _cursorSelRange;
 		}
 		return cursor(this.mode);
 	}
@@ -839,7 +870,7 @@ class PaintArea : Canvas, Undoable {
 	@property
 	const
 	bool dropperMode() {
-		return 3 == _mouseDown && !rangeSelection;
+		return 3 == _mouseDown;
 	}
 
 	/// Executes operation of cut, copy, paste, and delete.
@@ -2659,6 +2690,13 @@ class LayerList : Canvas {
 		_nameBounds.length = _paintArea.image.layerCount;
 		_vCheckBounds.length = _paintArea.image.layerCount;
 		calcScrollParams();
+
+		auto se = new Event;
+		se.widget = this;
+		se.time = cast(int) System.currentTimeMillis();
+		se.stateMask = 0;
+		se.doit = true;
+		notifyListeners(SWT.Selection, se);
 	}
 
 	/// Sets preview target image.
@@ -2714,6 +2752,37 @@ class LayerList : Canvas {
 			img.layer(l).name = name;
 			redraw();
 		});
+	}
+
+	/// Raises selection event.
+	private void raiseSelectionEvent(Event e) {
+		auto se = new Event;
+		se.widget = this;
+		se.time = e.time;
+		se.stateMask = e.stateMask;
+		se.doit = e.doit;
+		notifyListeners(SWT.Selection, se);
+		e.doit = se.doit;
+	}
+
+	/// Adds or removes a listener for image selection event.
+	void addSelectionListener(SelectionListener listener) {
+		checkWidget();
+		if (!listener) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
+		}
+		auto tl = new TypedListener(listener);
+		addListener(SWT.Selection, tl);
+		addListener(SWT.DefaultSelection, tl);
+	}
+	/// ditto
+	void removeSelectionListener(SelectionListener listener) {
+		checkWidget();
+		if (!listener) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
+		}
+		removeListener(SWT.Selection, listener);
+		removeListener(SWT.DefaultSelection, listener);
 	}
 
 	private void onResize(Event e) {
@@ -2844,6 +2913,7 @@ class LayerList : Canvas {
 			default: return;
 			}
 			_paintArea.selectedLayers = sels;
+			raiseSelectionEvent(e);
 			return;
 		}
 		if (SWT.F2 == e.keyCode) {
@@ -2872,6 +2942,7 @@ class LayerList : Canvas {
 			sels[0] = nl;
 		}
 		_paintArea.selectedLayers = sels;
+		raiseSelectionEvent(e);
 	}
 
 	/// Selects layer.
@@ -2914,6 +2985,7 @@ class LayerList : Canvas {
 			size_t[1] sel = [l];
 			_paintArea.selectedLayers = sel;
 		}
+		raiseSelectionEvent(e);
 	}
 
 	override Point computeSize(int wHint, int hHint, bool changed) {

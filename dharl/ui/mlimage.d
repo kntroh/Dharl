@@ -489,6 +489,21 @@ class MLImage : Undoable {
 			_layers[0].image.transparentPixel = -1;
 		}
 	}
+	/// Swap layer index.
+	void swapLayers(size_t index1, size_t index2) {
+		if (_layers.length <= index1) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (_layers.length <= index2) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkInit();
+		if (index1 == index2) return;
+		.swap(_layers[index1], _layers[index2]);
+		if (0 == index1 || 0 == index2) {
+			.swap(_layers[index1].image.transparentPixel, _layers[index2].image.transparentPixel);
+		}
+	}
 
 	/// Gets palette.
 	@property
