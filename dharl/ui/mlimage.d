@@ -207,12 +207,12 @@ class MLImage : Undoable {
 
 		/// If number of layers don't match, adjust layers number.
 		if (src.layerCount < _layers.length) {
-			removeLayers(src.layerCount, _layers.length);
+			removeLayers(0, _layers.length - src.layerCount);
 			changed = true;
 		} else if (src.layerCount > _layers.length) {
 			auto names = new string[src.layerCount - _layers.length];
 			names[] = "";
-			addLayers(names);
+			addLayers(0, names);
 			changed = true;
 		}
 		foreach (li; 0 .. src.layerCount) {
@@ -257,7 +257,7 @@ class MLImage : Undoable {
 		if (src.layerCount > _layers.length) {
 			auto names = new string[src.layerCount - _layers.length];
 			names[] = "";
-			addLayers(names);
+			addLayers(0, names);
 			changed = true;
 		}
 		foreach (li; 0 .. src.layerCount) {
@@ -396,18 +396,18 @@ class MLImage : Undoable {
 			foreach (x; 0 .. iw) {
 				foreach (y; 0 .. ih) {
 					int pixel = layer.getPixel(x + ix, y + iy);
-					if (pixel < colors && (0 == i || pixel != layer.transparentPixel)) {
+					if (pixel < colors && pixel != layer.transparentPixel) {
 						data.setPixel(x, y, pixel);
 					}
 				}
 			}
 		}
 		if (ls) {
-			foreach (i, l; ls) {
+			foreach_reverse (i, l; ls) {
 				put(i, _layers[l].image);
 			}
 		} else {
-			foreach (i, l; _layers) {
+			foreach_reverse (i, l; _layers) {
 				put(i, l.image);
 			}
 		}
@@ -425,17 +425,23 @@ class MLImage : Undoable {
 	/// Adds layer.
 	/// A layer after second,
 	/// is a first color treats as transparent pixel.
-	void addLayer(string name) {
+	void addLayer(size_t index, string name) {
 		if (!name) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
 		}
+		if (layerCount < index) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
 		checkInit();
-		addLayerImpl(name);
+		addLayerImpl(index, name);
 	}
 	/// ditto
-	void addLayers(string[] names) {
+	void addLayers(size_t index, string[] names) {
 		if (!names) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
+		}
+		if (layerCount < index) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		foreach (name; names) {
 			if (!name) {
@@ -443,19 +449,23 @@ class MLImage : Undoable {
 			}
 		}
 		checkInit();
-		foreach (name; names) {
-			addLayerImpl(name);
+		foreach (i, name; names) {
+			addLayerImpl(index + 1, name);
 		}
 	}
 	/// ditto
-	private void addLayerImpl(string name) {
+	private void addLayerImpl(size_t index, string name) {
 		checkInit();
-		enforce(name);
+		.enforce(name);
+		.enforce(index <= layerCount);
 		auto data = new ImageData(_iw, _ih, 8, _palette);
-		if (_layers.length >= 1) {
+		if (index < layerCount) {
 			data.transparentPixel = 0;
+			_layers.insertInPlace(index, Layer(data, name, true));
+		} else {
+			data.transparentPixel = -1;
+			_layers ~= Layer(data, name, true);
 		}
-		_layers ~= Layer(data, name, true);
 	}
 	/// Removes layer.
 	void removeLayer(size_t index) {
@@ -464,8 +474,8 @@ class MLImage : Undoable {
 		}
 		checkInit();
 		_layers = _layers.remove(index);
-		if (0 == index && _layers.length) {
-			_layers[0].image.transparentPixel = -1;
+		if (layerCount == index && _layers.length) {
+			_layers[index - 1].image.transparentPixel = -1;
 		}
 	}
 	/// ditto
@@ -485,8 +495,8 @@ class MLImage : Undoable {
 			}
 		}
 		_layers.length -= range;
-		if (0 == from && _layers.length) {
-			_layers[0].image.transparentPixel = -1;
+		if (_layers.length) {
+			_layers[$ - 1].image.transparentPixel = -1;
 		}
 	}
 	/// Swap layer index.
@@ -500,7 +510,7 @@ class MLImage : Undoable {
 		checkInit();
 		if (index1 == index2) return;
 		.swap(_layers[index1], _layers[index2]);
-		if (0 == index1 || 0 == index2) {
+		if (layerCount - 1 == index1 || layerCount - 1 == index2) {
 			.swap(_layers[index1].image.transparentPixel, _layers[index2].image.transparentPixel);
 		}
 	}

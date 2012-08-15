@@ -318,7 +318,7 @@ class MainPanel : Composite {
 		_paintArea.cursorSize = _c.conf.lineWidth;
 		_paintArea.pixel = _paletteView.pixel1;
 		_paintArea.backgroundPixel = _paletteView.pixel2;
-		_paintArea.addLayer(_c.text.newLayer);
+		_paintArea.addLayer(0, _c.text.newLayer);
 		auto pen = ccur(_c.image.cursorPen, 0, 0);
 		auto cross = d.getSystemCursor(SWT.CURSOR_CROSS);
 		auto dropper = ccur(_c.image.cursorDropper, 0, 0);
@@ -598,7 +598,7 @@ class MainPanel : Composite {
 		} else {
 			img.init(width, height, PaletteView.createDefaultPalette());
 		}
-		img.addLayer(_c.text.newLayer);
+		img.addLayer(0, _c.text.newLayer);
 		loadImage(img, _c.text.noName, "", 8, false);
 	}
 	/// Loads image from a file.
@@ -644,7 +644,7 @@ class MainPanel : Composite {
 		checkInit();
 		if (_paintArea.empty) {
 			// Creates first layer.
-			_paintArea.addLayer(_c.text.newLayer);
+			_paintArea.addLayer(0, _c.text.newLayer);
 		}
 		auto pi = new PImageItem(_imageList, SWT.NONE);
 		pi.p_text = name;
@@ -992,7 +992,7 @@ class MainPanel : Composite {
 	void addLayer() {
 		checkWidget();
 		checkInit();
-		_paintArea.addLayer(_c.text.newLayer);
+		_paintArea.addLayer(_paintArea.selectedLayers.sort[0], _c.text.newLayer);
 	}
 	/// ditto
 	void removeLayer() {

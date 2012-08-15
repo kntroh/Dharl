@@ -277,7 +277,7 @@ class PaintArea : Canvas, Undoable {
 	/// Adds layer.
 	/// A layer after second,
 	/// is a first color treats as transparent pixel.
-	void addLayer(string layerName) {
+	void addLayer(size_t index, string layerName) {
 		if (!layerName) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
 		}
@@ -286,9 +286,9 @@ class PaintArea : Canvas, Undoable {
 		if (!_image.empty) {
 			if (_um) _um.store(this);
 		}
-		_image.addLayer(layerName);
+		_image.addLayer(index, layerName);
 		_layers.length = 1;
-		_layers[0] = _image.layerCount - 1;
+		_layers[0] = index;
 		clearCache();
 		changedLayerReceivers.raiseEvent();
 		statusChangedReceivers.raiseEvent();
@@ -1803,10 +1803,11 @@ class PaintArea : Canvas, Undoable {
 		auto data = new ImageData(_image.width, _image.height, 8, _image.palette);
 
 		auto l = _image.layer(layer).image;
-		if (0 == layer && !selLayer[layer]) {
+		bool baseLayer = _image.layerCount - 1 == layer;
+		if (baseLayer && !selLayer[layer]) {
 			data.data[] = l.data;
 		} else {
-			int tPixel = (0 == layer) ? _backPixel : 0;
+			int tPixel = baseLayer ? _backPixel : 0;
 			foreach (ix; 0 .. _image.width) {
 				foreach (iy; 0 .. _image.height) {
 					// Fill background pixel to area before move.
@@ -1816,14 +1817,14 @@ class PaintArea : Canvas, Undoable {
 					}
 					int pixel = l.getPixel(ix, iy);
 					// In other than first layer, pixel 0 is transparent.
-					if (0 == layer || 0 != pixel) {
+					if (baseLayer || 0 != pixel) {
 						data.setPixel(ix, iy, pixel);
 					} else {
 						data.setPixel(ix, iy, tPixel);
 					}
 				}
 			}
-			if (0 != layer && !oneLayer) {
+			if (!baseLayer && !oneLayer) {
 				data.transparentPixel = tPixel;
 			}
 		}
@@ -1888,7 +1889,7 @@ class PaintArea : Canvas, Undoable {
 		bool showCursor = false;
 		auto selInfo = selectedInfo;
 
-		foreach (l; 0 .. _image.layerCount) {
+		foreach_reverse (l; 0 .. _image.layerCount) {
 			if (!_image.layer(l).visible) continue;
 			auto img = showingImage(l, false);
 			if (!img) continue;
@@ -2260,11 +2261,17 @@ class PaintArea : Canvas, Undoable {
 			scope (exit) this.p_cursor = cursorNow;
 			_mouseDown = -1;
 			if (cInImage(e.x, e.y)) {
-				auto pixels = iGetPixels(cxtoix(e.x), cytoiy(e.y));
-				_pixel = pixels[0];
-				foreach (i; 1 .. pixels.length) {
-					if (0 != pixels[i]) {
-						_pixel = pixels[i];
+				int ix = cxtoix(e.x);
+				int iy = cytoiy(e.y);
+
+				// Selects most upper opacity pixel
+				_pixel = iGetPixel(ix, iy, _image.layerCount - 1);
+				foreach (l; 0 .. _image.layerCount - 1) {
+					if (!_image.layer(l).visible) continue;
+					auto p = iGetPixel(ix, iy, l);
+					if (0 != p) {
+						_pixel = p;
+						break;
 					}
 				}
 				redrawCursorArea();
@@ -2527,7 +2534,7 @@ class PaintPreview : Canvas {
 		int w = .min(ca.width, iw - srcX);
 		int h = .min(ca.height, ih - srcY);
 
-		foreach (l; 0 .. _paintArea.image.layerCount) {
+		foreach_reverse (l; 0 .. _paintArea.image.layerCount) {
 			if (!_paintArea.image.layer(l).visible) continue;
 			auto img = _paintArea.showingImage(l, false);
 			if (!img) continue;
