@@ -13,11 +13,11 @@ version (Console) {
 	private import std.stdio;
 
 	/// Prints debug message.
-	void consoleoutf(T...)(string msgf, T args) {
+	void coutf(T...)(string msgf, T args) {
 		writefln(msgf, args);
 	}
 	/// ditto
-	void consoleout(T...)(T args) {
+	void cout(T...)(T args) {
 		writeln(args);
 	}
 	/// Outputs error message.
@@ -30,9 +30,9 @@ version (Console) {
 	}
 } else {
 	/// Prints debug message.
-	void consoleoutf(T...)(string msgf, T args) { /* Do nothing */ }
+	void coutf(T...)(string msgf, T args) { /* Do nothing */ }
 	/// ditto
-	void consoleout(T...)(T args) { /* Do nothing */ }
+	void cout(T...)(T args) { /* Do nothing */ }
 	/// Outputs error message.
 	void erroroutf(T...)(string msgf, T args) { /* Do nothing */ }
 	/// ditto
@@ -73,18 +73,39 @@ debug static ~this() {
 }
 
 /// Converts from degree to radian.
-@safe
-nothrow
-pure
+@safe nothrow pure
 real radian(real degree) {
 	return degree * PI / 180;
 }
 /// Converts from radian to degree.
-@safe
-nothrow
-pure
+@safe nothrow pure
 real degree(real radian) {
 	return radian * 180 / PI;
+}
+
+/// Distance of 1 to 2.
+@safe nothrow pure
+real distance(real x1, real y1, real x2, real y2) {
+	real d1 = x1 - x2;
+	real d2 = y1 - y2;
+	return sqrt(d1 * d1 + d2 * d2);
+}
+
+/// Normalizes range value.
+@safe nothrow pure
+T1 normalizeRange(T1, T2, T3)(T1 value, T2 from, T3 to) {
+	if (0 == to) return value;
+	if (to <= value || value < from) {
+		value -= cast(ulong) (value / to) * to;
+	}
+	if (value < from) {
+		value += to;
+	}
+	return value;
+} unittest {
+	assert (normalizeRange( 3750, 0, 360) == 150);
+	assert (normalizeRange(-3750, 0, 360) == 210);
+	assert (normalizeRange(  360, 0, 360) ==   0);
 }
 
 /// Send event to receivers.

@@ -26,13 +26,6 @@ bool isEnabledSize(PaintMode mode) {
 	return PaintMode.Fill != mode;
 }
 
-/// Distance of 1 to 2.
-real distance(real x1, real y1, real x2, real y2) {
-	real d1 = x1 - x2;
-	real d2 = y1 - y2;
-	return sqrt(d1 * d1 + d2 * d2);
-}
-
 /// Calls dlg(X, Y) or dlg(X, Y, Width, Height) with points of path.
 /// If mode is PaintMode.Fill, please use pointsOfFill().
 void pointsOfPath(void delegate(int x, int y) dlg, PaintMode mode, int x1, int y1, int x2, int y2, size_t w, size_t h, uint size = 1) {
@@ -858,30 +851,106 @@ void turn(T)(real deg, T delegate(int x, int y) pget, void delegate(int x, int y
 	enforce(0 <= w);
 	enforce(0 <= h);
 	if (isNaN(deg) || isInfinity(deg) || 0 == w || 0 == h) return;
-	auto rad = radian(deg);
+	deg = .normalizeRange(deg, 0, 360);
 	if (0 == deg) return;
-	int dcos = cast(int) (rad.cos() * (1 << 10)); 
-	int dsin = cast(int) (rad.sin() * (1 << 10)); 
 	auto base = new T[w * h];
-	foreach (x; 0 .. w) {
-		foreach (y; 0 .. h) {
-			base[y * w + x] = pget(sx + x, sy + y);
+	foreach (y; 0 .. h) {
+		auto yw = y * w;
+		foreach (x; 0 .. w) {
+			base[yw + x] = pget(sx + x, sy + y);
 			pset(sx + x, sy + y, backgroundPixel);
 		}
 	}
-	int cx = w / 2;
-	int cy = h / 2;
-	foreach (x; 0 .. w) {
+
+	if (w == h && 0 == deg % 90) {
+		// Exact turns.
+		if (90 == deg) {
+			foreach (y; 0 .. h) {
+				auto yw = y * w;
+				foreach (x; 0 .. w) {
+					pset(sx + (w - y - 1), sy + x, base[yw + x]);
+				}
+			}
+		} else if (180 == deg) {
+			foreach (y; 0 .. h) {
+				auto yw = y * w;
+				foreach (x; 0 .. w) {
+					pset(sx + (w - x - 1), sy + (h - y - 1), base[yw + x]);
+				}
+			}
+		} else if (270 == deg) {
+			foreach (y; 0 .. h) {
+				auto yw = y * w;
+				foreach (x; 0 .. w) {
+					pset(sx + y, sy + (h - x - 1), base[yw + x]);
+				}
+			}
+		}
+	} else {
+		auto rad = radian(deg);
+		int dcos = cast(int) ((-rad).cos() * (1 << 10)); 
+		int dsin = cast(int) ((-rad).sin() * (1 << 10)); 
+		int cx = w / 2;
+		int cy = h / 2;
 		foreach (y; 0 .. h) {
-			int xmcx = x - cx;
-			int ymcy = y - cy;
-			int ax = ((xmcx * dcos - ymcy * dsin) >> 10) + cx;
-			int ay = ((xmcx * dsin + ymcy * dcos) >> 10) + cy;
-			int xx = sx + ax;
-			int yy = sy + ay;
-			if (sx <= xx && ax < w && sy <= yy && ay < h) {
-				pset(xx, yy, base[y * w + x]);
+			foreach (x; 0 .. w) {
+				int xmcx = x - cx;
+				int ymcy = y - cy;
+				int ax = ((xmcx * dcos - ymcy * dsin) >> 10) + cx;
+				int ay = ((xmcx * dsin + ymcy * dcos) >> 10) + cy;
+				int xx = sx + ax;
+				int yy = sy + ay;
+				auto yyw = yy * w;
+				if (sx <= xx && ax < w && sy <= yy && ay < h) {
+					pset(sx + x, sy + y, base[yyw + xx]);
+				}
 			}
 		}
 	}
+} unittest {
+	import std.string;
+
+	char[][] img = [
+		"      ".dup,
+		"  ##  ".dup,
+		"   #  ".dup,
+		"   #  ".dup,
+		"   #  ".dup
+	];
+	char get(int x, int y) {
+		return img[y][x];
+	}
+	void set(int x, int y, char pixel) {
+		img[y][x] = pixel;
+	}
+
+	// Turn 90 degrees.
+	.turn(90, &get, &set, 2, 1, 4, 4, '@');
+	assert (img == [
+		"      ",
+		"     #",
+		"  ####",
+		"      ",
+		"      "
+	], "\n" ~ std.string.join(img, "\n"));
+
+	// Turn 180 degrees.
+	.turn(180, &get, &set, 2, 1, 4, 4, '@');
+	assert (img == [
+		"      ",
+		"      ",
+		"      ",
+		"  ####",
+		"  #   "
+	], "\n" ~ std.string.join(img, "\n"));
+
+	// Turn 270 degrees.
+	.turn(270, &get, &set, 2, 1, 4, 4, '@');
+	assert (img == [
+		"      ",
+		"    # ",
+		"    # ",
+		"    # ",
+		"    ##"
+	], "\n" ~ std.string.join(img, "\n"));
 }

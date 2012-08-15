@@ -27,7 +27,7 @@ private import java.lang.all : ArrayWrapperString2;
 /// Entry point of program.
 void main(string[] args) {
 	string exe = .moduleFileName(args[0]);
-	.consoleoutf("Execute: %s", exe);
+	.coutf("Execute: %s", exe);
 
 	// Pipe name for process communication.
 	static immutable PIPE_NAME = "dharl";
@@ -65,7 +65,7 @@ void main(string[] args) {
 
 	// Load application configuration.
 	string appData = .appData(exe.dirName(), true).buildPath("dharl").buildPath("settings.xml");
-	.consoleoutf("AppData: %s", appData);
+	.coutf("AppData: %s", appData);
 	auto c = new DCommon;
 	if (appData.exists()) {
 		try {
