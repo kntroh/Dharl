@@ -63,6 +63,7 @@ class DImages {
 	const DImage cursorPen = importImage!("cursor_pen.png");
 	const DImage cursorDropper = importImage!("cursor_dropper.png"); /// ditto
 	const DImage cursorBucket = importImage!("cursor_bucket.png"); /// ditto
+	const DImage cursorCross = importImage!("cursor_cross.png"); /// ditto
 
 	/// Image data for toolbars and menus.
 	const DImage createNewImage = importImage!("create_new_image.png");

@@ -15,18 +15,24 @@ private import org.eclipse.swt.all;
 
 /// Creates image from dimg.
 Image cimg(in DImage dimg) {
-	return cimgImpl!Image(dimg, 0, 0);
+	return cimgImpl!Image(dimg, CursorSpot.init);
 }
 
 /// Creates cursor from dimg.
-Cursor ccur(in DImage dimg, int hotspotX, int hotspotY) {
-	return cimgImpl!Cursor(dimg, hotspotX, hotspotY);
+Cursor ccur(in DImage dimg, CursorSpot hotspot) {
+	return cimgImpl!Cursor(dimg, hotspot);
+}
+
+/// Hotspot of cursor.
+enum CursorSpot {
+	TopLeft, // Top left.
+	Center, // Center.
 }
 
 /// Common function for cimg and ccur.
-private T cimgImpl(T)(in DImage dimg, int hotspotX, int hotspotY) {
-	enforce(dimg.id);
-	enforce(dimg.data);
+private T cimgImpl(T)(in DImage dimg, CursorSpot hotspot) {
+	.enforce(dimg.id);
+	.enforce(dimg.data);
 
 	auto d2 = Display.getCurrent();
 	if (!d2) {
@@ -66,7 +72,15 @@ private T cimgImpl(T)(in DImage dimg, int hotspotX, int hotspotY) {
 	static if (is(T:Image)) {
 		auto img = new T(d, data);
 	} else static if (is(T:Cursor)) {
-		auto img = new T(d, data, hotspotX, hotspotY);
+		T img;
+		final switch (hotspot) {
+		case CursorSpot.TopLeft:
+			img = new T(d, data, 0, 0);
+			break;
+		case CursorSpot.Center:
+			img = new T(d, data, data.width / 2, data.height / 2);
+			break;
+		}
 	}
 	table[dimg.id] = img;
 	return img;

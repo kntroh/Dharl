@@ -156,9 +156,10 @@ void bindMenu(MenuItem menu, ToolItem tool) {
 /// Gets a accelerator key from text.
 int acceleratorKey(string text) {
 	int i = text.indexOf("\t");
-	if (-1 != i && i + 1 < text.length) {
-		text = text[i + 1 .. $];
+	if (-1 == i || text.length <= i + 1) {
+		return 0;
 	}
+	text = text[i + 1 .. $];
 
 	int accelerator = 0;
 	foreach (key; text.split("+")) {

@@ -319,10 +319,10 @@ class MainPanel : Composite {
 		_paintArea.pixel = _paletteView.pixel1;
 		_paintArea.backgroundPixel = _paletteView.pixel2;
 		_paintArea.addLayer(0, _c.text.newLayer);
-		auto pen = ccur(_c.image.cursorPen, 0, 0);
-		auto cross = d.getSystemCursor(SWT.CURSOR_CROSS);
-		auto dropper = ccur(_c.image.cursorDropper, 0, 0);
-		auto bucket = ccur(_c.image.cursorBucket, 0, 0);
+		auto pen = ccur(_c.image.cursorPen, CursorSpot.TopLeft);
+		auto cross = ccur(_c.image.cursorCross, CursorSpot.Center);
+		auto dropper = ccur(_c.image.cursorDropper, CursorSpot.TopLeft);
+		auto bucket = ccur(_c.image.cursorBucket, CursorSpot.TopLeft);
 		_paintArea.cursor(PaintMode.FreePath, pen);
 		_paintArea.cursor(PaintMode.Straight, cross);
 		_paintArea.cursor(PaintMode.OvalLine, cross);

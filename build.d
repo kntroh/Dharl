@@ -1,4 +1,5 @@
 #!/usr/bin/rdmd
+
 /// Build script.
 module build;
 

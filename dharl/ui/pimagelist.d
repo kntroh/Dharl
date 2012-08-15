@@ -875,9 +875,7 @@ private class PImageItem : Item {
 		int index = _parent._images.countUntil!"a is b"(this);
 		assert (-1 != index);
 		_parent._images = _parent._images.remove(index);
-		if (_parent._selected == index) {
-			_parent._selected = -1;
-		} else if (index < _parent._selected) {
+		if (index <= _parent._selected) {
 			_parent._selected--;
 		}
 		_parent.calcScrollParams();

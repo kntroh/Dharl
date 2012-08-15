@@ -54,6 +54,7 @@ void initMouseWheel(Shell shell) {
 		se.count = e.count;
 
 		c.notifyListeners(se.type, se);
+		e.doit = false;
 	};
 }
 
