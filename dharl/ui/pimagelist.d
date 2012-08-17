@@ -801,7 +801,9 @@ private class PImageItem : Item {
 
 		// Draws image.
 		foreach (i; 0 .. image.layerCount) {
-			auto img = new Image(d, image.layer(i).image);
+			auto l = image.layer(i);
+			if (!l.visible) continue;
+			auto img = new Image(d, l.image);
 			scope (exit) img.dispose();
 			gc.drawImage(img, _iBounds.x, _iBounds.y);
 		}

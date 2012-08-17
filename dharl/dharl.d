@@ -389,7 +389,11 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto ft = cast(Transfer) FileTransfer.getInstance();
 	addDropFunctions(shell, DND.DROP_COPY, [ft], (DropTargetEvent e) {
 		foreach (file; (cast(ArrayWrapperString2) e.data).array) {
-			mainPanel.loadImage(file);
+			try {
+				mainPanel.loadImage(file);
+			} catch (Exception e) {
+				.erroroutf("Load failure: %s", file);
+			}
 		}
 	});
 	tUndo.p_enabled = mainPanel.undoManager.canUndo;

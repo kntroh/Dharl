@@ -17,6 +17,7 @@ private import dharl.ui.pimagelist;
 private import dharl.ui.splitter;
 private import dharl.ui.uicommon;
 private import dharl.ui.dwtutils;
+private import dharl.ui.dpx;
 
 private import std.algorithm;
 private import std.exception;
@@ -607,7 +608,7 @@ class MainPanel : Composite {
 		checkWidget();
 		checkInit();
 		auto dlg = new FileDialog(this.p_shell, SWT.OPEN | SWT.MULTI);
-		static FILTER = "*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff";
+		static FILTER = "*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx";
 		string type = _c.text.fLoadImageType.value;
 		dlg.p_filterNames = [type.format(FILTER)];
 		dlg.p_filterExtensions = [FILTER];
@@ -626,18 +627,28 @@ class MainPanel : Composite {
 	void loadImage(string file) {
 		checkWidget();
 		checkInit();
-		auto data = new ImageData(file);
-		auto img = new MLImage;
-		img.init(data, _c.text.newLayer);
-		assert (1 == img.layerCount);
-		bool saved = !data.palette.isDirect && data.depth <= 8;
-		if (saved) {
-			string ext = file.extension();
-			if (0 != ext.filenameCmp(".bmp") && 0 != ext.filenameCmp(".png")) {
-				saved = false;
+		string ext = file.extension();
+		MLImage img;
+		bool saved;
+		ubyte depth;
+		if (0 == ext.filenameCmp(".dpx")) {
+			img = .loadDPX(file);
+			saved = false;
+			depth = 8;
+		} else {
+			auto data = new ImageData(file);
+			img = new MLImage;
+			img.init(data, _c.text.newLayer);
+			assert (1 == img.layerCount);
+			depth = cast(ubyte) min(data.depth, 8);
+			saved = !data.palette.isDirect && depth <= 8;
+			if (saved) {
+				if (0 != ext.filenameCmp(".bmp") && 0 != ext.filenameCmp(".png")) {
+					saved = false;
+				}
 			}
 		}
-		loadImage(img, file.baseName(), file, cast(ubyte) min(data.depth, 8), saved);
+		loadImage(img, file.baseName(), file, depth, saved);
 	}
 	private void loadImage(MLImage img, string name, string path, ubyte depth, bool saved) {
 		checkWidget();

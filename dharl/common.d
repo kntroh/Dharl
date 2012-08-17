@@ -246,7 +246,7 @@ class DConfig {
 	]));
 
 	/// Parameters of layout.
-	mixin Prop!("mainWindow", WindowParameter, WindowParameter(100, 700, 900, 700));
+	mixin Prop!("mainWindow", WindowParameter, WindowParameter(int.min, int.min, 900, 700));
 
 	mixin Prop!("sashPosWork_List",     int, 550); /// ditto
 	mixin Prop!("sashPosPaint_Preview", int, 100); /// ditto

@@ -13,6 +13,16 @@ private import std.typecons;
 
 private import org.eclipse.swt.all;
 
+/// control is descendant of composite?
+/// If composite is control, returns true.
+bool descendant(Control composite, Control control) {
+	while (composite !is control) {
+		if (!control) return false;
+		control = control.p_parent;
+	}
+	return true;
+}
+
 /// Computes text size on drawable.
 Point computeTextSize(Drawable drawable, string text) {
 	auto tgc = new GC(drawable);

@@ -1808,11 +1808,13 @@ class PaintArea : Canvas, Undoable {
 		auto data = new ImageData(_image.width, _image.height, 8, _image.palette);
 
 		auto l = _image.layer(layer).image;
-		bool baseLayer = _image.layerCount - 1 == layer;
-		if (baseLayer && !selLayer[layer]) {
+		int tPixel = l.transparentPixel;
+		if (!oneLayer) {
+			data.transparentPixel = tPixel;
+		}
+		if (tPixel < 0 && !selLayer[layer]) {
 			data.data[] = l.data;
 		} else {
-			int tPixel = baseLayer ? _backPixel : 0;
 			foreach (ix; 0 .. _image.width) {
 				foreach (iy; 0 .. _image.height) {
 					// Fill background pixel to area before move.
@@ -1820,17 +1822,8 @@ class PaintArea : Canvas, Undoable {
 						data.setPixel(ix, iy, tPixel);
 						continue;
 					}
-					int pixel = l.getPixel(ix, iy);
-					// In other than first layer, pixel 0 is transparent.
-					if (baseLayer || 0 != pixel) {
-						data.setPixel(ix, iy, pixel);
-					} else {
-						data.setPixel(ix, iy, tPixel);
-					}
+					data.setPixel(ix, iy, l.getPixel(ix, iy));
 				}
-			}
-			if (!baseLayer && !oneLayer) {
-				data.transparentPixel = tPixel;
 			}
 		}
 		if (selLayer[layer] && _pasteLayer) {
@@ -2306,15 +2299,14 @@ class PaintArea : Canvas, Undoable {
 	private void onMouseWheel(Event e) {
 		checkWidget();
 		if (0 == e.count) return;
-		int count;
 		auto old = zoom;
-		if (e.count < 0) {
-			count = min(e.count / 3, -1);
-		} else {
-			count = max(e.count / 3, 1);
-		}
 
-		zoom = max(1, min(cast(int) zoom + count, ZOOM_MAX));
+		if (e.count < 0) {
+			zoom = max(1, zoom - 1);
+		} else {
+			assert (0 < e.count);
+			zoom = min(cast(int) zoom + 1, ZOOM_MAX);
+		}
 
 		if (zoom != old) {
 			statusChangedReceivers.raiseEvent();

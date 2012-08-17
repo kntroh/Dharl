@@ -22,23 +22,19 @@ private import org.eclipse.swt.all;
 /// A MouseWheel event send to a control under the cursor always.
 void initMouseWheel(Shell shell) {
 	auto d = shell.p_display;
-	bool inProc = false;
 	d.p_filters!(SWT.MouseWheel) ~= (Event e) {
 		.enforce(SWT.MouseWheel == e.type);
 
-		if (inProc) return;
-		inProc = true;
-		scope (exit) inProc = false;
-
 		auto c = d.getCursorControl();
-		if (!c) return;
+		if (!c) return; // no cursor control
 		auto w = cast(Control) e.widget;
-		if (!w) return;
-		if (c.p_shell !is shell) return;
-		if (c is w) {
-			e.doit = false;
-			return;
-		}
+		if (!w) return; // sender isn't control
+		if (w is c) return; // focus control is cursor control
+
+		if (c.p_shell !is shell) return; // out of shell
+
+		// All parent controls of c receive a wheel event.
+		if (w.descendant(c)) return;
 
 		auto se = new Event;
 		se.type = e.type;
@@ -54,16 +50,33 @@ void initMouseWheel(Shell shell) {
 		se.count = e.count;
 
 		c.notifyListeners(se.type, se);
+
+		// smother
 		e.doit = false;
+		e.count = 0;
+		e.button = 0;
 	};
 }
 
 /// Sets parameters to shell from param.
 /// And save parameters when disposed shell.
 void refWindow(ref WindowParameter param, Shell shell) {
-	shell.p_bounds = CRect(param.x, param.y, param.width, param.height);
+	int x = param.x;
+	int y = param.y;
+	int w = param.width;
+	int h = param.height;
+	if (x == int.min) x = SWT.DEFAULT;
+	if (y == int.min) y = SWT.DEFAULT;
+	if (w <= 0 || h <= 0) {
+		auto size = shell.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+		if (w <= 0) w = size.x;
+		if (h <= 0) h = size.y;
+	}
+
+	shell.p_bounds = CRect(x, y, w, h);
 	shell.p_maximized = param.maximized;
 	shell.p_minimized = param.minimized;
+
 	shell.listeners!(SWT.Dispose) ~= (Event e) {
 		auto b = shell.p_bounds;
 		param.x      = b.x;

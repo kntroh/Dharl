@@ -404,10 +404,12 @@ class MLImage : Undoable {
 		}
 		if (ls) {
 			foreach_reverse (i, l; ls) {
+				if (!_layers[l].visible) continue;
 				put(i, _layers[l].image);
 			}
 		} else {
 			foreach_reverse (i, l; _layers) {
+				if (!l.visible) continue;
 				put(i, l.image);
 			}
 		}
@@ -425,6 +427,33 @@ class MLImage : Undoable {
 	/// Adds layer.
 	/// A layer after second,
 	/// is a first color treats as transparent pixel.
+	void addLayer(size_t index, Layer layer) {
+		if (!layer.image) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (!layer.name) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (layer.image.width != _iw) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (layer.image.height != _ih) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (layer.image.depth != 8) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (layerCount < index) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkInit();
+		layer.image.palette = _palette;
+		if (index < layerCount) {
+			_layers.insertInPlace(index, layer);
+		} else {
+			_layers ~= layer;
+		}
+	}
 	void addLayer(size_t index, string name) {
 		if (!name) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
