@@ -652,7 +652,7 @@ private class PImageItem : Item {
 	/// Push src to image of this item.
 	bool pushImage(MLImage src) {
 		checkWidget();
-		redrawPiece();
+		redrawImage();
 		auto cip = _selectedPiece;
 		return _image.pushImage(src, cip.x, cip.y);
 	}

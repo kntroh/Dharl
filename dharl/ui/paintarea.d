@@ -127,9 +127,14 @@ class PaintArea : Canvas, Undoable {
 	/// A cursor of range selection mode.
 	private Cursor _cursorSelRange;
 
+	/// Cache of wallpaper.
+	private Image _shadeCache = null;
+	/// Size of wallpaper cache.
+	private Rectangle _shadeCacheRect = null;
+
 	/// The only constructor.
 	this (Composite parent, int style) {
-		super (parent, style | SWT.H_SCROLL | SWT.V_SCROLL);
+		super (parent, style | SWT.H_SCROLL | SWT.V_SCROLL | SWT.NO_BACKGROUND);
 		_id = format("%x-%d", &this, Clock.currTime().stdTime);
 
 		_image = new MLImage;
@@ -1819,6 +1824,14 @@ class PaintArea : Canvas, Undoable {
 			iRY = iRange.x;
 			iRW = iRange.width;
 			iRH = iRange.height;
+			if (iRX < 0) {
+				iRW += iRX;
+				iRX = 0;
+			}
+			if (iRY < 0) {
+				iRH += iRY;
+				iRY = 0;
+			}
 		} else {
 			iRX = 0;
 			iRY = 0;
@@ -1828,6 +1841,9 @@ class PaintArea : Canvas, Undoable {
 
 		// Draws layer.
 		auto data = new ImageData(_image.width, _image.height, 8, _image.palette);
+		if (iRW <= 0 || iRH <= 0) {
+			return new Image(d, data);
+		}
 
 		auto l = _image.layer(layer).image;
 		int tPixel = l.transparentPixel;
@@ -1869,7 +1885,7 @@ class PaintArea : Canvas, Undoable {
 		}
 
 		auto img = new Image(d, data);
-		if (!oneLayer) {
+		if (!oneLayer && iRX == 0 && iRY == 0 && iRW == _image.width && iRH == _image.height) {
 			_cache[layer] = img;
 		}
 		return img;
@@ -1877,6 +1893,7 @@ class PaintArea : Canvas, Undoable {
 
 	private void onDispose(Event e) {
 		clearCache();
+		if (_shadeCache) _shadeCache.dispose();
 	}
 
 	private void onResize(Event e) {
@@ -1907,27 +1924,61 @@ class PaintArea : Canvas, Undoable {
 		auto cb = itoc(ib);
 		if (!hasNoTransparent || !showImage || ((cb.width < ca.width || cb.height < ca.height)
 				&& !(cb.contains(e.x, e.y) && cb.contains(e.x + e.width, e.y + e.height)))) {
-			drawShade(e.gc, ca);
+			if (!_shadeCache || !_shadeCacheRect || _shadeCacheRect != ca) {
+				// Creates wallpaper cache.
+				auto cSize =  this.p_size;
+				if (_shadeCache) _shadeCache.dispose();
+				auto shade = new Image(d, cSize.x, cSize.y);
+				auto gc = new GC(shade);
+				scope (exit) gc.dispose();
+				gc.p_background = e.gc.p_background;
+				gc.p_foreground = e.gc.p_foreground;
+				gc.fillRectangle(ca);
+				gc.drawShade(ca);
+				_shadeCache = shade;
+				_shadeCacheRect = ca;
+			}
+			e.gc.drawImage(_shadeCache, e.x, e.y, e.width, e.height, e.x, e.y, e.width, e.height);
 		}
 
 		bool showCursor = false;
 		auto selInfo = selectedInfo;
 
-		// TODO
-//		auto cPaint = CRect(e.x, e.y, e.width, e.height);
-//		auto iPaint = ctoi(cPaint);
-//		.coutf("%s,%s,%s,%s",iPaint.x,iPaint.y,iPaint.width,iPaint.height);
-		auto cPaint = cb;
-		auto iPaint = ib;
-
-		foreach_reverse (l; 0 .. _image.layerCount) {
-			if (!_image.layer(l).visible) continue;
-			auto img = showingImage(l, false, iPaint);
-			if (!img) continue;
-			e.gc.drawImage(img, iPaint.x, iPaint.y, iPaint.width, iPaint.height,
-				cPaint.x, cPaint.y, cPaint.width, cPaint.height);
-			if (selInfo[l]) {
-				showCursor = true;
+		void valid(ref Rectangle rect, int width, int height) {
+			if (rect.x < 0) {
+				rect.width += rect.x;
+				rect.x = 0;
+			}
+			if (rect.y < 0) {
+				rect.height += rect.y;
+				rect.y = 0;
+			}
+			if (width < rect.x + rect.width) {
+				rect.width = width - rect.x;
+			}
+			if (height < rect.y + rect.height) {
+				rect.height = height - rect.y;
+			}
+		}
+		auto cPaint = CRect(e.x, e.y, e.width, e.height);
+		auto iPaint = ctoi(cPaint);
+		// Extends a drawing range for leakage of drawing doesn't occur.
+		iPaint.x -= 2;
+		iPaint.y -= 2;
+		iPaint.width += 4;
+		iPaint.height += 4;
+		valid(iPaint, ib.width, ib.height);
+		cPaint = itoc(iPaint);
+		if (0 < iPaint.width && 0 < iPaint.height) {
+			foreach_reverse (l; 0 .. _image.layerCount) {
+				if (!_image.layer(l).visible) continue;
+				auto img = showingImage(l, false, null); // uses cache
+				if (!img) continue;
+				e.gc.drawImage(img, iPaint.x, iPaint.y, iPaint.width, iPaint.height,
+					cPaint.x, cPaint.y, cPaint.width, cPaint.height);
+				if (selInfo[l]) {
+					showCursor = true;
+				}
 			}
 		}
 
