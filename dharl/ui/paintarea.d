@@ -261,9 +261,13 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		cancelPaste();
 		if (_um) _um.store(this);
+		auto r = _image.pushImage(src, srcX, srcY, _backPixel);
 		clearCache();
 		redraw();
-		return _image.pushImage(src, srcX, srcY, _backPixel);
+		drawReceivers.raiseEvent();
+		changedLayerReceivers.raiseEvent();
+		statusChangedReceivers.raiseEvent();
+		return r;
 	}
 
 	/// If image haven't layer, returns true.
@@ -1562,6 +1566,11 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		return ctoi(c - cImageTop);
 	}
+	/// ditto
+	private Rectangle ctoi(in Rectangle c) {
+		checkInit();
+		return CRect(cxtoix(c.x), cytoiy(c.y), ctoi(c.width), ctoi(c.height));
+	}
 	/// Converts a image coordinate to a control coordinate.
 	const
 	private int itoc(int i) {
@@ -1578,7 +1587,7 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		return itoc(i) + cImageTop;
 	}
-	/// Zooms values of rectangle.
+	/// ditto
 	private Rectangle itoc(in Rectangle i) {
 		checkInit();
 		return CRect(ixtocx(i.x), iytocy(i.y), itoc(i.width), itoc(i.height));
@@ -1792,7 +1801,7 @@ class PaintArea : Canvas, Undoable {
 		_cache.length = _image.layerCount;
 	}
 	/// Creates an image to be showing.
-	private Image showingImage(size_t layer, bool oneLayer) {
+	private Image showingImage(size_t layer, bool oneLayer, in Rectangle iRange) {
 		checkWidget();
 		checkInit();
 
@@ -1803,6 +1812,19 @@ class PaintArea : Canvas, Undoable {
 		auto d = this.p_display;
 
 		auto selLayer = selectedInfo;
+
+		int iRX, iRY, iRW, iRH;
+		if (iRange) {
+			iRX = iRange.x;
+			iRY = iRange.x;
+			iRW = iRange.width;
+			iRH = iRange.height;
+		} else {
+			iRX = 0;
+			iRY = 0;
+			iRW = _image.width;
+			iRH = _image.height;
+		}
 
 		// Draws layer.
 		auto data = new ImageData(_image.width, _image.height, 8, _image.palette);
@@ -1815,8 +1837,8 @@ class PaintArea : Canvas, Undoable {
 		if (tPixel < 0 && !selLayer[layer]) {
 			data.data[] = l.data;
 		} else {
-			foreach (ix; 0 .. _image.width) {
-				foreach (iy; 0 .. _image.height) {
+			foreach (ix; iRX .. iRW) {
+				foreach (iy; iRY .. iRH) {
 					// Fill background pixel to area before move.
 					if (selLayer[layer] && _iMoveRange.contains(ix, iy)) {
 						data.setPixel(ix, iy, tPixel);
@@ -1870,16 +1892,20 @@ class PaintArea : Canvas, Undoable {
 		auto ca = this.p_clientArea;
 
 		bool showImage = false;
+		bool hasNoTransparent = false;
 		foreach (l; 0 .. _image.layerCount) {
 			if (_image.layer(l).visible) {
 				showImage = true;
-				break;
+				if (_image.layer(l).image.transparentPixel < 0) {
+					hasNoTransparent= true;
+					break;
+				}
 			}
 		}
 
 		auto ib = CRect(0, 0, _image.width, _image.height);
 		auto cb = itoc(ib);
-		if (!showImage || ((cb.width < ca.width || cb.height < ca.height)
+		if (!hasNoTransparent || !showImage || ((cb.width < ca.width || cb.height < ca.height)
 				&& !(cb.contains(e.x, e.y) && cb.contains(e.x + e.width, e.y + e.height)))) {
 			drawShade(e.gc, ca);
 		}
@@ -1887,12 +1913,19 @@ class PaintArea : Canvas, Undoable {
 		bool showCursor = false;
 		auto selInfo = selectedInfo;
 
+		// TODO
+//		auto cPaint = CRect(e.x, e.y, e.width, e.height);
+//		auto iPaint = ctoi(cPaint);
+//		.coutf("%s,%s,%s,%s",iPaint.x,iPaint.y,iPaint.width,iPaint.height);
+		auto cPaint = cb;
+		auto iPaint = ib;
+
 		foreach_reverse (l; 0 .. _image.layerCount) {
 			if (!_image.layer(l).visible) continue;
-			auto img = showingImage(l, false);
+			auto img = showingImage(l, false, iPaint);
 			if (!img) continue;
-			e.gc.drawImage(img, ib.x, ib.y, ib.width, ib.height,
-				cb.x, cb.y, cb.width, cb.height);
+			e.gc.drawImage(img, iPaint.x, iPaint.y, iPaint.width, iPaint.height,
+				cPaint.x, cPaint.y, cPaint.width, cPaint.height);
 			if (selInfo[l]) {
 				showCursor = true;
 			}
@@ -1902,19 +1935,19 @@ class PaintArea : Canvas, Undoable {
 		if (_grid1 && 4 <= _zoom) {
 			e.gc.p_lineStyle = SWT.LINE_DOT;
 			scope (exit) e.gc.p_lineStyle = SWT.LINE_SOLID;
-			foreach (ix; 0 .. ib.width) {
+			foreach (ix; iPaint.x .. iPaint.x + iPaint.width) {
 				e.gc.drawLine(ixtocx(ix), iytocy(0), ixtocx(ix), iytocy(ib.height));
 			}
-			foreach (iy; 0 .. ib.height) {
+			foreach (iy; iPaint.y .. iPaint.y + iPaint.height) {
 				e.gc.drawLine(ixtocx(0), iytocy(iy), ixtocx(ib.width), iytocy(iy));
 			}
 		}
 		if (_grid2) {
 			static const GRID_2_INTERVAL = 25;
-			for (int ix; ix < ib.width; ix += GRID_2_INTERVAL) {
+			for (int ix = iPaint.x; ix < iPaint.x + iPaint.width; ix += GRID_2_INTERVAL) {
 				e.gc.drawLine(ixtocx(ix), iytocy(0), ixtocx(ix), iytocy(ib.height));
 			}
-			for (int iy; iy < ib.height; iy += GRID_2_INTERVAL) {
+			for (int iy = iPaint.y; iy < iPaint.y + iPaint.height; iy += GRID_2_INTERVAL) {
 				e.gc.drawLine(ixtocx(0), iytocy(iy), ixtocx(ib.width), iytocy(iy));
 			}
 		}
@@ -2275,7 +2308,7 @@ class PaintArea : Canvas, Undoable {
 				foreach (l; 0 .. _image.layerCount - 1) {
 					if (!_image.layer(l).visible) continue;
 					auto p = iGetPixel(ix, iy, l);
-					if (0 != p) {
+					if (_image.layer(l).image.transparentPixel != p) {
 						_pixel = p;
 						break;
 					}
@@ -2544,7 +2577,7 @@ class PaintPreview : Canvas {
 
 		foreach_reverse (l; 0 .. _paintArea.image.layerCount) {
 			if (!_paintArea.image.layer(l).visible) continue;
-			auto img = _paintArea.showingImage(l, false);
+			auto img = _paintArea.showingImage(l, false, null);
 			if (!img) continue;
 			e.gc.drawImage(img, srcX, srcY, w, h, destX, destY, w, h);
 			painted = true;
@@ -2844,7 +2877,7 @@ class LayerList : Canvas {
 		foreach (l; 0 .. _paintArea.image.layerCount) {
 			if (vss + ca.height <= y) break;
 			if (0 <= y + LAYER_H + 2) {
-				auto img = _paintArea.showingImage(l, true);
+				auto img = _paintArea.showingImage(l, true, null);
 				auto layer = _paintArea.image.layer(l);
 				scope (exit) img.dispose();
 

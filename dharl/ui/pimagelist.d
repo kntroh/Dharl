@@ -800,7 +800,7 @@ private class PImageItem : Item {
 		scope (exit) gc.dispose();
 
 		// Draws image.
-		foreach (i; 0 .. image.layerCount) {
+		foreach_reverse (i; 0 .. image.layerCount) {
 			auto l = image.layer(i);
 			if (!l.visible) continue;
 			auto img = new Image(d, l.image);

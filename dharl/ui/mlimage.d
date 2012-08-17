@@ -218,8 +218,10 @@ class MLImage : Undoable {
 		foreach (li; 0 .. src.layerCount) {
 			auto sl = src.layer(li);
 			_layers[li].name = sl.name;
+			_layers[li].visible = sl.visible;
 			auto l = sl.image;
 			auto tl = _layers[li].image;
+			tl.transparentPixel = l.transparentPixel;
 			foreach (ix; 0 .. _iw) {
 				foreach (iy; 0 .. _ih) {
 					int ilx = srcX + ix;
@@ -263,8 +265,10 @@ class MLImage : Undoable {
 		foreach (li; 0 .. src.layerCount) {
 			auto sl = src.layer(li);
 			_layers[li].name = sl.name;
+			_layers[li].visible = sl.visible;
 			auto l = sl.image;
 			auto tl = _layers[li].image;
+			tl.transparentPixel = l.transparentPixel;
 			foreach (ix; 0 .. src.width) {
 				foreach (iy; 0 .. src.height) {
 					int idx = destX + ix;

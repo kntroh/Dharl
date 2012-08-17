@@ -2,7 +2,7 @@
 module dharl.ui.dpx;
 
 private import util.convertendian;
-private import util.utils;
+private import util.sjis;
 
 private import dharl.ui.mlimage;
 
@@ -144,7 +144,7 @@ MLImage loadDPX(string file) {
 
 		s.seekCur(maskDataSize); // Mask data. (Ignore)
 
-		img.addLayer(i, Layer(data, .assumeUnique(name), 0 != (layerFlags & VISIBLE)));
+		img.addLayer(0, Layer(data, .touni(name), 0 != (layerFlags & VISIBLE)));
 	}
 
 	return img;
