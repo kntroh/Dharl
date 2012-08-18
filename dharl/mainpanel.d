@@ -9,7 +9,10 @@ private import util.utils;
 
 private import dharl.common;
 
-private import dharl.ui.mlimage;
+private import dharl.image.dpx;
+private import dharl.image.edg;
+private import dharl.image.mlimage;
+
 private import dharl.ui.paintarea;
 private import dharl.ui.paletteview;
 private import dharl.ui.colorslider;
@@ -17,8 +20,6 @@ private import dharl.ui.pimagelist;
 private import dharl.ui.splitter;
 private import dharl.ui.uicommon;
 private import dharl.ui.dwtutils;
-private import dharl.ui.dpx;
-private import dharl.ui.edg;
 
 private import std.algorithm;
 private import std.exception;

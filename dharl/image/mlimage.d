@@ -1,13 +1,13 @@
 
-/// This module includes MLImage and members related to it. 
-module dharl.ui.mlimage;
+/// This module includes MLImage and members related to it.
+module dharl.image.mlimage;
 
 private import util.graphics;
 private import util.types;
 private import util.undomanager;
 private import util.utils;
 
-private import dharl.ui.dwtutils;
+private import dharl.image.imageutils;
 
 private import std.algorithm;
 private import std.array;

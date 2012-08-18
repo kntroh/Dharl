@@ -1,10 +1,10 @@
 
-module dharl.ui.edg;
+module dharl.image.edg;
 
 private import util.convertendian;
 private import util.sjis;
 
-private import dharl.ui.mlimage;
+private import dharl.image.mlimage;
 
 private import std.conv;
 private import std.stream;

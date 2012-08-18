@@ -1,10 +1,10 @@
 
-module dharl.ui.dpx;
+module dharl.image.dpx;
 
 private import util.convertendian;
 private import util.sjis;
 
-private import dharl.ui.mlimage;
+private import dharl.image.mlimage;
 
 private import std.exception;
 private import std.stream;

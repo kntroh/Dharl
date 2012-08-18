@@ -7,7 +7,8 @@ private import util.types;
 private import util.undomanager;
 private import util.utils;
 
-private import dharl.ui.mlimage;
+private import dharl.image.mlimage;
+
 private import dharl.ui.dwtutils;
 
 private import std.algorithm;
