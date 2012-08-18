@@ -13,6 +13,8 @@ private import std.xml;
 
 /// Common data and methods for the application.
 class DCommon {
+	/// Module file path of the application.
+	private string _moduleFileName;
 	/// All messages and texts.
 	private DText _text;
 	/// All icons and images.
@@ -21,12 +23,16 @@ class DCommon {
 	private DConfig _conf;
 
 	/// The only constructor.
-	this () {
+	this (string moduleFileName) {
+		_moduleFileName = moduleFileName;
 		_text = new DText;
 		_image = new DImages;
 		_conf = new DConfig;
 	}
 
+	/// Module file path of the application.
+	@property
+	string moduleFileName() { return _moduleFileName; }
 	/// All messages and texts.
 	@property
 	DText text() { return _text; }

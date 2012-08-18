@@ -104,6 +104,10 @@ version (Windows) {
 
 	/// Initialize Susie Plug-ins in dir.
 	shared void loadSusiePlugins(string dir) {
+		releaseSusiePlugins();
+
+		if (!dir.exists()) return;
+
 		char[1024] buf;
 		foreach (string file; dir.dirEntries(SpanMode.shallow)) {
 			if (0 != file.extension().filenameCmp(".spi")) continue;
@@ -124,18 +128,19 @@ version (Windows) {
 			info.getFileInfo    = cast(GetFileInfo) lib.dlsym("GetFileInfo");
 			info.getFile        = cast(GetFile) lib.dlsym("GetFile");
 
+			// BUG: len includes '\0' sometimes.
 			int len;
 			len = info.getPluginInfo(0, buf.ptr, buf.length);
-			if (len) info.apiVersion = buf[0 .. len].idup;
+			if (len) info.apiVersion = buf[0 .. .strlen(buf.ptr)].idup;
 			len = info.getPluginInfo(1, buf.ptr, buf.length);
-			if (len) info.about = buf[0 .. len].idup;
+			if (len) info.about = buf[0 .. .strlen(buf.ptr)].idup;
 			for (size_t n = 2; ; n += 2) {
 				len = info.getPluginInfo(n + 0, buf.ptr, buf.length);
 				if (!len) break;
-				info.extension ~= buf[0 .. len].idup;
+				info.extension ~= buf[0 .. .strlen(buf.ptr)].idup;
 				len = info.getPluginInfo(n + 1, buf.ptr, buf.length);
 				if (!len) break;
-				info.fileTypeName ~= buf[0 .. len].idup;
+				info.fileTypeName ~= buf[0 .. .strlen(buf.ptr)].idup;
 			}
 
 			plugins ~= info;
@@ -155,7 +160,7 @@ version (Windows) {
 
 	/// Gets loadable image file extensions from Susie Plug-ins in dir.
 	@property
-	shared string[] susieExtensions(string dir) {
+	shared string[] susieExtensions() {
 		string[] r;
 		foreach (lib; plugins) {
 			foreach (ext; lib.extension) {
@@ -362,7 +367,7 @@ version (Windows) {
 
 	/// Gets loadable image file extensions from susie plugins in dir.
 	@property
-	shared string[] susieExtensions(string dir) { return []; }
+	shared string[] susieExtensions() { return []; }
 
 	/// Loads file with Susie Plug-in.
 	/// If load failure, returns empty array.

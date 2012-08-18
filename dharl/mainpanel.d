@@ -12,6 +12,7 @@ private import dharl.common;
 private import dharl.image.dpx;
 private import dharl.image.edg;
 private import dharl.image.mlimage;
+private import dharl.image.susie;
 
 private import dharl.ui.paintarea;
 private import dharl.ui.paletteview;
@@ -22,6 +23,7 @@ private import dharl.ui.uicommon;
 private import dharl.ui.dwtutils;
 
 private import std.algorithm;
+private import std.array;
 private import std.exception;
 private import std.path;
 private import std.string;
@@ -604,16 +606,38 @@ class MainPanel : Composite {
 		img.addLayer(0, _c.text.newLayer);
 		loadImage(img, _c.text.noName, "", 8, false);
 	}
+	/// Calls loadSusiePlugins().
+	private bool initSusiePlugin() {
+		if (_c.conf.susiePluginDir.length) {
+			try {
+				_c.conf.susiePluginDir.absolutePath(_c.moduleFileName.dirName()).loadSusiePlugins();
+				return true;
+			} catch (Exception e) {
+				// Susie Plug-in initialize failure.
+			}
+		}
+		return false;
+	}
+	/// Default file filter.
+	private static immutable FILTER = "*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx;*.edg".split(";");
 	/// Loads image from a file.
 	/// A loaded image adds to image list.
 	bool loadImage() {
 		checkWidget();
 		checkInit();
 		auto dlg = new FileDialog(this.p_shell, SWT.OPEN | SWT.MULTI);
-		static FILTER = "*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx;*.edg";
+
+		// File filter.
+		string[] filter = FILTER.dup;
+		if (initSusiePlugin()) {
+			filter ~= susieExtensions;
+			filter = filter.sort().uniq().array();
+		}
+		auto filterString = std.string.join(filter, ";");
+
 		string type = _c.text.fLoadImageType.value;
-		dlg.p_filterNames = [type.format(FILTER)];
-		dlg.p_filterExtensions = [FILTER];
+		dlg.p_filterNames = [type.format(filterString)];
+		dlg.p_filterExtensions = [filterString];
 		auto cur = currentDir;
 		if (cur.length) dlg.p_filterPath = cur;
 		if (!dlg.open()) return false;
@@ -621,40 +645,60 @@ class MainPanel : Composite {
 		auto names = dlg.p_fileNames;
 		foreach (file; names) {
 			auto path = fPath.buildPath(file);
-			loadImage(path);
+			loadImage(path, true);
 		}
 		return true;
 	}
 	/// ditto
 	void loadImage(string file) {
+		loadImage(file, false);
+	}
+	/// ditto
+	private void loadImage(string file, bool initializedSusiePlugin) {
 		checkWidget();
 		checkInit();
+		if (!initializedSusiePlugin) {
+			initSusiePlugin();
+		}
 		string ext = file.extension();
-		MLImage img;
-		bool saved;
-		ubyte depth;
+		auto fname = file.baseName();
 		if (0 == ext.filenameCmp(".dpx")) {
-			img = .loadDPX(file);
-			saved = false;
-			depth = 8;
+			loadImage(.loadDPX(file), fname, file, 8, false);
 		} else if (0 == ext.filenameCmp(".edg")) {
-			img = .loadEDG(file);
-			saved = false;
-			depth = 8;
+			loadImage(.loadEDG(file), fname, file, 8, false);
 		} else {
-			auto data = new ImageData(file);
-			img = new MLImage;
-			img.init(data, _c.text.newLayer);
-			assert (1 == img.layerCount);
-			depth = cast(ubyte) min(data.depth, 8);
-			saved = !data.palette.isDirect && depth <= 8;
-			if (saved) {
-				if (0 != ext.filenameCmp(".bmp") && 0 != ext.filenameCmp(".png")) {
-					saved = false;
+			void depthAndSaved(ImageData data, out ubyte depth, out bool saved) {
+				depth = cast(ubyte) min(data.depth, 8);
+				saved = !data.palette.isDirect && depth <= 8;
+				if (saved) {
+					if (0 != ext.filenameCmp(".bmp") && 0 != ext.filenameCmp(".png")) {
+						saved = false;
+					}
 				}
 			}
+			auto imgs = file.loadWithSusie(_c.text.newLayer);
+			if (imgs.length) {
+				foreach (i, img; imgs) {
+					ubyte depth;
+					bool saved;
+					depthAndSaved(img.layer(0).image, depth, saved);
+					string name = fname;
+					if (1 < imgs.length) {
+						name ~= " (%s)".format(i + 1);
+					}
+					loadImage(img, name, file, depth, saved);
+				}
+			} else {
+				auto data = new ImageData(file);
+				auto img = new MLImage;
+				img.init(data, _c.text.newLayer);
+				assert (1 == img.layerCount);
+				ubyte depth;
+				bool saved;
+				depthAndSaved(data, depth, saved);
+				loadImage(img, fname, file, depth, saved);
+			}
 		}
-		loadImage(img, file.baseName(), file, depth, saved);
 	}
 	private void loadImage(MLImage img, string name, string path, ubyte depth, bool saved) {
 		checkWidget();

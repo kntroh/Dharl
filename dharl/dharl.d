@@ -68,7 +68,7 @@ void main(string[] args) {
 	// Load application configuration.
 	string appData = .appData(exe.dirName(), true).buildPath("dharl").buildPath("settings.xml");
 	.coutf("AppData: %s", appData);
-	auto c = new DCommon;
+	auto c = new DCommon(exe);
 	if (appData.exists()) {
 		try {
 			c.conf.readXMLFile(appData);
