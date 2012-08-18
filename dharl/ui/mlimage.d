@@ -219,17 +219,16 @@ class MLImage : Undoable {
 			auto sl = src.layer(li);
 			_layers[li].name = sl.name;
 			_layers[li].visible = sl.visible;
-			auto l = sl.image;
 			auto tl = _layers[li].image;
-			tl.transparentPixel = l.transparentPixel;
+			tl.transparentPixel = sl.image.transparentPixel;
 			foreach (ix; 0 .. _iw) {
 				foreach (iy; 0 .. _ih) {
 					int ilx = srcX + ix;
 					int ily = srcY + iy;
 					int pixel = tl.getPixel(ix, iy);
 					int sPixel;
-					if (0 <= ilx && ilx < l.width && 0 <= ily && ily < l.height) {
-						sPixel = l.getPixel(ilx, ily);
+					if (0 <= ilx && ilx < src.width && 0 <= ily && ily < src.height) {
+						sPixel = sl.image.getPixel(ilx, ily);
 					} else {
 						// Out of source image.
 						sPixel = backgroundPixel;
@@ -507,9 +506,6 @@ class MLImage : Undoable {
 		}
 		checkInit();
 		_layers = _layers.remove(index);
-		if (layerCount == index && _layers.length) {
-			_layers[index - 1].image.transparentPixel = -1;
-		}
 	}
 	/// ditto
 	void removeLayers(size_t from, size_t to) {
@@ -523,14 +519,9 @@ class MLImage : Undoable {
 		checkInit();
 		size_t range = to - from;
 		foreach (index; from .. to) {
-			if (index + range < _layers.length) {
-				_layers[index] = _layers[index + range];
-			}
+			_layers[index] = _layers[from + index];
 		}
 		_layers.length -= range;
-		if (_layers.length) {
-			_layers[$ - 1].image.transparentPixel = -1;
-		}
 	}
 	/// Swap layer index.
 	void swapLayers(size_t index1, size_t index2) {
