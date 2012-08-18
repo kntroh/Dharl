@@ -75,20 +75,24 @@ MLImage loadDPX(string file) {
 			s.read(c);
 			if (c) name ~= c;
 		}
-		// Animation-related data. (Ignore)
-		auto aLeft   = s.readL!uint();
-		auto aTop    = s.readL!uint();
-		auto aRight  = s.readL!uint();
-		auto aBottom = s.readL!uint();
-		auto aDelay  = s.readL!uint();
-		auto aMode   = s.readL!uint();
-		auto aInput  = s.readL!uint();
-		auto aTransparent = s.readL!uint();
+		if (0x00002100 <= ver) {
+			// Animation-related data. (Ignore)
+			auto aLeft   = s.readL!uint();
+			auto aTop    = s.readL!uint();
+			auto aRight  = s.readL!uint();
+			auto aBottom = s.readL!uint();
+			auto aDelay  = s.readL!uint();
+			auto aMode   = s.readL!uint();
+			auto aInput  = s.readL!uint();
+			auto aTransparent = s.readL!uint();
+		}
 
-		// Color mask. (Ignore)
-		if (HAS_COLOR_MASK & layerFlags) {
-			ubyte[256] colorMask;
-			s.read(colorMask);
+		if (0x00002110 <= ver) {
+			// Color mask. (Ignore)
+			if (HAS_COLOR_MASK & layerFlags) {
+				ubyte[256] colorMask;
+				s.read(colorMask);
+			}
 		}
 
 		// Pixels.
@@ -101,7 +105,7 @@ MLImage loadDPX(string file) {
 		auto padCount = 0;
 		void put(int b) {
 			if (padCount) {
-				// ignore padding
+				// ignore line padding
 				padCount--;
 				return;
 			}
@@ -115,7 +119,9 @@ MLImage loadDPX(string file) {
 		}
 
 		if (COMP_IMAGE & layerFlags) {
-			// compressed
+			// Compressed data.
+			// If there is a same pixel twice, next byte is run length of it pixel.
+			// Actual data is compressed confuse with a line padding.
 			short old = -1;
 			for (size_t p = 0; p < dataSize;) {
 				auto b = s.readL!ubyte();
@@ -144,6 +150,7 @@ MLImage loadDPX(string file) {
 
 		s.seekCur(maskDataSize); // Mask data. (Ignore)
 
+		// Adds layer.
 		img.addLayer(0, Layer(data, .touni(name), 0 != (layerFlags & VISIBLE)));
 	}
 

@@ -18,6 +18,7 @@ private import dharl.ui.splitter;
 private import dharl.ui.uicommon;
 private import dharl.ui.dwtutils;
 private import dharl.ui.dpx;
+private import dharl.ui.edg;
 
 private import std.algorithm;
 private import std.exception;
@@ -608,7 +609,7 @@ class MainPanel : Composite {
 		checkWidget();
 		checkInit();
 		auto dlg = new FileDialog(this.p_shell, SWT.OPEN | SWT.MULTI);
-		static FILTER = "*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx";
+		static FILTER = "*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx;*.edg";
 		string type = _c.text.fLoadImageType.value;
 		dlg.p_filterNames = [type.format(FILTER)];
 		dlg.p_filterExtensions = [FILTER];
@@ -633,6 +634,10 @@ class MainPanel : Composite {
 		ubyte depth;
 		if (0 == ext.filenameCmp(".dpx")) {
 			img = .loadDPX(file);
+			saved = false;
+			depth = 8;
+		} else if (0 == ext.filenameCmp(".edg")) {
+			img = .loadEDG(file);
 			saved = false;
 			depth = 8;
 		} else {
