@@ -91,6 +91,12 @@ real distance(real x1, real y1, real x2, real y2) {
 	return sqrt(d1 * d1 + d2 * d2);
 }
 
+/// Calculates padding of n-byte boundary.
+@safe nothrow pure
+uint padding(uint count, uint n) {
+	return (n - (count % n)) % n;
+}
+
 /// Normalizes range value.
 @safe nothrow pure
 T1 normalizeRange(T1, T2, T3)(T1 value, T2 from, T3 to) {

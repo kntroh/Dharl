@@ -1,8 +1,10 @@
 
+/// This module includes functions to handle D-Pixed file (*.dpx).
 module dharl.image.dpx;
 
 private import util.convertendian;
 private import util.sjis;
+private import util.utils;
 
 private import dharl.image.mlimage;
 
@@ -100,7 +102,7 @@ MLImage loadDPX(string file) {
 		data.transparentPixel = transparentPixel;
 		int x = 0, y = h - 1;
 
-		auto pad = (4 - (w % 4)) % 4;
+		auto pad = .padding(w, 4);
 
 		auto padCount = 0;
 		void put(int b) {

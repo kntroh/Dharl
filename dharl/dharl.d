@@ -11,6 +11,8 @@ private import dharl.common;
 private import dharl.dialogs;
 private import dharl.mainpanel;
 
+private import dharl.image.susie;
+
 private import dharl.ui.uicommon;
 private import dharl.ui.dwtutils;
 

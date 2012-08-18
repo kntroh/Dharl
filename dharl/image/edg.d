@@ -1,4 +1,5 @@
 
+/// This module includes functions to handle EDGE file (*.edg).
 module dharl.image.edg;
 
 private import util.convertendian;

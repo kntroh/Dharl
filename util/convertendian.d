@@ -6,6 +6,11 @@ private import std.stream;
 
 version (LittleEndian) {
 
+	/// Gets little endian value.
+	alias normalBytes littleEndian;
+	/// Gets big endian value.
+	alias reverseBytes bigEndian;
+
 	/// Reads big endian value from stream.
 	alias readReverse readB;
 
@@ -20,6 +25,11 @@ version (LittleEndian) {
 
 } else version (BigEndian) {
 
+	/// Gets little endian value.
+	alias reverseBytes littleEndian;
+	/// Gets big endian value.
+	alias normalBytes bigEndian;
+
 	/// Reads big endian value from stream.
 	alias readNormal readB;
 
@@ -33,6 +43,12 @@ version (LittleEndian) {
 	alias writeReverse writeL;
 
 } else static assert (0);
+
+/// Returns bytes.
+@property
+T normalBytes(T)(T value) {
+	return value;
+}
 
 /// Reverses bytes.
 @property

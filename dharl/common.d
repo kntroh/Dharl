@@ -223,6 +223,9 @@ struct DMenuText {
 
 /// Application configuration.
 class DConfig {
+	/// Susie Plug-in directory.
+	mixin Prop!("susiePluginDir", string, "plugin");
+
 	/// Character (paint area) size.
 	mixin Prop!("character", PSize, PSize(100, 100));
 	/// Maximum count of undo operation.
