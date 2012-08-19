@@ -42,8 +42,7 @@ MLImage loadEDG(InputStream s) {
 	auto palette = new PaletteData(rgbs);
 
 	// Creates instance.
-	auto img = new MLImage;
-	img.init(w, h, palette);
+	auto img = new MLImage(w, h, palette);
 
 	// Layers.
 	foreach (li; 0 .. lCount) {

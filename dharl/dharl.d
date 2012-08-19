@@ -190,7 +190,11 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		if (c.conf.fileHistory.length) {
 			void createItem(int index, string file) {
 				basicMenuItem(mFile, file.omitPath(c.conf.fileHistoryOmitLength), .cimg(c.image.imageFile), {
-					mainPanel.loadImage(file);
+					try {
+						mainPanel.loadImage(file);
+					} catch (Exception e) {
+						.erroroutf("Load failure: %s", file);
+					}
 				}, SWT.PUSH, false, mFileHistFrom + index);
 			}
 			foreach (i, file; c.conf.fileHistory) {

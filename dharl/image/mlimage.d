@@ -11,9 +11,19 @@ private import dharl.image.imageutils;
 
 private import std.algorithm;
 private import std.array;
+private import std.conv;
+private import std.datetime;
 private import std.exception;
+private import std.file;
+private import std.path;
+private import std.string;
+private import std.xml;
+private import std.zip;
 
 private import org.eclipse.swt.all;
+
+private import java.io.ByteArrayInputStream;
+private import java.io.ByteArrayOutputStream;
 
 /// Layer data.
 struct Layer {
@@ -38,16 +48,142 @@ class MLImage : Undoable {
 	/// Image size. It is common in all layers.
 	private uint _iw = 0, _ih = 0;
 
-	/// If doesn't initialized instance, throws exception.
-	const
-	private void checkInit() {
-		enforce(isInitialized, new Exception("MLImage is no initialized.", __FILE__, __LINE__));
+	/// Creates instance that hasn't initialized.
+	this () {
+		// No processing.
 	}
-	/// Is initialized?
+	/// Creates instance and initialize it.
+	this (ImageData image, string name) {
+		init(image, name);
+	}
+	/// ditto
+	this (uint w, uint h, PaletteData palette) {
+		init(w, h, palette);
+	}
+	/// Creates from Dharl file (*.dhr).
+	this (string file) {
+		this (file.read());
+	}
+	/// Creates from Dharl file data.
+	this (void[] fileData) {
+		// Gets files information in archive.
+		auto archive = new ZipArchive(fileData);
+		ArchiveMember info = null;
+		ArchiveMember[string] images;
+		foreach (name, member; archive.directory) {
+			if (0 == name.filenameCmp("dharl.xml")) {
+				info = member;
+			} else if (0 == name.extension().filenameCmp(".png")) {
+				images[name] = member;
+			}
+		}
+		.enforce(info);
+
+		// Parses image information.
+		auto xml = cast(char[]) archive.expand(info);
+		auto parser = new DocumentParser(.assumeUnique(xml));
+		.enforce("dharl" == parser.tag.name);
+
+		ImageData baseImage = null;
+		Layer[] layers;
+		parser.onStartTag["layers"] = (ElementParser ep) {
+			ep.onStartTag["layer"] = (ElementParser ep) {
+				Layer layer;
+
+				// Image data.
+				auto bytes = archive.expand(images[ep.tag.attr["file"]]);
+				auto buf = new ByteArrayInputStream(cast(byte[]) bytes);
+				layer.image = .colorReduction(new ImageData(buf), false);
+				assert (layer.image.palette.colors.length == 256);
+
+				// Visibility.
+				layer.visible = .to!bool(ep.tag.attr["visible"]);
+
+				// Name.
+				ep.onText = (string text) {
+					layer.name = text;
+				};
+				ep.parse();
+
+				layers ~= layer;
+				if ("base" in ep.tag.attr) {
+					baseImage = layer.image;
+				}
+			};
+			ep.parse();
+		};
+		parser.parse();
+
+		.enforce(layers.length);
+		if (!baseImage) baseImage = layers[$ - 1].image;
+
+		// Initialize instance.
+		init(baseImage.width, baseImage.height, baseImage.palette);
+		foreach (i, l; layers) {
+			addLayer(i, l);
+		}
+	}
+
+	/// Creates Dharl image data.
 	@property
-	const
-	bool isInitialized() {
-		return _palette !is null;
+	void[] dharlImageData() {
+		static immutable UNICODE_FILENAME = 0x0800;
+		static immutable MEMBER_IS_FILE   = 0x0020;
+
+		checkInit();
+		auto time = Clock.currTime().SysTimeToDosFileTime();
+		auto archive = new ZipArchive();
+
+		auto doc = new Document(new Tag("dharl"));
+		auto layers = new Element("layers");
+		doc ~= layers;
+
+		// Creates archive member.
+		ArchiveMember createMember(string name, ubyte[] data) {
+			auto member = new ArchiveMember;
+			member.name = name;
+			member.time = time;
+			member.compressionMethod = 8;
+			member.externalAttributes = MEMBER_IS_FILE;
+			member.internalAttributes = 1;
+			member.flags |= UNICODE_FILENAME;
+			member.expandedData = data;
+			return member;
+		}
+
+		// Layers.
+		foreach (i, l; _layers) {
+			auto le = new Element("layer", l.name);
+			layers ~= le;
+
+			le.tag.attr["visible"] = .text(l.visible);
+			string file = "layer_%d.png".format(i);
+			le.tag.attr["file"] = file;
+
+			// Creates image data.
+			auto loader = new ImageLoader;
+			auto stream = new ByteArrayOutputStream(1024);
+			loader.data ~= l.image;
+			loader.save(stream, SWT.IMAGE_PNG);
+
+			if (i + 1 == layerCount) {
+				le.tag.attr["base"] = .text(true);
+			}
+
+			auto bytes = cast(ubyte[]) stream.toByteArray();
+			archive.addMember(createMember(file, bytes));
+		}
+
+		// Image information.
+		auto xml = doc.prolog ~ "\n" ~ doc.pretty(2).join("\n") ~ "\n";
+		archive.addMember(createMember("dharl.xml", cast(ubyte[]) xml));
+
+		return archive.build();
+	}
+	/// Save Dharl image file.
+	void write(string file) {
+		checkInit();
+		file.write(dharlImageData);
 	}
 
 	/// Initializes this image.
@@ -58,7 +194,7 @@ class MLImage : Undoable {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
 		}
 		int ow = _iw, oh = _ih;
-		auto layer = colorReduction(image, false);
+		auto layer = .colorReduction(image, false);
 		assert (layer.palette.colors.length == 256);
 		_layers.length = 1;
 		_layers[0].image = layer;
@@ -92,6 +228,18 @@ class MLImage : Undoable {
 			resizeReceivers.raiseEvent();
 		}
 		initializeReceivers.raiseEvent();
+	}
+
+	/// If doesn't initialized instance, throws exception.
+	const
+	private void checkInit() {
+		enforce(isInitialized, new Exception("MLImage is no initialized.", __FILE__, __LINE__));
+	}
+	/// Is initialized?
+	@property
+	const
+	bool isInitialized() {
+		return _palette !is null;
 	}
 
 	/// Disposes this image.
@@ -333,8 +481,7 @@ class MLImage : Undoable {
 			}
 		}
 
-		auto r = new MLImage;
-		r.init(iw, ih, palette);
+		auto r = new MLImage(iw, ih, palette);
 		foreach (i, d; data) {
 			r._layers ~= Layer(d, name[i], true);
 		}

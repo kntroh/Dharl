@@ -655,7 +655,11 @@ class MainPanel : Composite {
 		auto names = dlg.p_fileNames;
 		foreach (file; names) {
 			auto path = fPath.buildPath(file);
-			loadImage(path, true);
+			try {
+				loadImage(path, true);
+			} catch (Exception e) {
+				.erroroutf("Load failure: %s", file);
+			}
 		}
 		return true;
 	}
@@ -677,7 +681,9 @@ class MainPanel : Composite {
 			MLImage[] r;
 			ext = ext.toLower();
 			try {
-				if (0 == ext.filenameCmp(".dpx")) {
+				if (0 == ext.filenameCmp(".dhr")) {
+					r ~= new MLImage(data);
+				} else if (0 == ext.filenameCmp(".dpx")) {
 					auto s = new MemoryStream(data);
 					scope (exit) s.close();
 					r ~= .loadDPX(s);
@@ -708,7 +714,7 @@ class MainPanel : Composite {
 			ubyte depth = cast(ubyte) .min(data.depth, 8);
 			bool saved = !data.palette.isDirect && depth <= 8;
 			if (saved) {
-				if (0 != ext.filenameCmp(".bmp") && 0 != ext.filenameCmp(".png")) {
+				if (0 != ext.filenameCmp(".dhr") && 0 != ext.filenameCmp(".bmp") && 0 != ext.filenameCmp(".png")) {
 					saved = false;
 				}
 			}
@@ -784,9 +790,11 @@ class MainPanel : Composite {
 		auto params = item.dataTo!PImageParams;
 		auto dlg = new FileDialog(this.p_shell, SWT.SAVE | SWT.SINGLE);
 		dlg.p_fileName = params.path;
+		string dhr = _c.text.fSaveImageTypeDharl;
 		string bmp = _c.text.fSaveImageTypeBitmap;
 		string png = _c.text.fSaveImageTypePNG;
 		dlg.p_filterNames = [
+			dhr,
 			bmp.format(8, 256),
 			bmp.format(4, 16),
 			bmp.format(1, 2),
@@ -795,6 +803,7 @@ class MainPanel : Composite {
 			png.format(1, 2),
 		];
 		dlg.p_filterExtensions = [
+			"*.dhr",
 			"*.bmp",
 			"*.bmp",
 			"*.bmp",
@@ -803,20 +812,26 @@ class MainPanel : Composite {
 			"*.png"
 		];
 		size_t fi = 0; // filter index
-		if (0 == params.path.extension().filenameCmp(".bmp")) {
+		auto ext = params.path.extension();
+		if (0 == ext.filenameCmp(".dhr")) {
+			fi = 0;
+		} else if (0 == ext.filenameCmp(".bmp")) {
 			switch (params.depth) {
-			case 8: fi = 0; break;
-			case 4: fi = 1; break;
-			case 1: fi = 2; break;
+			case 8: fi = 1; break;
+			case 4: fi = 2; break;
+			case 1: fi = 3; break;
 			default: break;
 			}
-		} else if (0 == params.path.extension().filenameCmp(".png")) {
+		} else if (0 == ext.filenameCmp(".png")) {
 			switch (params.depth) {
-			case 8: fi = 3; break;
-			case 4: fi = 4; break;
-			case 1: fi = 5; break;
+			case 8: fi = 4; break;
+			case 4: fi = 5; break;
+			case 1: fi = 6; break;
 			default: break;
 			}
+		} else {
+			fi = 0;
+			dlg.p_fileName = params.path.setExtension(".dhr");
 		}
 		dlg.p_filterIndex = fi;
 		dlg.p_overwrite = true;
@@ -828,9 +843,10 @@ class MainPanel : Composite {
 		auto file = fPath.buildPath(dlg.p_fileName);
 		ubyte depth;
 		switch (dlg.p_filterIndex) {
-		case 0, 3: depth = 8; break;
-		case 1, 4: depth = 4; break;
-		case 2, 5: depth = 1; break;
+		case 0: depth = params.depth; break;
+		case 1, 4: depth = 8; break;
+		case 2, 5: depth = 4; break;
+		case 3, 6: depth = 1; break;
 		default: assert (0);
 		}
 		saveImageWithName(index, file, depth);
@@ -908,18 +924,23 @@ class MainPanel : Composite {
 		auto params = item.dataTo!PImageParams;
 		assert (params);
 
-		auto loader = new ImageLoader;
-		auto data = item.image.createImageData(params.depth);
-		loader.data ~= data;
-		switch (file.extension().toLower()) {
-		case ".bmp":
-			loader.save(file, SWT.IMAGE_BMP);
-			break;
-		case ".png":
-			loader.save(file, SWT.IMAGE_PNG);
-			break;
-		default:
-			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		auto ext = file.extension().toLower();
+		if (0 == ext.filenameCmp(".dhr")) {
+			item.image.write(file);
+		} else {
+			auto loader = new ImageLoader;
+			auto data = item.image.createImageData(params.depth);
+			loader.data ~= data;
+			switch (ext) {
+			case ".bmp":
+				loader.save(file, SWT.IMAGE_BMP);
+				break;
+			case ".png":
+				loader.save(file, SWT.IMAGE_PNG);
+				break;
+			default:
+				SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+			}
 		}
 		params.saved = true;
 		params.path = file;

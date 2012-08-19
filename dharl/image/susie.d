@@ -337,9 +337,7 @@ version (Windows) {
 					auto imgData = new ImageData(buf);
 
 					// Creates MLImage.
-					auto img = new MLImage;
-					img.init(imgData, newLayerName);
-					r ~= img;
+					r ~= new MLImage(imgData, newLayerName);
 					break;
 
 				case "00AM":

@@ -148,6 +148,7 @@ class DText {
 	mixin MsgProp!("fCanvasChanged", "%s has been changed.\nDo you want to save it?"); /// ditto
 
 	mixin MsgProp!("fLoadImageType", "Image file (%s)"); /// ditto
+	mixin MsgProp!("fSaveImageTypeDharl", "Dharl image (*.dhr)"); /// ditto
 	mixin MsgProp!("fSaveImageTypeBitmap", "%d-bit (%d colors) bitmap image (*.bmp)"); /// ditto
 	mixin MsgProp!("fSaveImageTypePNG", "%d-bit (%d colors) PNG image (*.png)"); /// ditto
 
