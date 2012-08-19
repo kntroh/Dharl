@@ -12,17 +12,21 @@ private import std.exception;
 private import std.stream;
 private import std.string;
 
-private import org.eclipse.swt.all;
+private import org.eclipse.swt.all : ImageData, PaletteData, RGB;
 
 /// Loads D-Pixed file (*.dpx).
 MLImage loadDPX(string file) {
 	auto s = new BufferedFile(file, FileMode.In);
 	scope (exit) s.close();
+	return loadDPX(s);
+}
 
+/// Loads D-Pixed image from s.
+MLImage loadDPX(InputStream s) {
 	ubyte[128] desc;
 	s.read(desc); // Description.
 	if ('D' != desc[0] || 'P' != desc[1] || 'X' != desc[2]) {
-		throw new Exception("%s isn't D-Pixed image.".format(file));
+		throw new Exception("Data isn't D-Pixed image.");
 	}
 	auto ver = s.readL!uint(); // Data version.
 	auto fileFlags = s.readL!uint(); // File flags.
@@ -150,7 +154,8 @@ MLImage loadDPX(string file) {
 			}
 		}
 
-		s.seekCur(maskDataSize); // Mask data. (Ignore)
+		auto maskData = new ubyte[maskDataSize];
+		s.read(maskData); // Mask data. (Ignore)
 
 		// Adds layer.
 		img.addLayer(0, Layer(data, .touni(name), 0 != (layerFlags & VISIBLE)));

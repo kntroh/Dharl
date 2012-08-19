@@ -11,15 +11,19 @@ private import std.conv;
 private import std.stream;
 private import std.string;
 
-private import org.eclipse.swt.all;
+private import org.eclipse.swt.all : ImageData, PaletteData, RGB;
 
 /// Loads EDGE file (*.edg).
 MLImage loadEDG(string file) {
 	auto s = new BufferedFile(file, FileMode.In);
 	scope (exit) s.close();
+	return loadEDG(s);
+}
 
+/// Loads EDGE image from s.
+MLImage loadEDG(InputStream s) {
 	if ('E' != s.readL!ubyte() || 'D' != s.readL!ubyte() || 'G' != s.readL!ubyte() || 'E' != s.readL!ubyte()) {
-		throw new Exception("%s isn't EDGE image.".format(file));
+		throw new Exception("Data isn't EDGE image.");
 	}
 
 	s.readL!uint(); // reserved

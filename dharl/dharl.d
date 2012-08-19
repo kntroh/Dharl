@@ -449,7 +449,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	mainPanel.selectedReceivers ~= &refreshMenu;
 
 	// Open last opened files.
-	foreach (file; c.conf.lastOpenedFiles) {
+	foreach (file; c.conf.lastOpenedFiles.uniq()) {
 		try {
 			mainPanel.loadImage(file);
 		} catch (Exception e) {

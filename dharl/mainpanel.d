@@ -26,10 +26,13 @@ private import std.algorithm;
 private import std.array;
 private import std.exception;
 private import std.path;
+private import std.stream;
 private import std.string;
 private import std.traits;
 
 private import org.eclipse.swt.all;
+
+private import java.io.ByteArrayInputStream;
 
 /// Parameter for PImage management.
 private class PImageParams {
@@ -660,44 +663,53 @@ class MainPanel : Composite {
 		if (!initializedSusiePlugin) {
 			initSusiePlugin();
 		}
-		string ext = file.extension();
+
 		auto fname = file.baseName();
-		if (0 == ext.filenameCmp(".dpx")) {
-			loadImage(.loadDPX(file), fname, file, 8, false);
-		} else if (0 == ext.filenameCmp(".edg")) {
-			loadImage(.loadEDG(file), fname, file, 8, false);
-		} else {
-			void depthAndSaved(ImageData data, out ubyte depth, out bool saved) {
-				depth = cast(ubyte) min(data.depth, 8);
-				saved = !data.palette.isDirect && depth <= 8;
-				if (saved) {
-					if (0 != ext.filenameCmp(".bmp") && 0 != ext.filenameCmp(".png")) {
-						saved = false;
+		auto ext = fname.extension();
+		auto imgs = file.loadWithSusie(_c.text.newLayer, (string ext, lazy ubyte[] data) {
+			MLImage[] r;
+			ext = ext.toLower();
+			try {
+				if (0 == ext.filenameCmp(".dpx")) {
+					auto s = new MemoryStream(data);
+					scope (exit) s.close();
+					r ~= .loadDPX(s);
+				} else if (0 == ext.filenameCmp(".edg")) {
+					auto s = new MemoryStream(data);
+					scope (exit) s.close();
+					r ~= .loadEDG(s);
+				} else {
+					foreach (filter; FILTER) {
+						if (filter.endsWith(ext)) {
+							auto buf = new ByteArrayInputStream(cast(byte[]) data());
+							auto imgData = new ImageData(buf);
+							auto img = new MLImage;
+							img.init(imgData, _c.text.newLayer);
+							r ~= img;
+							break;
+						}
 					}
 				}
+			} catch (Exception e) {
+				// Load failure.
 			}
-			auto imgs = file.loadWithSusie(_c.text.newLayer);
-			if (imgs.length) {
-				foreach (i, img; imgs) {
-					ubyte depth;
-					bool saved;
-					depthAndSaved(img.layer(0).image, depth, saved);
-					string name = fname;
-					if (1 < imgs.length) {
-						name ~= " (%s)".format(i + 1);
-					}
-					loadImage(img, name, file, depth, saved);
+			return r;
+		});
+		foreach (i, img; imgs) {
+			if (!img.layerCount) continue;
+			auto data = img.layer(0).image;
+			ubyte depth = cast(ubyte) .min(data.depth, 8);
+			bool saved = !data.palette.isDirect && depth <= 8;
+			if (saved) {
+				if (0 != ext.filenameCmp(".bmp") && 0 != ext.filenameCmp(".png")) {
+					saved = false;
 				}
-			} else {
-				auto data = new ImageData(file);
-				auto img = new MLImage;
-				img.init(data, _c.text.newLayer);
-				assert (1 == img.layerCount);
-				ubyte depth;
-				bool saved;
-				depthAndSaved(data, depth, saved);
-				loadImage(img, fname, file, depth, saved);
 			}
+			string name = fname;
+			if (1 < imgs.length) {
+				name ~= " (%s)".format(i + 1);
+			}
+			loadImage(img, name, file, depth, saved);
 		}
 	}
 	private void loadImage(MLImage img, string name, string path, ubyte depth, bool saved) {
