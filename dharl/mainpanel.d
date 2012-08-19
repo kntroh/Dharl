@@ -63,7 +63,12 @@ class MainPanel : Composite {
 	/// Receivers of loaded event.
 	void delegate(string file)[] loadedReceivers;
 
+	/// Default image file filter.
+	private static immutable FILTER = "*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx;*.edg".split(";");
+
 	private DCommon _c = null;
+
+	private SusiePlugin _susiePlugin = null;
 
 	private PaintArea _paintArea = null;
 	private PaintPreview _paintPreview = null;
@@ -83,6 +88,8 @@ class MainPanel : Composite {
 	/// The only constructor.
 	this (Composite parent, int style) {
 		super (parent, style);
+
+		_susiePlugin = new SusiePlugin;
 	}
 	/// Initialize instance.
 	void init(DCommon c) {
@@ -609,11 +616,12 @@ class MainPanel : Composite {
 		img.addLayer(0, _c.text.newLayer);
 		loadImage(img, _c.text.noName, "", 8, false);
 	}
+
 	/// Calls loadSusiePlugins().
 	private bool initSusiePlugin() {
 		if (_c.conf.susiePluginDir.length) {
 			try {
-				_c.conf.susiePluginDir.absolutePath(_c.moduleFileName.dirName()).loadSusiePlugins();
+				_susiePlugin.loadSusiePlugins(_c.conf.susiePluginDir.absolutePath(_c.moduleFileName.dirName()));
 				return true;
 			} catch (Exception e) {
 				// Susie Plug-in initialize failure.
@@ -621,8 +629,7 @@ class MainPanel : Composite {
 		}
 		return false;
 	}
-	/// Default file filter.
-	private static immutable FILTER = "*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx;*.edg".split(";");
+
 	/// Loads image from a file.
 	/// A loaded image adds to image list.
 	bool loadImage() {
@@ -633,7 +640,7 @@ class MainPanel : Composite {
 		// File filter.
 		string[] filter = FILTER.dup;
 		if (initSusiePlugin()) {
-			filter ~= susieExtensions;
+			filter ~= _susiePlugin.susieExtensions;
 			filter = filter.sort().uniq().array();
 		}
 		auto filterString = std.string.join(filter, ";");
@@ -666,7 +673,7 @@ class MainPanel : Composite {
 
 		auto fname = file.baseName();
 		auto ext = fname.extension();
-		auto imgs = file.loadWithSusie(_c.text.newLayer, (string ext, lazy ubyte[] data) {
+		auto imgs = _susiePlugin.loadWithSusie(file, _c.text.newLayer, (string ext, lazy ubyte[] data) {
 			MLImage[] r;
 			ext = ext.toLower();
 			try {

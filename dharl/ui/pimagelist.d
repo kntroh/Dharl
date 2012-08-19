@@ -655,6 +655,7 @@ private class PImageItem : Item {
 		checkWidget();
 		redrawImage();
 		auto cip = _selectedPiece;
+		if (cip.x < 0 || cip.y < 0) return false;
 		return _image.pushImage(src, cip.x, cip.y);
 	}
 
@@ -880,6 +881,11 @@ private class PImageItem : Item {
 		_parent._images = _parent._images.remove(index);
 		if (index <= _parent._selected) {
 			_parent._selected--;
+			if (-1 != _parent._selected) {
+				auto itm = _parent.item(_parent._selected);
+				itm._selectedPiece.x = -1;
+				itm._selectedPiece.y = -1;
+			}
 		}
 		_parent.calcScrollParams();
 		_parent.redraw();

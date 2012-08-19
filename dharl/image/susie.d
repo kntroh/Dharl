@@ -5,6 +5,7 @@ module dharl.image.susie;
 private import dharl.image.mlimage;
 
 version (Windows) {
+
 	private import core.stdc.string;
 	private import core.stdc.time;
 
@@ -100,314 +101,343 @@ version (Windows) {
 		GetFile        getFile        = null; /// ditto
 	}
 
-	/// Susie Plug-in informations.
-	private shared PluginInfo[] plugins;
-	/// Last loaded directory path.
-	private shared string loadDir = null;
-	/// Last loaded time.
-	private shared long loadTime;
+	/// Susie Plug-in management class.
+	class SusiePlugin {
 
-	/// Initialize Susie Plug-ins in dir.
-	shared void loadSusiePlugins(string dir) {
-		if (!dir) return;
-		if (!dir.exists()) return;
+		/// Susie Plug-in informations.
+		private PluginInfo[] _plugins;
+		/// Last loaded directory path.
+		private string _loadDir = null;
+		/// Last loaded time.
+		private SysTime _loadTime;
 
-		auto modified = dir.timeLastModified().stdTime;
-
-		if (loadDir && loadDir == dir && modified == loadTime) {
-			// No change of dir.
-			return;
+		/// The only constructor.
+		this () {
+			_loadTime = SysTime.min;
 		}
 
-		releaseSusiePlugins();
-		loadDir = dir;
-		loadTime = modified;
+		~this () {
+			releaseSusiePlugins();
+		}
 
-		char[1024] buf;
-		foreach (string file; dir.dirEntries(SpanMode.shallow)) {
-			if (0 != file.extension().filenameCmp(".spi")) continue;
+		/// Initialize Susie Plug-ins in dir.
+		void loadSusiePlugins(string dir) {
+			if (!dir) return;
+			if (!dir.exists()) return;
 
-			auto lib = file.dlopen();
-			if (!lib) continue;
+			auto modified = dir.timeLastModified();
 
-			// Load functions.
-			shared(PluginInfo) info;
-			info.getPluginInfo = cast(GetPluginInfo) lib.dlsym("GetPluginInfo");
-			if (!info.getPluginInfo) {
-				lib.dlclose();
-				continue;
-			}
-			info.isSupported    = cast(IsSupported) lib.dlsym("IsSupported");
-			info.getPictureInfo = cast(GetPictureInfo) lib.dlsym("GetPictureInfo");
-			info.getPicture     = cast(GetPicture) lib.dlsym("GetPicture");
-			info.getArchiveInfo = cast(GetArchiveInfo) lib.dlsym("GetArchiveInfo");
-			info.getFileInfo    = cast(GetFileInfo) lib.dlsym("GetFileInfo");
-			info.getFile        = cast(GetFile) lib.dlsym("GetFile");
-
-			info.handle = lib;
-			info.pluginFile     = file.absolutePath().buildNormalizedPath();
-
-			// BUG: len includes '\0' sometimes.
-			int len;
-			len = info.getPluginInfo(0, buf.ptr, buf.length);
-			if (len) info.apiVersion = buf[0 .. .strlen(buf.ptr)].idup;
-			len = info.getPluginInfo(1, buf.ptr, buf.length);
-			if (len) info.about = buf[0 .. .strlen(buf.ptr)].idup;
-			for (size_t n = 2; ; n += 2) {
-				len = info.getPluginInfo(n + 0, buf.ptr, buf.length);
-				if (!len) break;
-				info.extension ~= buf[0 .. .strlen(buf.ptr)].idup;
-				len = info.getPluginInfo(n + 1, buf.ptr, buf.length);
-				if (!len) break;
-				info.fileTypeName ~= buf[0 .. .strlen(buf.ptr)].idup;
+			if (_loadDir && _loadDir == dir && modified == _loadTime) {
+				// No change of dir.
+				return;
 			}
 
-			plugins ~= info;
-		}
-	}
-	/// Releases all Susie Plug-ins.
-	shared void releaseSusiePlugins() {
-		foreach (lib; plugins) {
-			libHandle handle = lib.handle;
-			handle.dlclose();
-		}
-		plugins.length = 0;
-		loadDir = null;
-		loadTime = SysTime.min.stdTime;
-	}
-	shared static this () {
-		loadTime = SysTime.min.stdTime;
-	}
-	shared static ~this () {
-		releaseSusiePlugins();
-	}
+			releaseSusiePlugins();
+			_loadDir = dir;
+			_loadTime = modified;
 
-	/// Gets loadable image file extensions from Susie Plug-ins in dir.
-	@property
-	shared string[] susieExtensions() {
-		string[] r;
-		foreach (lib; plugins) {
-			foreach (ext; lib.extension) {
-				r ~= ext.toLower().split(";");
-			}
-		}
-		return r;
-	}
+			char[1024] buf;
+			foreach (string file; dir.dirEntries(SpanMode.shallow)) {
+				if (0 != file.extension().filenameCmp(".spi")) continue;
 
-	/// Loads file with Susie Plug-in.
-	/// If load failure, returns empty array.
-	/// If tryLoadWithoutPlugin() exist,
-	/// try load image without plugin before load with Susie Plug-in.
-	/// Parameters of tryLoadWithoutPlugin() is file data in archive sometimes.
-	shared MLImage[] loadWithSusie(
-		string file,
-		string newLayerName,
-		MLImage[] delegate(string fileExtension, lazy ubyte[] fileData) tryLoadWithoutPlugin
-	) {
-		file = file.absolutePath().buildNormalizedPath();
+				auto lib = file.dlopen();
+				if (!lib) continue;
 
-		ubyte[2048] head; // Beginning (2KB) of file.
-		{
-			auto s = new BufferedFile(file);
-			scope (exit) s.close();
-			size_t len = s.read(head);
-			head[len .. $] = 0;
-		}
-		return loadWithSusieImpl(file, file.extension(), newLayerName, tryLoadWithoutPlugin, head, {
-			return cast(ubyte[]) file.read();
-		});
-	}
-	/// ditto
-	private shared MLImage[] loadWithSusieImpl(
-		string file,
-		string ext,
-		string newLayerName,
-		MLImage[] delegate(string fileExtension, lazy ubyte[] fileData) tryLoadWithoutPlugin,
-		in ubyte[2048] head,
-		ubyte[] delegate() readData
-	) {
-		MLImage[] r;
-
-		ubyte[] fileBytes = null;
-
-		if (tryLoadWithoutPlugin) {
-			// Try load without Susie Plug-in.
-			r ~= tryLoadWithoutPlugin(ext, (fileBytes ? fileBytes : fileBytes = readData()));
-			if (r.length) {
-				// Successfully.
-				return r;
-			}
-		}
-
-		// Parameters for IsSupported().
-		auto dw = cast(DWORD) head.ptr;
-		auto filename = file.toMBSz();
-
-		all: foreach (lib; plugins) {
-			if (!lib.isSupported) continue;
-			static immutable uint DISC   = 0x0000;
-			static immutable uint MEMORY = 0x0001;
-
-			switch (lib.apiVersion) {
-
-			case "00IN":
-				if (!lib.getPicture) continue;
-
-				if (!lib.isSupported(filename, dw)) continue;
-
-				// Memory image of file.
-				auto data = cast(char[]) (fileBytes is null ? readData() : fileBytes);
-				int errcode;
-
-				// Gets bitmap data by Susie Plug-in.
-				HLOCAL bInfo = null;
-				HLOCAL bm = null;
-				scope (exit) {
-					if (bInfo && !(*(cast(void**) bInfo))) LocalFree(*(cast(void**) bInfo));
-					if (bm && !(*(cast(void**) bm))) LocalFree(*(cast(void**) bm));
+				// Load functions.
+				PluginInfo info;
+				info.getPluginInfo = cast(GetPluginInfo) lib.dlsym("GetPluginInfo");
+				if (!info.getPluginInfo) {
+					lib.dlclose();
+					continue;
 				}
-				errcode = lib.getPicture(data.ptr, data.length, MEMORY, &bInfo, &bm, null, 0);
-				if (0 != errcode) continue;
-				if (!bInfo || !bm || !(*(cast(void**) bInfo)) || !(*(cast(void**) bm))) {
+				info.isSupported    = cast(IsSupported) lib.dlsym("IsSupported");
+				info.getPictureInfo = cast(GetPictureInfo) lib.dlsym("GetPictureInfo");
+				info.getPicture     = cast(GetPicture) lib.dlsym("GetPicture");
+				info.getArchiveInfo = cast(GetArchiveInfo) lib.dlsym("GetArchiveInfo");
+				info.getFileInfo    = cast(GetFileInfo) lib.dlsym("GetFileInfo");
+				info.getFile        = cast(GetFile) lib.dlsym("GetFile");
+
+				info.handle = lib;
+				info.pluginFile     = file.absolutePath().buildNormalizedPath();
+
+				// BUG: len includes '\0' sometimes.
+				int len;
+				len = info.getPluginInfo(0, buf.ptr, buf.length);
+				if (len) info.apiVersion = buf[0 .. .strlen(buf.ptr)].idup;
+				len = info.getPluginInfo(1, buf.ptr, buf.length);
+				if (len) info.about = buf[0 .. .strlen(buf.ptr)].idup;
+				for (size_t n = 2; ; n += 2) {
+					len = info.getPluginInfo(n + 0, buf.ptr, buf.length);
+					if (!len) break;
+					info.extension ~= buf[0 .. .strlen(buf.ptr)].idup;
+					len = info.getPluginInfo(n + 1, buf.ptr, buf.length);
+					if (!len) break;
+					info.fileTypeName ~= buf[0 .. .strlen(buf.ptr)].idup;
+				}
+
+				_plugins ~= info;
+			}
+		}
+
+		/// Releases all Susie Plug-ins.
+		void releaseSusiePlugins() {
+			foreach (lib; _plugins) {
+				libHandle handle = lib.handle;
+				handle.dlclose();
+			}
+			_plugins.length = 0;
+			_loadDir = null;
+			_loadTime = SysTime.min;
+		}
+
+		/// Gets loadable image file extensions from Susie Plug-ins in dir.
+		@property
+		string[] susieExtensions() {
+			string[] r;
+			foreach (lib; _plugins) {
+				foreach (ext; lib.extension) {
+					r ~= ext.toLower().split(";");
+				}
+			}
+			return r;
+		}
+
+		/// Loads file with Susie Plug-in.
+		/// If load failure, returns empty array.
+		/// If tryLoadWithoutPlugin() exist,
+		/// try load image without plugin before load with Susie Plug-in.
+		/// Parameters of tryLoadWithoutPlugin() is file data in archive sometimes.
+		MLImage[] loadWithSusie(
+			string file,
+			string newLayerName,
+			MLImage[] delegate(string fileExtension, lazy ubyte[] fileData) tryLoadWithoutPlugin
+		) {
+			file = file.absolutePath().buildNormalizedPath();
+
+			ubyte[2048] head; // Beginning (2KB) of file.
+			{
+				auto s = new BufferedFile(file);
+				scope (exit) s.close();
+				size_t len = s.read(head);
+				head[len .. $] = 0;
+			}
+			return loadWithSusieImpl(file, file.extension(), newLayerName, tryLoadWithoutPlugin, head, {
+				return cast(ubyte[]) file.read();
+			});
+		}
+		/// ditto
+		private MLImage[] loadWithSusieImpl(
+			string file,
+			string ext,
+			string newLayerName,
+			MLImage[] delegate(string fileExtension, lazy ubyte[] fileData) tryLoadWithoutPlugin,
+			in ubyte[2048] head,
+			ubyte[] delegate() readData
+		) {
+			MLImage[] r;
+
+			ubyte[] fileBytes = null;
+
+			if (tryLoadWithoutPlugin) {
+				// Try load without Susie Plug-in.
+				r ~= tryLoadWithoutPlugin(ext, (fileBytes ? fileBytes : fileBytes = readData()));
+				if (r.length) {
+					// Successfully.
+					return r;
+				}
+			}
+
+			// Parameters for IsSupported().
+			auto dw = cast(DWORD) head.ptr;
+			auto filename = file.toMBSz();
+
+			all: foreach (lib; _plugins) {
+				if (!lib.isSupported) continue;
+				static immutable uint DISC   = 0x0000;
+				static immutable uint MEMORY = 0x0001;
+
+				switch (lib.apiVersion) {
+
+				case "00IN":
+					if (!lib.getPicture) continue;
+
+					if (!lib.isSupported(filename, dw)) continue;
+
+					// Memory image of file.
+					auto data = cast(char[]) (fileBytes is null ? readData() : fileBytes);
+					int errcode;
+
+					// Gets bitmap data by Susie Plug-in.
+					HLOCAL bInfo = null;
+					HLOCAL bm = null;
+					scope (exit) {
+						if (bInfo && !(*(cast(void**) bInfo))) LocalFree(*(cast(void**) bInfo));
+						if (bm && !(*(cast(void**) bm))) LocalFree(*(cast(void**) bm));
+					}
+					errcode = lib.getPicture(data.ptr, data.length, MEMORY, &bInfo, &bm, null, 0);
+					if (0 != errcode) continue;
+					if (!bInfo || !bm || !(*(cast(void**) bInfo)) || !(*(cast(void**) bm))) {
+						continue;
+					}
+
+					// Creates bitmap data.
+					auto info = *(cast(BITMAPINFO**) bInfo);
+					auto bmp = *(cast(ubyte**) bm);
+					auto w = info.bmiHeader.biWidth.littleEndian;
+					auto h = info.bmiHeader.biHeight.littleEndian;
+					auto bytesPerLine = w + .padding(w, 4);
+
+					static immutable BITMAPFILEHEADER_SIZE = 14;
+					static immutable RGBQUAD_SIZE = 4;
+					size_t headerSize = info.bmiHeader.biSize.littleEndian;
+					auto bitCount = info.bmiHeader.biBitCount.littleEndian;
+					switch (bitCount) {
+					case 1:
+						headerSize += RGBQUAD_SIZE * (0x01 << 1);
+						break;
+					case 4:
+						headerSize += RGBQUAD_SIZE * (0x01 << 4);
+						break;
+					case 8:
+						headerSize += RGBQUAD_SIZE * (0x01 << 8);
+						break;
+					default:
+						break;
+					}
+					auto size = info.bmiHeader.biSizeImage;
+					if (!size) {
+						// Calculates bitmap data size.
+						size = w;
+						switch (bitCount) {
+						case 1:
+							size /= 8;
+							break;
+						case 4:
+							size /= 2;
+							break;
+						default:
+							size *= bitCount / 8;
+						}
+						size += size.padding(4);
+						size *= h.abs();
+					}
+
+					// Bitmap data bytes.
+					auto bytes = new byte[BITMAPFILEHEADER_SIZE + headerSize + size];
+					auto header = cast(BITMAPFILEHEADER*) bytes.ptr;
+					header.bfType = (cast(USHORT) ('B' | ('M' << 8))).littleEndian;
+					header.bfSize = bytes.length.littleEndian;
+					header.bfOffBits = (BITMAPFILEHEADER_SIZE + headerSize).littleEndian;
+
+					.memmove(&bytes[BITMAPFILEHEADER_SIZE], info, headerSize);
+					.memmove(&bytes[header.bfOffBits], bmp, size);
+
+					// Loads bitmap.
+					auto buf = new ByteArrayInputStream(bytes);
+					auto imgData = new ImageData(buf);
+
+					// Creates MLImage.
+					auto img = new MLImage;
+					img.init(imgData, newLayerName);
+					r ~= img;
+					break;
+
+				case "00AM":
+					if (!lib.getArchiveInfo) continue;
+					if (!lib.getFile) continue;
+
+					if (!lib.isSupported(filename, dw)) continue;
+
+					// Memory image of file.
+					auto data = cast(char[]) (fileBytes is null ? readData() : fileBytes);
+					int errcode;
+
+					// Gets archive file information.
+					HLOCAL info = null;
+					scope (exit) {
+						if (info && !(*(cast(void**) info))) LocalFree((*(cast(void**) info)));
+					}
+					errcode = lib.getArchiveInfo(data.ptr, data.length, MEMORY, &info);
+					if (0 != errcode) continue;
+					if (!info) continue;
+					auto fileInfo = *(cast(fileInfo**) info);
+					if (!fileInfo) continue;
+
+					// Processing files in archive.
+					while ('\0' != fileInfo.method[0]) {
+
+						HLOCAL dest;
+						scope (exit) {
+							if (dest && !(*(cast(void**) dest))) LocalFree((*(cast(void**) dest)));
+						}
+						// BUG: Pass a memory image to axzip.spi, to hang.
+						errcode = lib.getFile(filename, fileInfo.position, cast(char*) &dest, 0x0100, null, 0);
+						if (0 != errcode) continue all;
+						auto uncomp = *(cast(ubyte**) dest);
+
+						// Beginning (2KB) of file in archive.
+						ubyte[2048] headA;
+						headA[] = 0;
+						.memmove(headA.ptr, uncomp, .min(headA.sizeof, fileInfo.filesize));
+
+						// Loads image in archive.
+						auto name = fileInfo.filename[0 .. .strlen(fileInfo.filename.ptr)];
+						auto compExt = name.extension().idup;
+						r ~= loadWithSusieImpl("", compExt, newLayerName, tryLoadWithoutPlugin, headA, {
+							return uncomp[0 .. fileInfo.filesize];
+						});
+
+						// Advance pointer.
+						fileInfo++;
+					}
+					break;
+
+				default:
 					continue;
 				}
 
-				// Creates bitmap data.
-				auto info = *(cast(BITMAPINFO**) bInfo);
-				auto bmp = *(cast(ubyte**) bm);
-				auto w = info.bmiHeader.biWidth.littleEndian;
-				auto h = info.bmiHeader.biHeight.littleEndian;
-				auto bytesPerLine = w + .padding(w, 4);
-
-				static immutable BITMAPFILEHEADER_SIZE = 14;
-				static immutable RGBQUAD_SIZE = 4;
-				size_t headerSize = info.bmiHeader.biSize.littleEndian;
-				auto bitCount = info.bmiHeader.biBitCount.littleEndian;
-				switch (bitCount) {
-				case 1:
-					headerSize += RGBQUAD_SIZE * (0x01 << 1);
-					break;
-				case 4:
-					headerSize += RGBQUAD_SIZE * (0x01 << 4);
-					break;
-				case 8:
-					headerSize += RGBQUAD_SIZE * (0x01 << 8);
-					break;
-				default:
-					break;
-				}
-				auto size = info.bmiHeader.biSizeImage;
-				if (!size) {
-					// Calculates bitmap data size.
-					size = w;
-					switch (bitCount) {
-					case 1:
-						size /= 8;
-						break;
-					case 4:
-						size /= 2;
-						break;
-					default:
-						size *= bitCount / 8;
-					}
-					size += size.padding(4);
-					size *= h.abs();
-				}
-
-				// Bitmap data bytes.
-				auto bytes = new byte[BITMAPFILEHEADER_SIZE + headerSize + size];
-				auto header = cast(BITMAPFILEHEADER*) bytes.ptr;
-				header.bfType = (cast(USHORT) ('B' | ('M' << 8))).littleEndian;
-				header.bfSize = bytes.length.littleEndian;
-				header.bfOffBits = (BITMAPFILEHEADER_SIZE + headerSize).littleEndian;
-
-				.memmove(&bytes[BITMAPFILEHEADER_SIZE], info, headerSize);
-				.memmove(&bytes[header.bfOffBits], bmp, size);
-
-				// Loads bitmap.
-				auto buf = new ByteArrayInputStream(bytes);
-				auto imgData = new ImageData(buf);
-
-				// Creates MLImage.
-				auto img = new MLImage;
-				img.init(imgData, newLayerName);
-				r ~= img;
-				break;
-
-			case "00AM":
-				if (!lib.getArchiveInfo) continue;
-				if (!lib.getFile) continue;
-
-				if (!lib.isSupported(filename, dw)) continue;
-
-				// Memory image of file.
-				auto data = cast(char[]) (fileBytes is null ? readData() : fileBytes);
-				int errcode;
-
-				// Gets archive file information.
-				HLOCAL info = null;
-				scope (exit) {
-					if (info && !(*(cast(void**) info))) LocalFree((*(cast(void**) info)));
-				}
-				errcode = lib.getArchiveInfo(data.ptr, data.length, MEMORY, &info);
-				if (0 != errcode) continue;
-				if (!info) continue;
-				auto fileInfo = *(cast(fileInfo**) info);
-				if (!fileInfo) continue;
-
-				// Processing files in archive.
-				while ('\0' != fileInfo.method[0]) {
-
-					HLOCAL dest;
-					scope (exit) {
-						if (dest && !(*(cast(void**) dest))) LocalFree((*(cast(void**) dest)));
-					}
-					// BUG: Pass a memory image to axzip.spi, to hang.
-					errcode = lib.getFile(filename, fileInfo.position, cast(char*) &dest, 0x0100, null, 0);
-					if (0 != errcode) continue all;
-					auto uncomp = *(cast(ubyte**) dest);
-
-					// Beginning (2KB) of file in archive.
-					ubyte[2048] headA;
-					headA[] = 0;
-					.memmove(headA.ptr, uncomp, .min(headA.sizeof, fileInfo.filesize));
-
-					// Loads image in archive.
-					auto compExt = fileInfo.filename[0 .. .strlen(fileInfo.filename.ptr)].extension().idup;
-					r ~= loadWithSusieImpl("", compExt, newLayerName, tryLoadWithoutPlugin, headA, {
-						return uncomp[0 .. fileInfo.filesize];
-					});
-
-					// Advance pointer.
-					fileInfo++;
-				}
-				break;
-
-			default:
-				continue;
+				/// Successful to load a image by lib.
+				if (r.length) break;
 			}
-
-			/// Successful to load a image by lib.
-			if (r.length) break;
+			return r;
 		}
-		return r;
 	}
+
 } else {
 
-	/// Initialize Susie Plug-ins in dir.
-	shared void susieInitialize(string dir) {
-		// No processing.
-	}
-	/// Releases all Susie Plug-ins.
-	shared void releaseSusiePlugins() {
-		// No processing.
-	}
+	/// Susie Plug-in management class.
+	class SusiePlugin {
 
-	/// Gets loadable image file extensions from susie plugins in dir.
-	@property
-	shared string[] susieExtensions() { return []; }
+		/// The only constructor.
+		this () {
+			// No processing.
+		}
 
-	/// Loads file with Susie Plug-in.
-	/// If load failure, returns empty array.
-	shared MLImage[] loadWithSusie(string file, string newLayerName) { return []; }
+		/// Initialize Susie Plug-ins in dir.
+		void loadSusiePlugins(string dir) {
+			// No processing.
+		}
+
+		/// Releases all Susie Plug-ins.
+		void releaseSusiePlugins() {
+			// No processing.
+		}
+
+		/// Gets loadable image file extensions from susie plugins in dir.
+		@property
+		string[] susieExtensions() { return []; }
+
+		/// Loads file with Susie Plug-in.
+		/// If load failure, returns empty array.
+		/// If tryLoadWithoutPlugin() exist,
+		/// try load image without plugin before load with Susie Plug-in.
+		/// Parameters of tryLoadWithoutPlugin() is file data in archive sometimes.
+		MLImage[] loadWithSusie(
+			string file,
+			string newLayerName,
+			MLImage[] delegate(string fileExtension, lazy ubyte[] fileData) tryLoadWithoutPlugin
+		) {
+			return [];
+		}
+	}
 }
