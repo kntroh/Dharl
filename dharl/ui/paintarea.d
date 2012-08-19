@@ -266,13 +266,26 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		cancelPaste();
+
 		if (_um) _um.store(this);
 		auto r = _image.pushImage(src, srcX, srcY, _backPixel);
+
+		size_t[] layers;
+		foreach (l; _layers) {
+			if (l < _image.layerCount) {
+				layers ~= l;
+			}
+		}
+		if (!layers.length) layers ~= _image.layerCount - 1;
+		_layers = layers;
+
 		clearCache();
 		redraw();
+
 		drawReceivers.raiseEvent();
 		changedLayerReceivers.raiseEvent();
 		statusChangedReceivers.raiseEvent();
+
 		return r;
 	}
 
