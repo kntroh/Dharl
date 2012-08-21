@@ -2,6 +2,7 @@
 /// This module includes dialog of editor for combinations of layers in MLImage.
 module dharl.combinationdialog;
 
+private import util.undomanager;
 private import util.utils;
 
 private import dharl.common;
@@ -56,8 +57,12 @@ class CombinationDialog : DharlDialog {
 	/// Items of combination toolbar.
 	private ToolItem _tAdd = null, _tRemove = null, _tUp = null, _tDown = null;
 
+	/// Manager of undo and redo operation.
+	private UndoManager _um = null;
+
 	/// The only constructor.
-	this (Shell parent, DCommon c, MLImage image, string name) {
+	this (Shell parent, DCommon c, UndoManager um, MLImage image, string name) {
+		_um = um;
 		_image = image;
 		_name = name;
 		auto title  = c.text.fEditCombinationDialog.value.format(name);
@@ -170,6 +175,7 @@ class CombinationDialog : DharlDialog {
 
 			_combiList.deselectAll();
 			_combiList.select(index);
+			enableApply();
 			updateLayerList();
 		});
 		_tRemove = basicToolItem(combiTools, c.text.menu.removeCombination, .cimg(c.image.removeCombination), {
@@ -179,6 +185,7 @@ class CombinationDialog : DharlDialog {
 			foreach_reverse (i; indices) {
 				_combiData.remove(i);
 			}
+			enableApply();
 			updateEnabled();
 		});
 
@@ -199,6 +206,7 @@ class CombinationDialog : DharlDialog {
 			indices[] -= 1;
 			_combiList.deselectAll();
 			_combiList.select(indices);
+			enableApply();
 			updateEnabled();
 		});
 		_tDown = basicToolItem(combiTools, c.text.menu.down, .cimg(c.image.down), {
@@ -211,6 +219,7 @@ class CombinationDialog : DharlDialog {
 			indices[] += 1;
 			_combiList.deselectAll();
 			_combiList.select(indices);
+			enableApply();
 			updateEnabled();
 		});
 	}
@@ -233,13 +242,33 @@ class CombinationDialog : DharlDialog {
 	/// Update layer list from selection combination.
 	private void updateLayerList() {
 		auto indices = _combiList.p_selectionIndices;
-		foreach (i, itm; _layers.p_items) {
-			if (1 == indices.length) {
-				itm.p_grayed = false;
-				itm.p_checked = _combiData[indices[0]].visible[i];
-			} else {
+		if (0 == indices.length) {
+			foreach (i, itm; _layers.p_items) {
 				itm.p_grayed = true;
 				itm.p_checked = true;
+			}
+		} else if (1 == indices.length) {
+			foreach (i, itm; _layers.p_items) {
+				itm.p_grayed = false;
+				itm.p_checked = _combiData[indices[0]].visible[i];
+			}
+		} else {
+			auto checked = _combiData[indices[0]].visible.dup;
+			foreach (i, itm; _layers.p_items) {
+				bool grayed = false;
+				foreach (ci; indices[1 .. $]) {
+					if (checked[i] != _combiData[ci].visible[i]) {
+						grayed = true;
+						break;
+					}
+				}
+				if (grayed) {
+					itm.p_grayed = true;
+					itm.p_checked = true;
+				} else {
+					itm.p_grayed = false;
+					itm.p_checked = checked[i];
+				}
 			}
 		}
 		updateEnabled();
@@ -251,6 +280,7 @@ class CombinationDialog : DharlDialog {
 		foreach (i; indices) {
 			_combiData[i].visible[index] = check;
 		}
+		enableApply();
 		_preview.redraw();
 	}
 
@@ -303,8 +333,12 @@ class CombinationDialog : DharlDialog {
 	}
 
 	protected override bool apply() {
-		_image.combinations = _combiData;
-		return true;
+		if (_image.combinations != _combiData) {
+			if (_um) _um.store(_image);
+			_image.combinations = _combiData;
+			return true;
+		}
+		return false;
 	}
 
 	/// Preview of combination.
@@ -332,7 +366,7 @@ class CombinationDialog : DharlDialog {
 			size_t[] ls;
 			int x = (ca.width - _image.width) / 2;
 			int y = (ca.height - _image.height) / 2;
-			foreach (l, v; _combiData[index].visible) {
+			foreach_reverse (l, v; _combiData[index].visible) {
 				if (!v) continue;
 				auto img = new Image(d, _image.layer(l).image);
 				scope (exit) img.dispose();

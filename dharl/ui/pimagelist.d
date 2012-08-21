@@ -35,6 +35,11 @@ class PImageList : Canvas {
 	/// Old coordinates of mouse cursor.
 	private int _oldX = -1, _oldY = -1;
 
+	/// Cache of wallpaper.
+	private Image _shadeCache = null;
+	/// Size of wallpaper cache.
+	private Rectangle _shadeCacheRect = null;
+
 	/// The only constructor.
 	this (Composite parent, int style) {
 		super (parent, style | SWT.H_SCROLL | SWT.V_SCROLL);
@@ -298,6 +303,7 @@ class PImageList : Canvas {
 
 	private void onDispose(Event e) {
 		checkWidget();
+		if (_shadeCache) _shadeCache.dispose();
 	}
 
 	private void onResize(Event e) {
@@ -362,10 +368,26 @@ class PImageList : Canvas {
 		assert (this.p_verticalBar);
 		int vss = vs.p_selection;
 
-		drawShade(e.gc, ca);
+		// Wallpepar.
+		if (!_shadeCache || !_shadeCacheRect || _shadeCacheRect != ca) {
+			// Creates wallpaper cache.
+			auto cSize =  this.p_size;
+			if (_shadeCache) _shadeCache.dispose();
+			auto shade = new Image(d, cSize.x, cSize.y);
+			auto gc = new GC(shade);
+			scope (exit) gc.dispose();
+			gc.p_background = e.gc.p_background;
+			gc.p_foreground = e.gc.p_foreground;
+			gc.fillRectangle(ca);
+			gc.drawShade(ca);
+			_shadeCache = shade;
+			_shadeCacheRect = ca;
+		}
+		e.gc.drawImage(_shadeCache, e.x, e.y, e.width, e.height, e.x, e.y, e.width, e.height);
 
 		if (!_images.length) return;
 
+		// Images.
 		auto cRect = CRectangle(e.x, e.y, e.width, e.height);
 		int x = SPACING - hss;
 		int y = SPACING - vss;
@@ -601,6 +623,10 @@ private class PImageItem : Item {
 		_parent.redraw();
 	}
 
+	/// Parent of this.
+	@property
+	PImageList parent() { return _parent; }
+
 	/// Image of this item.
 	@property
 	void image(MLImage v) {
@@ -800,6 +826,20 @@ private class PImageItem : Item {
 		auto canvas = new Image(d, _bounds.width, _bounds.height);
 		auto gc = new GC(canvas);
 		scope (exit) gc.dispose();
+
+		// Wallpaper.
+		bool transparent = true;
+		foreach (i; 0 .. image.layerCount) {
+			if (image.layer(i).image.transparentPixel < 0) {
+				transparent = false;
+				break;
+			}
+		}
+		if (transparent) {
+			gc.drawImage(parent._shadeCache,
+				_bounds.x, _bounds.y, _bounds.width, _bounds.height,
+				0, 0, _bounds.width, _bounds.height);
+		}
 
 		// Draws image.
 		foreach_reverse (i; 0 .. image.layerCount) {

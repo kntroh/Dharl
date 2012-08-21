@@ -166,6 +166,14 @@ abstract class BasicDialog {
 	/// This method is called when the Apply button is pushed.
 	protected abstract bool apply() { return true; }
 
+	/// Set enable to apply button.
+	protected void enableApply() {
+		auto pApply = DBtn.Apply in _buttons;
+		if (!pApply) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		pApply.p_enabled = true;
+	}
 	/// When control changed, set enable to apply button.
 	protected void mod(C)(C control) {
 		if (control.p_shell !is _shl) {
