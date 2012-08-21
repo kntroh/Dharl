@@ -83,14 +83,6 @@ real degree(real radian) {
 	return radian * 180 / PI;
 }
 
-/// Distance of 1 to 2.
-@safe nothrow pure
-real distance(real x1, real y1, real x2, real y2) {
-	real d1 = x1 - x2;
-	real d2 = y1 - y2;
-	return sqrt(d1 * d1 + d2 * d2);
-}
-
 /// Calculates padding of n-byte boundary.
 @safe nothrow pure
 uint padding(uint count, uint n) {
@@ -171,8 +163,8 @@ bool removeReceiver(T)(ref T[] receivers, in T receiver) {
 }
 
 /// Rounds value at range from T.min to T.max.
-T roundCast(T, N)(in N value) {
-	return cast(T) min(T.max, max(T.min, value));
+T roundCast(T, N)(in N value, in T min = T.min, in T max = T.max) {
+	return cast(T) .min(max, .max(min, value));
 }
 
 /// Parse string. This function don't throw an exception.

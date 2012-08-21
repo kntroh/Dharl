@@ -13,6 +13,7 @@ private import dharl.ui.splitter;
 
 private import std.exception;
 private import std.math;
+private import std.path;
 private import std.range;
 private import std.string;
 private import std.typecons;
@@ -25,7 +26,7 @@ void initMouseWheel(Shell shell) {
 	d.p_filters!(SWT.MouseWheel) ~= (Event e) {
 		.enforce(SWT.MouseWheel == e.type);
 
-		auto c = d.getCursorControl();
+		auto c = d.p_cursorControl();
 		if (!c) return; // no cursor control
 		auto w = cast(Control) e.widget;
 		if (!w) return; // sender isn't control
@@ -73,14 +74,35 @@ void refWindow(ref WindowParameter param, Shell shell) {
 		if (h <= 0) h = size.y;
 	}
 
+	Rectangle pBounds = null;
+	auto parent = shell.p_parent;
+	if (parent) {
+		// relative position
+		pBounds = parent.p_bounds;
+		int px = pBounds.x;
+		int py = pBounds.y;
+		int pw = pBounds.width;
+		int ph = pBounds.height;
+		x = (SWT.DEFAULT == x) ? (x + (pw - w) / 2) : (px + x);
+		y = (SWT.DEFAULT == y) ? (y + (ph - h) / 2) : (py + y);
+	}
+
 	shell.p_bounds = CRect(x, y, w, h);
 	shell.p_maximized = param.maximized;
 	shell.p_minimized = param.minimized;
 
 	shell.listeners!(SWT.Dispose) ~= (Event e) {
 		auto b = shell.p_bounds;
-		param.x      = b.x;
-		param.y      = b.y;
+		auto parent = shell.p_parent;
+		if (parent) {
+			// relative position
+			pBounds = parent.p_bounds;
+			param.x = b.x - pBounds.x;
+			param.y = b.y - pBounds.y;
+		} else {
+			param.x = b.x;
+			param.y = b.y;
+		}
 		param.width  = b.width;
 		param.height = b.height;
 		param.maximized = shell.p_maximized;
@@ -110,8 +132,73 @@ void refSelection(C, V)(ref V value, C control) {
 	};
 }
 
-// Draws alternately different color lines,
-// to raise the visibility.
+/// Sets index to control.
+/// And save index when disposed control.
+void refSelectionIndex(C, V)(ref V index, C control, bool canNoSelection = false) {
+	int min = canNoSelection ? -1 : 0;
+	control.select(index.roundCast(min, control.p_itemCount - 1));
+	control.listeners!(SWT.Dispose) ~= (Event e) {
+		index = control.p_selectionIndex;
+	};
+}
+
+/// Sets text to control.
+/// And save text when disposed control.
+void refText(C, V)(ref V text, C control) {
+	control.p_text = text;
+	control.listeners!(SWT.Dispose) ~= (Event e) {
+		text = control.p_text;
+	};
+}
+
+/// Show message dialog.
+int showMessage(Shell parent, string msg, string title, int style = SWT.OK | SWT.ICON_INFORMATION) {
+	if (!parent) {
+		SWT.error(SWT.ERROR_NULL_ARGUMENT);
+	}
+	auto dialog = new MessageBox(parent, style);
+	dialog.p_text = title;
+	dialog.p_message = msg;
+	return dialog.open();
+}
+/// Show yes / no dialog.
+int showYesNoDialog(Shell parent, string msg, string title) {
+	return showMessage(parent, msg, title, SWT.YES | SWT.NO | SWT.ICON_QUESTION);
+}
+/// Show yes / no / cancel dialog.
+int showYesNoCancelDialog(Shell parent, string msg, string title) {
+	return showMessage(parent, msg, title, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
+}
+/// Show warning dialog.
+int showWarningDialog(Shell parent, string msg, string title) {
+	return showMessage(parent, msg, title, SWT.OK | SWT.ICON_WARNING);
+}
+/// Show error dialog.
+int showErrorDialog(Shell parent, string msg, string title) {
+	return showMessage(parent, msg, title, SWT.OK | SWT.ICON_ERROR);
+}
+
+/// Creates select folder field.
+Tuple!(Text, "text", Composite, "pane") folderField(Composite parent, string dialogTitle, string dialogMessage, string selectButton = "...") {
+	auto area = basicComposite(parent);
+	area.p_layout = GL.noMargin(2, false);
+	auto field = basicText(area, "");
+	field.p_layoutData = GD.fill(true, false);
+	basicButton(area, selectButton, {
+		auto dialog = new DirectoryDialog(field.p_shell);
+		dialog.p_text = dialogTitle;
+		dialog.p_message = dialogMessage;
+		dialog.p_filterPath = field.p_text;
+		auto result = dialog.open();
+		if (result !is null) {
+			field.p_text = dialog.p_filterPath.absolutePath().buildNormalizedPath();
+		}
+	});
+	return typeof(return)(field, area);
+}
+
+/// Draws alternately different color lines,
+/// to raise the visibility.
 void drawColorfulFocus(GC gc, Color color1, Color color2, int x, int y, int w, int h) {
 	auto fore = gc.p_foreground;
 	scope (exit) gc.p_foreground = fore;
@@ -135,7 +222,7 @@ void drawColorfulFocus(GC gc, Color color1, Color color2, Rectangle rect) {
 	drawColorfulFocus(gc, color1, color2, rect.x, rect.y, rect.width, rect.height);
 }
 
-// Shading to client area.
+/// Shading to client area.
 void drawShade(GC gc, in Rectangle clientArea) {
 	static const cSHADE_INTERVAL = 8;
 	int cwh = clientArea.width + clientArea.height;

@@ -7,7 +7,9 @@ private import util.types;
 private import util.undomanager;
 private import util.utils;
 
+private import dharl.combinationdialog;
 private import dharl.common;
+private import dharl.dialogs;
 
 private import dharl.image.dpx;
 private import dharl.image.edg;
@@ -158,7 +160,7 @@ class MainPanel : Composite {
 				_um.store(item.image, {
 					_paintArea.fixPaste();
 					if (item.pushImage(_paintArea.image)) {
-						_pushBase = _paintArea.image.storeData(false);
+						_pushBase = _paintArea.image.storeData(false, false);
 						modified(item);
 						return true;
 					}
@@ -173,7 +175,7 @@ class MainPanel : Composite {
 				_paintArea.pushImage(image, bounds.x, bounds.y);
 				_paintPreview.redraw();
 				_layerList.redraw();
-				_pushBase = _paintArea.image.storeData(false);
+				_pushBase = _paintArea.image.storeData(false, false);
 				break;
 			default: assert (0);
 			}
@@ -289,8 +291,8 @@ class MainPanel : Composite {
 		lToolBar.p_layoutData = GD(GridData.FILL_HORIZONTAL);
 		basicToolItem(lToolBar, _c.text.menu.addLayer, cimg(_c.image.addLayer), &addLayer);
 		basicToolItem(lToolBar, _c.text.menu.removeLayer, cimg(_c.image.removeLayer), &removeLayer);
-		auto tUpLayer = basicToolItem(lToolBar, _c.text.menu.upLayer, cimg(_c.image.upLayer), &upLayer);
-		auto tDownLayer = basicToolItem(lToolBar, _c.text.menu.downLayer, cimg(_c.image.downLayer), &downLayer);
+		auto tUpLayer = basicToolItem(lToolBar, _c.text.menu.up, cimg(_c.image.up), &upLayer);
+		auto tDownLayer = basicToolItem(lToolBar, _c.text.menu.down, cimg(_c.image.down), &downLayer);
 
 		// List of layers.
 		_layerList = new LayerList(comp, SWT.BORDER | SWT.DOUBLE_BUFFERED);
@@ -347,6 +349,8 @@ class MainPanel : Composite {
 		_paintArea.cursor(PaintMode.Fill, bucket);
 		_paintArea.cursorDropper = dropper;
 		_paintArea.cursorSelRange = cross;
+		_paintArea.statusTextXY = _c.text.fStatusTextXY;
+		_paintArea.statusTextRange = _c.text.fStatusTextRange;
 		_paintPreview.init(_paintArea);
 		_paletteView.p_cursor = dropper;
 		_layerList.init(_paintArea);
@@ -358,7 +362,7 @@ class MainPanel : Composite {
 		constructModeToolBar(ptSplitter);
 
 		// Stores image data for undo operation.
-		_pushBase = _paintArea.image.storeData(false);
+		_pushBase = _paintArea.image.storeData(false, false);
 	}
 	/// Creates paint mode toolbar.
 	private void constructModeToolBar(Composite parent) {
@@ -843,7 +847,7 @@ class MainPanel : Composite {
 		auto file = fPath.buildPath(dlg.p_fileName);
 		ubyte depth;
 		switch (dlg.p_filterIndex) {
-		case 0: depth = params.depth; break;
+		case 0: depth = 8; break;
 		case 1, 4: depth = 8; break;
 		case 2, 5: depth = 4; break;
 		case 3, 6: depth = 1; break;
@@ -1138,6 +1142,27 @@ class MainPanel : Composite {
 	bool canDownLayer() {
 		checkInit();
 		return _paintArea.image.layerCount != _paintArea.selectedLayers[$ - 1] + 1;
+	}
+
+	/// Opens dialog for edit combinations of layers in MLImage.
+	void editCombination() {
+		checkWidget();
+		checkInit();
+		if (!canEditCombination()) return;
+
+		auto item = _imageList.item(_imageList.selectedIndex);
+		auto params = item.dataTo!PImageParams;
+		auto dlg = new CombinationDialog(_imageList.p_shell, _c, item.image, params.name);
+		dlg.appliedReceivers ~= {
+			// TODO
+		};
+		dlg.open();
+	}
+	/// ditto
+	@property
+	const
+	bool canEditCombination() {
+		return -1 != _imageList.selectedIndex;
 	}
 
 	/// If paintArea is changed after push, returns true.

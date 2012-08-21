@@ -2,6 +2,8 @@
 /// This module includes functions with result for each environment.
 module util.environment;
 
+private import std.algorithm;
+private import std.ascii;
 private import std.conv;
 private import std.exception;
 private import std.string;
@@ -14,10 +16,40 @@ alias shared(void)* libHandle;
 /// This overwrite MAX_PATH and FILENAME_MAX etc.
 private immutable MAX_PATH = 0x8000;
 
+
+/* ----- Filename ------------------------------------------------------ */
+
+/// Can use c in filename?
+@property
+@safe
+pure
+nothrow
+bool isFilenameChar(dchar c) {
+	return c.isPrintable() && -1 == INVALID_FILENAME.countUntil(c);
+}
+
+/// If name contains characters that can't use in filename,
+/// replace it to c.
+@property
+string validFilename(string name, dchar c = '_') {
+	dchar[] filename;
+	foreach (dchar n; name) {
+		if (n.isFilenameChar) {
+			filename ~= n;
+		} else {
+			filename ~= c;
+		}
+	}
+	return filename.text();
+}
+
 version (Windows) {
 
 	private import std.utf;
 	private import core.sys.windows.windows;
+
+	/// This characters can't use to filename.
+	private immutable INVALID_FILENAME = "\\/:*?\"<>|/\\"d;
 
 	/// Handle of shell32.dll or shell64.dll.
 	private libHandle _dllShell = null;
@@ -102,6 +134,9 @@ version (Windows) {
 
 	private import core.sys.posix.pwd;
 	private import core.sys.posix.unistd;
+
+	/// This characters can't use to filename.
+	private immutable INVALID_FILENAME = "/";
 
 
 	/* ----- Shared library -------------------------------------------- */

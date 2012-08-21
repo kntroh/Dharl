@@ -270,10 +270,10 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tRemoveLayer = basicMenuItem(mEdit, c.text.menu.removeLayer, cimg(c.image.removeLayer), {
 		mainPanel.removeLayer();
 	});
-	auto tUpLayer = basicMenuItem(mEdit, c.text.menu.upLayer, cimg(c.image.upLayer), {
+	auto tUpLayer = basicMenuItem(mEdit, c.text.menu.up, cimg(c.image.up), {
 		mainPanel.upLayer();
 	});
-	auto tDownLayer = basicMenuItem(mEdit, c.text.menu.downLayer, cimg(c.image.downLayer), {
+	auto tDownLayer = basicMenuItem(mEdit, c.text.menu.down, cimg(c.image.down), {
 		mainPanel.downLayer();
 	});
 
@@ -328,6 +328,11 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	}, SWT.CHECK);
 
 	separator(toolBar);
+
+	auto mCombi = basicMenuItem(mTool, toolBar, c.text.menu.editCombination, cimg(c.image.editCombination), {
+		mainPanel.editCombination();
+	});
+	separator(mTool, toolBar);
 	basicMenuItem(mTool, toolBar, c.text.menu.mirrorHorizontal, cimg(c.image.mirrorHorizontal), {
 		mainPanel.paintArea.mirrorHorizontal();
 	});
@@ -448,6 +453,8 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 		tUpLayer.p_enabled = mainPanel.canUpLayer;
 		tDownLayer.p_enabled = mainPanel.canDownLayer;
+
+		mCombi.p_enabled = mainPanel.canEditCombination;
 	}
 	mainPanel.statusChangedReceivers ~= &refreshMenu;
 	mainPanel.selectedReceivers ~= &refreshMenu;

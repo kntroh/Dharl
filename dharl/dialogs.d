@@ -2,12 +2,11 @@
 /// This module includes dialogs and members related to it.
 module dharl.dialogs;
 
-private import dwtutils.utils;
-
 private import dharl.common;
 
-private import dharl.ui.uicommon;
 private import dharl.ui.basicdialog;
+private import dharl.ui.dwtutils;
+private import dharl.ui.uicommon;
 
 private import std.string;
 
@@ -41,7 +40,7 @@ abstract class DharlDialog : BasicDialog {
 	protected DCommon c() { return _c; }
 }
 
-/// The dialog of application configuration.
+/// Dialog of application configuration.
 class ConfigDialog : DharlDialog {
 
 	/// Character (paint area) size.

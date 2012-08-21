@@ -124,14 +124,21 @@ class PaintArea : Canvas, Undoable {
 	private Cursor[PaintMode] _cursor;
 
 	/// A cursor of dropper mode.
-	private Cursor _cursorDropper;
+	private Cursor _cursorDropper = null;
 	/// A cursor of range selection mode.
-	private Cursor _cursorSelRange;
+	private Cursor _cursorSelRange = null;
 
 	/// Cache of wallpaper.
 	private Image _shadeCache = null;
 	/// Size of wallpaper cache.
 	private Rectangle _shadeCacheRect = null;
+
+	/// Tooltip for display of status.
+	private ToolTip _status = null;
+	/// Format of status texts.
+	private string _statusTextXY = "%s, %s";
+	/// ditto
+	private string _statusTextRange = "%s, %s to %s, %s (%s x %s)";
 
 	/// The only constructor.
 	this (Composite parent, int style) {
@@ -146,6 +153,8 @@ class PaintArea : Canvas, Undoable {
 		_iSelRange = CRect(0, 0, 0, 0);
 		_iMoveRange = CRect(0, 0, 0, 0);
 		_iOldSelRange = CRect(0, 0, 0, 0);
+
+		_status = basicToolTip(this.p_shell, false);
 
 		auto d = parent.p_display;
 		this.p_background = d.getSystemColor(SWT.COLOR_GRAY);
@@ -901,6 +910,70 @@ class PaintArea : Canvas, Undoable {
 		return 3 == _mouseDown;
 	}
 
+	/// Format for status texts.
+	@property
+	const
+	string statusTextXY() { return _statusTextXY; }
+	/// ditto
+	@property
+	void statusTextXY(string v) {
+		_statusTextXY = v;
+		updateStatusText();
+	}
+	/// ditto
+	@property
+	const
+	string statusTextRange() { return _statusTextRange; }
+	/// ditto
+	@property
+	void statusTextRange(string v) {
+		_statusTextRange = v;
+		updateStatusText();
+	}
+
+	/// Update status text.
+	private void updateStatusText() {
+		_status.p_visible = false;
+
+		auto d = this.p_display;
+		if (d.p_cursorControl !is this) return;
+
+		auto ia = selectedArea;
+
+		if (0 == ia.width && 0 == ia.height) {
+			// no selection
+			auto cLoc = toControl(d.p_cursorLocation);
+			int ix1 = cxtoix(cLoc.x);
+			int iy1 = cytoiy(cLoc.y);
+			if (1 == _mouseDown && _mode != PaintMode.FreePath && _mode != PaintMode.Fill) {
+				// drawing range
+				int ix2 = _iCurFrom.x;
+				int iy2 = _iCurFrom.y;
+				int ixF = .min(ix1, ix2);
+				int iyF = .min(iy1, iy2);
+				int ixT = .max(ix1, ix2);
+				int iyT = .max(iy1, iy2);
+				int iw = ixT - ixF + 1;
+				int ih = iyT - iyF + 1;
+				_status.p_message = statusTextRange.format(ixF, iyF, ixT, iyT, iw, ih);
+			} else {
+				// x, y
+				_status.p_message = statusTextXY.format(ix1, iy1);
+			}
+		} else {
+			// selected range
+			int iw = ia.width;
+			int ih = ia.height;
+			int ixTo = ia.x + iw;
+			int iyTo = ia.y + ih;
+			_status.p_message = statusTextRange.format(ia.x, ia.y, ixTo, iyTo, iw, ih);
+		}
+
+		auto bounds = this.p_bounds;
+		_status.p_location = toDisplay(CPoint(0, bounds.height));
+		_status.p_visible = true;
+	}
+
 	/// Executes operation of cut, copy, paste, and delete.
 	void cut() {
 		checkWidget();
@@ -1388,6 +1461,7 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		_mouseEnter = true;
+		updateStatusText();
 		clearCache();
 		redrawCursorArea();
 	}
@@ -1395,6 +1469,7 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		_mouseEnter = false;
+		updateStatusText();
 		clearCache();
 		redrawCursorArea();
 	}
@@ -2094,6 +2169,9 @@ class PaintArea : Canvas, Undoable {
 		int iy = cytoiy(e.y);
 		auto d = this.p_display;
 
+		scope (exit) updateStatusText();
+
+		// Operation for image.
 		if (1 == _mouseDown) {
 			auto cursor = iCursorNow(ix, iy);
 			if (_pasteLayer) {

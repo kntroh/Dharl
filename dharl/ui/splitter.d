@@ -10,8 +10,16 @@ private import org.eclipse.swt.all;
 
 /// Creates basic style splitter.
 Splitter basicSplitter(Composite parent, int style = SWT.HORIZONTAL) {
-	auto sa = new Splitter(parent, style);
-	return sa;
+	auto splitter = new Splitter(parent, style);
+	return splitter;
+}
+/// ditto
+Splitter basicHSplitter(Composite parent) {
+	return basicSplitter(parent, SWT.HORIZONTAL);
+}
+/// ditto
+Splitter basicVSplitter(Composite parent) {
+	return basicSplitter(parent, SWT.VERTICAL);
 }
 
 /// This control is show two child controls, and show sash between there.

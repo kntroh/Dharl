@@ -249,7 +249,16 @@ Text basicText(Composite parent, string text = "", int style = SWT.BORDER) {
 
 /// Creates basic style button.
 Button basicButton(Composite parent, string text, void delegate(Event) selection, int style = SWT.PUSH) {
+	return basicButton(parent, text, null, selection, style);
+}
+/// ditto
+Button basicButton(Composite parent, string text, void delegate() selection, int style = SWT.PUSH) {
+	return basicButton(parent, text, null, selection, style);
+}
+/// ditto
+Button basicButton(Composite parent, string text, Image image, void delegate(Event) selection, int style = SWT.PUSH) {
 	auto bt = new Button(parent, style);
+	bt.p_image = image;
 	bt.p_text = text;
 	if (selection) {
 		bt.listeners!(SWT.Selection) ~= selection;
@@ -257,8 +266,8 @@ Button basicButton(Composite parent, string text, void delegate(Event) selection
 	return bt;
 }
 /// ditto
-Button basicButton(Composite parent, string text, void delegate() selection, int style = SWT.PUSH) {
-	return basicButton(parent, text, selection ? (Event e) {
+Button basicButton(Composite parent, string text, Image image, void delegate() selection, int style = SWT.PUSH) {
+	return basicButton(parent, text, image, selection ? (Event e) {
 		selection();
 	} : null, style);
 }
@@ -322,6 +331,7 @@ Combo basicCombo(Composite parent, bool readOnly = true, string[] items = null) 
 	int style = SWT.BORDER;
 	if (readOnly) style |= SWT.READ_ONLY;
 	auto combo = new Combo(parent, style);
+	combo.p_visibleItemCount = 20;
 	if (items) {
 		combo.p_items = items;
 		if (0 != items.length) {
@@ -338,6 +348,63 @@ Spinner basicSpinner(Composite parent, int min, int max) {
 	spn.p_minimum = min;
 	spn.p_maximum = max;
 	return spn;
+}
+
+/// Creates basic style ToolTip.
+ToolTip basicToolTip(Control parent, bool autoHide = true, string title = "", string message = "", int style = SWT.NONE) {
+	auto toolTip = new ToolTip(parent.p_shell, style);
+	toolTip.p_text = title;
+	toolTip.p_message = message;
+	return toolTip;
+}
+
+/// Creates basic style List.
+List basicList(Composite parent, bool multi, bool check = false) {
+	int style = SWT.BORDER | SWT.V_SCROLL;
+	style |= multi ? SWT.MULTI : SWT.SINGLE;
+	return new List(parent, style);
+}
+
+/// Creates basic style Table.
+Table basicTable(Composite parent, bool multi, bool check) {
+	int style = SWT.BORDER | SWT.V_SCROLL | SWT.FULL_SELECTION;
+	style |= multi ? SWT.MULTI : SWT.SINGLE;
+	if (check) style |= SWT.CHECK;
+	return new Table(parent, style);
+}
+/// Creates basic style TableColumn.
+TableColumn basicTableColumn(Table parent, string text, int index = -1) {
+	TableColumn column;
+	if (-1 == index) {
+		column = new TableColumn(parent, SWT.NONE);
+	} else {
+		column = new TableColumn(parent, SWT.NONE, index);
+	}
+	column.p_text = text;
+	return column;
+}
+/// Creates basic style TableItem.
+TableItem basicTableItem(Table parent, string text, Image image = null, int index = -1) {
+	TableItem item;
+	if (-1 == index) {
+		item = new TableItem(parent, SWT.NONE);
+	} else {
+		item = new TableItem(parent, SWT.NONE, index);
+	}
+	item.p_text = text;
+	item.p_image = image;
+	return item;
+}
+/// Creates a Table like list.
+Table listTable(Composite parent, bool multi, bool check = false) {
+	auto table = basicTable(parent, multi, check);
+
+	// The only column.
+	auto column = basicTableColumn(table, "");
+	table.listeners!(SWT.Resize) ~= {
+		column.p_width = table.p_clientArea.width;
+	};
+	return table;
 }
 
 /// A wrapper for settings to a RowLayout.

@@ -152,7 +152,13 @@ abstract class BasicDialog {
 		if (pApply) pApply.p_enabled = false;
 
 		_shl.pack();
+		onOpen(_shl);
 		_shl.open();
+	}
+
+	/// This method is call when shell open.
+	protected void onOpen(Shell shell) {
+		// No processing.
 	}
 
 	/// Creates controls of dialog.

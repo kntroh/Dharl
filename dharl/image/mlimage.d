@@ -2,6 +2,7 @@
 /// This module includes MLImage and members related to it.
 module dharl.image.mlimage;
 
+private import util.environment;
 private import util.graphics;
 private import util.types;
 private import util.undomanager;
@@ -16,6 +17,7 @@ private import std.datetime;
 private import std.exception;
 private import std.file;
 private import std.path;
+private import std.range;
 private import std.string;
 private import std.xml;
 private import std.zip;
@@ -30,6 +32,12 @@ struct Layer {
 	ImageData image = null; /// Image data of layer.
 	string name = ""; /// Name of layer.
 	bool visible = true; /// Visibility of layer.
+}
+
+/// Information of layers combination.
+struct Combination {
+	string name;
+	bool[] visible;
 }
 
 /// Multi layer image.
@@ -47,6 +55,14 @@ class MLImage : Undoable {
 	private PaletteData _palette = null;
 	/// Image size. It is common in all layers.
 	private uint _iw = 0, _ih = 0;
+
+	/// Combination info.
+	private Combination[] _combi;
+	invariant () {
+		foreach (combi; _combi) {
+			assert (combi.visible.length == _layers.length);
+		}
+	}
 
 	/// Creates instance that hasn't initialized.
 	this () {
@@ -186,6 +202,79 @@ class MLImage : Undoable {
 		file.write(dharlImageData);
 	}
 
+	/// Writes combination to file.
+	/// The following values can be specified to imageType:
+	/// SWT.IMAGE_BMP, SWT.IMAGE_BMP_RLE, SWT.IMAGE_GIF,
+	/// SWT.IMAGE_ICO, SWT.IMAGE_JPEG, SWT.IMAGE_PNG.
+	void writeCombination(int imageType, ubyte depth, string dir, void delegate(ref string[] filenames, out bool cancel) checkOverwrite = null, in Combination[] combinations = null) {
+		checkInit();
+		auto combis = combinations !is null ? combinations : this.combinations;
+		const(bool)[][string] nameTable;
+		string[] exists;
+		string[] notExists;
+		foreach (combi; combis) {
+			string filename = dir.buildPath(combinationFilename(imageType, combi));
+			nameTable[filename] = combi.visible;
+			if (filename.exists()) {
+				exists ~= filename;
+			} else {
+				notExists ~= filename;
+			}
+		}
+		if (exists.length && checkOverwrite) {
+			bool cancel;
+			checkOverwrite(exists, cancel);
+			if (cancel) return;
+		}
+		foreach (filename; exists ~ notExists) {
+			auto loader = writeCombinationImpl(depth, nameTable[filename]);
+			loader.save(filename, imageType);
+		}
+	}
+	/// Creates file data table from combination.
+	/// See_Also: writeCombination
+	ubyte[][string] combinationFileTable(int imageType, ubyte depth, in Combination[] combinations = null) {
+		checkInit();
+		ubyte[][string] r;
+		auto combis = combinations !is null ? combinations : this.combinations;
+		foreach (combi; combis) {
+			auto loader = writeCombinationImpl(depth, combi.visible);
+			auto buf = new ByteArrayOutputStream;
+			loader.save(buf, imageType);
+			r[combinationFilename(imageType, combi)] = cast(ubyte[]) buf.toByteArray();
+		}
+		return r;
+	}
+	/// Common function for writeCombination() and combinationFileTable().
+	private static string combinationFilename(int imageType, in Combination combi) {
+		string ext;
+		switch (imageType) {
+		case SWT.IMAGE_BMP:     ext = "bmp"; break;
+		case SWT.IMAGE_BMP_RLE: ext = "bmp"; break;
+		case SWT.IMAGE_GIF:     ext = "gif"; break;
+		case SWT.IMAGE_ICO:     ext = "ico"; break;
+		case SWT.IMAGE_JPEG:    ext = "jpg"; break;
+		case SWT.IMAGE_PNG:     ext = "png"; break;
+		default: SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		return combi.name.validFilename.setExtension(ext);
+	}
+	/// ditto
+	private ImageLoader writeCombinationImpl(ubyte depth, in bool[] layerVisible) {
+		checkInit();
+		if (layerVisible.length != layerCount) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+
+		auto loader = new ImageLoader;
+		size_t[] ls;
+		foreach (l, v; layerVisible) {
+			if (v) ls ~= l;
+		}
+		loader.data ~= createImageData(0, 0, width, height, depth, ls);
+		return loader;
+	}
+
 	/// Initializes this image.
 	/// If call a other methods before called this,
 	/// it throws exception.
@@ -203,6 +292,7 @@ class MLImage : Undoable {
 		_iw = layer.width;
 		_ih = layer.height;
 		_palette = layer.palette;
+		_combi.length  = 0;
 		if (ow != _iw || oh != _ih) {
 			resizeReceivers.raiseEvent();
 		}
@@ -224,6 +314,7 @@ class MLImage : Undoable {
 		_iw = w;
 		_ih = h;
 		_palette = palette;
+		_combi.length  = 0;
 		if (ow != _iw || oh != _ih) {
 			resizeReceivers.raiseEvent();
 		}
@@ -244,6 +335,7 @@ class MLImage : Undoable {
 
 	/// Disposes this image.
 	void dispose() {
+		_combi.length  = 0;
 		removeLayers(0, _layers.length);
 		restoreReceivers.length = 0;
 		resizeReceivers.length = 0;
@@ -388,6 +480,9 @@ class MLImage : Undoable {
 				}
 			}
 		}
+
+		cloneCombi(_combi, src._combi);
+
 		return changed;
 	}
 	/// ditto
@@ -489,15 +584,27 @@ class MLImage : Undoable {
 	}
 
 	/// Creates one image from all layers.
-	ImageData createImageData(ubyte depth, in size_t[] layer = null) {
+	/// ditto
+	ImageData createImageData(ubyte depth) {
+		return createImageData(depth, .iota(0, _layers.length).array());
+	}
+	ImageData createImageData(ubyte depth, in size_t[] layer) {
 		return createImageData(0, 0, _iw, _ih, depth, layer);
 	}
 	/// ditto
-	ImageData createImageData(Rectangle iRange, ubyte depth, in size_t[] layer = null) {
+	ImageData createImageData(Rectangle iRange, ubyte depth) {
+		return createImageData(iRange, depth, .iota(0, _layers.length).array());
+	}
+	/// ditto
+	ImageData createImageData(Rectangle iRange, ubyte depth, in size_t[] layer) {
 		return createImageData(iRange.x, iRange.y, iRange.width, iRange.height, depth, layer);
 	}
 	/// ditto
-	ImageData createImageData(int ix, int iy, int iw, int ih, ubyte depth, in size_t[] layer = null) {
+	ImageData createImageData(int ix, int iy, int iw, int ih, ubyte depth) {
+		return createImageData(ix, iy, iw, ih, depth, .iota(0, _layers.length).array());
+	}
+	/// ditto
+	ImageData createImageData(int ix, int iy, int iw, int ih, ubyte depth, in size_t[] layer) {
 		if (1 != depth && 2 != depth && 4 != depth && 8 != depth
 				&& 16 != depth && 24 != depth && 32 != depth) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -508,19 +615,14 @@ class MLImage : Undoable {
 		if (iw < 1 || ih < 1 || _iw < ix + iw || _ih < iy + ih) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
-		if (layer) {
-			foreach (i; layer) {
-				if (_layers.length <= i) {
-					SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
-				}
+		foreach (i; layer) {
+			if (_layers.length <= i) {
+				SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 			}
 		}
 		checkInit();
 
-		size_t[] ls = null;
-		if (layer) {
-			ls = layer.dup.sort().uniq().array();
-		}
+		size_t[] ls = layer.dup.sort().uniq().array();
 		/// Creates new palette.
 		size_t colors = 0x1 << depth;
 		auto rgbs = new RGB[colors];
@@ -533,7 +635,7 @@ class MLImage : Undoable {
 		}
 		auto palette = new PaletteData(rgbs);
 
-		if (1 == _layers.length && 8 == depth
+		if (1 == ls.length && 1 == _layers.length && 8 == depth
 				&& 0 == ix && 0 == iy && _iw == iw && _ih == ih) {
 			/// Only base layer.
 			auto data = new ImageData(_iw, _ih, 8, palette);
@@ -552,16 +654,9 @@ class MLImage : Undoable {
 				}
 			}
 		}
-		if (ls) {
-			foreach_reverse (i, l; ls) {
-				if (!_layers[l].visible) continue;
-				put(i, _layers[l].image);
-			}
-		} else {
-			foreach_reverse (i, l; _layers) {
-				if (!l.visible) continue;
-				put(i, l.image);
-			}
+
+		foreach_reverse (i, l; ls) {
+			put(i, _layers[l].image);
 		}
 		return data;
 	}
@@ -600,8 +695,14 @@ class MLImage : Undoable {
 		layer.image.palette = _palette;
 		if (index < layerCount) {
 			_layers.insertInPlace(index, layer);
+			foreach (ref combi; _combi) {
+				combi.visible.insertInPlace(index, layer.visible);
+			}
 		} else {
 			_layers ~= layer;
+			foreach (ref combi; _combi) {
+				combi.visible ~= layer.visible;
+			}
 		}
 	}
 	void addLayer(size_t index, string name) {
@@ -641,9 +742,15 @@ class MLImage : Undoable {
 		if (index < layerCount) {
 			data.transparentPixel = 0;
 			_layers.insertInPlace(index, Layer(data, name, true));
+			foreach (ref combi; _combi) {
+				combi.visible.insertInPlace(index, true);
+			}
 		} else {
 			data.transparentPixel = -1;
 			_layers ~= Layer(data, name, true);
+			foreach (ref combi; _combi) {
+				combi.visible ~= true;
+			}
 		}
 	}
 	/// Removes layer.
@@ -653,6 +760,9 @@ class MLImage : Undoable {
 		}
 		checkInit();
 		_layers = _layers.remove(index);
+		foreach (ref combi; _combi) {
+			combi.visible = combi.visible.remove(index);
+		}
 	}
 	/// ditto
 	void removeLayers(size_t from, size_t to) {
@@ -669,6 +779,12 @@ class MLImage : Undoable {
 			_layers[index] = _layers[from + index];
 		}
 		_layers.length -= range;
+		foreach (ref combi; _combi) {
+			foreach (index; from .. to) {
+				combi.visible[index] = combi.visible[from + index];
+			}
+			combi.visible.length -= range;
+		}
 	}
 	/// Swap layer index.
 	void swapLayers(size_t index1, size_t index2) {
@@ -683,6 +799,9 @@ class MLImage : Undoable {
 		.swap(_layers[index1], _layers[index2]);
 		if (layerCount - 1 == index1 || layerCount - 1 == index2) {
 			.swap(_layers[index1].image.transparentPixel, _layers[index2].image.transparentPixel);
+		}
+		foreach (ref combi; _combi) {
+			.swap(combi.visible[index1], combi.visible[index2]);
 		}
 	}
 
@@ -779,6 +898,41 @@ class MLImage : Undoable {
 		}
 	}
 
+	/// Combinations of layers.
+	@property
+	const
+	const(Combination)[] combinations() {
+		checkInit();
+		return _combi;
+	}
+	/// ditto
+	@property
+	void combinations(in Combination[] combi) {
+		checkInit();
+		if (!combi) {
+			SWT.error(SWT.ERROR_NULL_ARGUMENT);
+		}
+		foreach (c; combi) {
+			if (c.visible.length != _layers.length) {
+				SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+			}
+		}
+		cloneCombi(_combi, combi);
+	}
+
+	/// Creates clone of combi to dest.
+	private void cloneCombi(ref Combination[] dest, in Combination[] combi) {
+		if (dest is null) {
+			dest = new Combination[combi.length];
+		} else {
+			dest.length = combi.length;
+		}
+		foreach (i, c; combi) {
+			dest[i].name = c.name;
+			dest[i].visible = c.visible.dup;
+		}
+	}
+
 	/// A data object for undo.
 	private static class StoreData {
 		/// Size of image.
@@ -791,8 +945,12 @@ class MLImage : Undoable {
 		string[] name = null;
 		/// Visibility of layers.
 		bool[] visible = null;
+		/// Combination info.
+		Combination[] combi;
 		/// Is this include palette data?
 		bool includePalette = true;
+		/// Is this include combination info?
+		bool includeCombination = true;
 	}
 
 	/// Checks this is equal to o.
@@ -814,12 +972,15 @@ class MLImage : Undoable {
 			if (l.name != data.name[i]) return false;
 			if (l.visible != data.visible[i]) return false;
 		}
+		if (data.includeCombination) {
+			if (_combi != data.combi) return false;
+		}
 		return true;
 	}
 
 	/// Creates now state data.
 	@property
-	Object storeData(bool includePalette) {
+	Object storeData(bool includePalette, bool includeCombination) {
 		auto data = new StoreData;
 		data.width = _iw;
 		data.height = _ih;
@@ -839,12 +1000,16 @@ class MLImage : Undoable {
 			data.name[i] = l.name;
 			data.visible[i] = l.visible;
 		}
+		if (includeCombination) {
+			cloneCombi(data.combi, _combi);
+		}
 		data.includePalette = includePalette;
+		data.includeCombination = includeCombination;
 		return data;
 	}
 	@property
 	override Object storeData() {
-		return storeData(true);
+		return storeData(true, true);
 	}
 	override void restore(Object data, UndoMode mode) {
 		auto st = cast(StoreData) data;
@@ -868,6 +1033,7 @@ class MLImage : Undoable {
 		}
 		_iw = st.width;
 		_ih = st.height;
+		cloneCombi(_combi, st.combi);
 		restoreReceivers.raiseEvent();
 	}
 	@property

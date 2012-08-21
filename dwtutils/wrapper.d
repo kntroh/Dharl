@@ -33,13 +33,20 @@ shell.p_visible = true;
 mixin GetSetWrapper!("Accelerator"); /// ditto
 mixin GetSetWrapper!("Alpha"); /// ditto
 mixin GetSetWrapper!("Antialias"); /// ditto
+mixin GetSetWrapper!("AutoHide"); /// ditto
 mixin GetSetWrapper!("Background"); /// ditto
 mixin GetSetWrapper!("BorderWidth"); /// ditto
 mixin GetSetWrapper!("Bounds"); /// ditto
+mixin GetSetWrapper!("Checked"); /// ditto
 mixin GetSetWrapper!("Children"); /// ditto
 mixin GetSetWrapper!("ClientArea"); /// ditto
+mixin GetSetWrapper!("ColumnCount"); /// ditto
+mixin GetSetWrapper!("ColumnOrder"); /// ditto
+mixin GetSetWrapper!("Columns"); /// ditto
 mixin GetSetWrapper!("Control"); /// ditto
 mixin GetSetWrapper!("Cursor"); /// ditto
+mixin GetSetWrapper!("CursorControl"); /// ditto
+mixin GetSetWrapper!("CursorLocation"); /// ditto
 mixin GetSetWrapper!("Data"); /// ditto
 mixin GetSetWrapper!("DefaultButton"); /// ditto
 mixin GetSetWrapper!("Display"); /// ditto
@@ -57,9 +64,12 @@ mixin GetSetWrapper!("FocusControl"); /// ditto
 mixin GetSetWrapper!("Font"); /// ditto
 mixin GetSetWrapper!("FontMetrics"); /// ditto
 mixin GetSetWrapper!("Foreground"); /// ditto
+mixin GetSetWrapper!("Grayed"); /// ditto
+mixin GetSetWrapper!("HeaderVisible"); /// ditto
 mixin GetSetWrapper!("Height"); /// ditto
 mixin GetSetWrapper!("HorizontalBar"); /// ditto
 mixin GetSetWrapper!("Image"); /// ditto
+mixin GetSetWrapper!("ImageIndent"); /// ditto
 mixin GetSetWrapper!("ItemCount"); /// ditto
 mixin GetSetWrapper!("Items"); /// ditto
 mixin GetSetWrapper!("Layout"); /// ditto
@@ -67,10 +77,12 @@ mixin GetSetWrapper!("LayoutData"); /// ditto
 mixin GetSetWrapper!("LineDash"); /// ditto
 mixin GetSetWrapper!("LineStyle"); /// ditto
 mixin GetSetWrapper!("LineWidth"); /// ditto
+mixin GetSetWrapper!("Location"); /// ditto
 mixin GetSetWrapper!("Maximized"); /// ditto
 mixin GetSetWrapper!("Maximum"); /// ditto
 mixin GetSetWrapper!("Menu"); /// ditto
 mixin GetSetWrapper!("MenuBar"); /// ditto
+mixin GetSetWrapper!("Message", systemReturnCodeToN, nToSystemReturnCode); /// ditto
 mixin GetSetWrapper!("Minimized"); /// ditto
 mixin GetSetWrapper!("Minimum"); /// ditto
 mixin GetSetWrapper!("Selection"); /// ditto
@@ -90,6 +102,7 @@ mixin GetSetWrapper!("Parent"); /// ditto
 mixin GetSetWrapper!("Redraw"); /// ditto
 mixin GetSetWrapper!("VerticalBar"); /// ditto
 mixin GetSetWrapper!("Visible"); /// ditto
+mixin GetSetWrapper!("VisibleItemCount"); /// ditto
 mixin GetSetWrapper!("Weights"); /// ditto
 mixin GetSetWrapper!("Width"); /// ditto
 
@@ -173,12 +186,12 @@ info.remove(); // remove the dispose listener.
 */
 @property
 auto listeners(int Type, W)(W widget) {
-	return ListenerWrapper!(Type, W, false)(widget);
+	return new ListenerWrapper!(Type, W, false)(widget);
 }
 /// ditto
 @property
 auto p_filters(int Type)(Display display) {
-	return ListenerWrapper!(Type, Display, true)(display);
+	return new ListenerWrapper!(Type, Display, true)(display);
 }
 
 
@@ -225,11 +238,20 @@ string nToSystemReturnCode(string text) {
 }
 
 /// A information of added listeners.
-struct ListenerInfo(W, L) {
+/// BUG: If struct use, when call remove(),
+///      occur Privileged Instruction exception.
+class ListenerInfo(W, L) {
 	W widget; // A widget which registered a listener.
 	L listener; // A registered listener.
 
 	private void delegate() _remove;
+
+	/// The only constructor.
+	this (W widget, L listener, void delegate() remove) {
+		this.widget = widget;
+		this.listener = listener;
+		this._remove = remove;
+	}
 
 	/// Removes listener.
 	void remove() {
@@ -349,7 +371,7 @@ template GetSetWrapper(string Name, alias getterFunc = Object, alias setterFunc 
 			return widget.get` ~ Name ~ `();
 		} else static if (is(typeof(widget.is` ~ Name ~ `()))) {
 			return widget.is` ~ Name ~ `();
-		} else static assert (0);
+		} else static assert (0, W.stringof ~ "." ~ LName ~ " <- " ~ Name);
 	}`);
 } unittest {
 	class BeanParent1 {
@@ -376,14 +398,16 @@ template AddRemoveWrapper(string Name) {
 	private static immutable LName = PName!(Name);
 	mixin(`@property auto ` ~ LName ~ `(W)(W widget) {
 		import std.traits;
-		return AddRemove!(W, Name, ParameterTypeTuple!(widget.add` ~ Name ~ `)[0])(widget);
+		return new AddRemove!(W, Name, ParameterTypeTuple!(widget.add` ~ Name ~ `)[0])(widget);
 	}`);
 }
-private struct AddRemove(T, string Name, Type) {
+/// BUG: If struct use, when call remove(),
+///      occur Privileged Instruction exception.
+private class AddRemove(T, string Name, Type) {
 	T t;
 	auto opOpAssign(string s)(Type value) if (s == "~") {
 		mixin(`t.add` ~ Name ~ `(value);`);
-		return ListenerInfo!(T, Type)(t, value, {
+		return new ListenerInfo!(T, Type)(t, value, {
 			mixin(`t.remove` ~ Name ~ `(value);`);
 		});
 	}
@@ -411,15 +435,18 @@ private template CreateTypedListenerWrapperImpl(ListenerType, int Index) {
 template TypedListenerWrapper(ListenerType, string MethodName) {
 	@property
 	mixin(`auto ` ~ MethodName ~ `(W)(W widget) {
-		return TypedListenerWrapperImpl!(W, ListenerType, MethodName)(widget);
+		return new TypedListenerWrapperImpl!(W, ListenerType, MethodName)(widget);
 	}`);
 }
-private struct TypedListenerWrapperImpl(W, ListenerType, string MethodName) {
+/// BUG: If struct use, when call remove(),
+///      occur Privileged Instruction exception.
+private class TypedListenerWrapperImpl(W, ListenerType, string MethodName) {
 	private import std.traits;
 	private import std.typecons;
 	alias ParameterTypeTuple!(mixin(ListenerType.stringof ~ "." ~ MethodName))[0] EventType;
 
 	W widget;
+	this (W widget) { this.widget = widget; }
 	auto opOpAssign(string s)(void delegate() dlg) if (s == "~") {
 		return opOpAssign!s((EventType e) {dlg();});
 	}
@@ -432,15 +459,18 @@ private struct TypedListenerWrapperImpl(W, ListenerType, string MethodName) {
 	}
 	auto opOpAssign(string s)(ListenerType l) if (s == "~") {
 		mixin(`widget.add` ~ ListenerType.stringof ~ `(l);`);
-		return ListenerInfo!(W, ListenerType)(widget, l, {
+		return new ListenerInfo!(W, ListenerType)(widget, l, {
 			mixin(`widget.remove` ~ ListenerType.stringof ~ `(l);`);
 		});
 	}
 }
 
 /// Creates wrapper for org.eclipse.swt.widget.Listener#handleEvent().
-private struct ListenerWrapper(int Type, W, bool Filter) {
+/// BUG: If struct use, when call remove(),
+///      occur Privileged Instruction exception.
+private class ListenerWrapper(int Type, W, bool Filter) {
 	W widget;
+	this (W widget) { this.widget = widget; }
 	auto opOpAssign(string s)(void delegate() dlg) if (s == "~") {
 		return opOpAssign!s((Event e) {dlg();});
 	}
@@ -454,12 +484,12 @@ private struct ListenerWrapper(int Type, W, bool Filter) {
 	auto opOpAssign(string s)(Listener l) if (s == "~") {
 		static if (Filter) {
 			widget.addFilter(Type, l);
-			return ListenerInfo!(W, Listener)(widget, l, {
+			return new ListenerInfo!(W, Listener)(widget, l, {
 				widget.removeFilter(Type, l);
 			});
 		} else {
 			widget.addListener(Type, l);
-			return ListenerInfo!(W, Listener)(widget, l, {
+			return new ListenerInfo!(W, Listener)(widget, l, {
 				widget.removeListener(Type, l);
 			});
 		}

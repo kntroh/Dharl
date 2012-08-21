@@ -881,6 +881,9 @@ private class PImageItem : Item {
 		_parent._images = _parent._images.remove(index);
 		if (index <= _parent._selected) {
 			_parent._selected--;
+			if (-1 == _parent._selected && _parent._images.length) {
+				_parent._selected = 0;
+			}
 			if (-1 != _parent._selected) {
 				auto itm = _parent.item(_parent._selected);
 				itm._selectedPiece.x = -1;

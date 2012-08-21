@@ -72,6 +72,9 @@ class DImages {
 	const DImage cursorCross = importImage!("cursor_cross.png"); /// ditto
 
 	/// Image data for toolbars and menus.
+	const DImage up = importImage!("up.png"); /// ditto
+	const DImage down = importImage!("down.png"); /// ditto
+
 	const DImage createNewImage = importImage!("create_new_image.png");
 	const DImage openImage = importImage!("open_image.png"); /// ditto
 	const DImage saveOverwrite = importImage!("save_overwrite.png"); /// ditto
@@ -88,8 +91,6 @@ class DImages {
 	const DImage selectAll = importImage!("select_all.png"); /// ditto
 	const DImage addLayer = importImage!("add_layer.png"); /// ditto
 	const DImage removeLayer = importImage!("remove_layer.png"); /// ditto
-	const DImage upLayer = importImage!("up_layer.png"); /// ditto
-	const DImage downLayer = importImage!("down_layer.png"); /// ditto
 	const DImage resizeCanvas = importImage!("resize_canvas.png"); /// ditto
 
 	const DImage createGradation = importImage!("create_gradation.png"); /// ditto
@@ -118,6 +119,10 @@ class DImages {
 	const DImage rotateDown = importImage!("rotate_down.png"); /// ditto
 	const DImage turn = importImage!("turn.png"); /// ditto
 
+	const DImage editCombination = importImage!("edit_combination.png"); /// ditto
+	const DImage addCombination = importImage!("add_combination.png"); /// ditto
+	const DImage removeCombination = importImage!("remove_combination.png"); /// ditto
+
 	const DImage configuration = importImage!("configuration.png"); /// ditto
 }
 
@@ -131,11 +136,17 @@ class DText {
 	mixin MsgProp!("fAppNameWithImage", "%s - %s"); /// ditto
 	mixin MsgProp!("fAppNameWithImageChanged", "*%s - %s"); /// ditto
 
+	mixin MsgProp!("fQuestionDialog", "Question - %s"); /// ditto
+	mixin MsgProp!("fWarningDialog", "Warning - %s"); /// ditto
+
 	mixin MsgProp!("ok", "&OK"); /// ditto
 	mixin MsgProp!("cancel", "&Cancel"); /// ditto
 	mixin MsgProp!("yes", "&Yes"); /// ditto
 	mixin MsgProp!("no", "&No"); /// ditto
 	mixin MsgProp!("apply", "&Apply"); /// ditto
+
+	mixin MsgProp!("selectFile", "..."); /// ditto
+	mixin MsgProp!("fAskFilesOverwrite", "%s files already exists,\noverwrite it?"); /// ditto
 
 	mixin MsgProp!("noName", "(No name)"); /// ditto
 	mixin MsgProp!("fChanged", "*%s"); /// ditto
@@ -157,10 +168,20 @@ class DText {
 	mixin MsgProp!("zoom", "Zoom"); /// ditto
 	mixin MsgProp!("lineWidth", "Line width"); /// ditto
 
+	mixin MsgProp!("fEditCombinationDialog", "Combination - %s"); /// ditto
 	mixin MsgProp!("fConfigDialog", "Configuration - %s"); /// ditto
 	mixin MsgProp!("characterSize", "Character size"); /// ditto
 	mixin MsgProp!("characterWidth", "Character width"); /// ditto
 	mixin MsgProp!("characterHeight", "Character height"); /// ditto
+
+	mixin MsgProp!("fStatusTextXY", "%s, %s"); /// ditto
+	mixin MsgProp!("fStatusTextRange", "%s, %s to %s, %s (%s x %s)"); /// ditto
+
+	mixin MsgProp!("combinationOutput", "Output"); /// ditto
+	mixin MsgProp!("targetFolder", "Target Folder:"); /// ditto
+	mixin MsgProp!("saveCombination", "&Save"); /// ditto
+	mixin MsgProp!("selectFolderDialogTitle", "Select folder"); /// ditto
+	mixin MsgProp!("selectCombinationOutputFolder", "Please select layer combinations output folder."); /// ditto
 
 	mixin PropIO!("i18n");
 }
@@ -187,10 +208,10 @@ struct DMenuText {
 	mixin MsgProp!("paste", "&Paste\tCtrl+V"); /// ditto
 	mixin MsgProp!("del", "&Delete\tDelete"); /// ditto
 	mixin MsgProp!("selectAll", "Select&All\tCtrl+A"); /// ditto
+	mixin MsgProp!("up", "Up"); /// ditto
+	mixin MsgProp!("down", "Down"); /// ditto
 	mixin MsgProp!("addLayer", "Add &Layer"); /// ditto
 	mixin MsgProp!("removeLayer", "Remove La&yer"); /// ditto
-	mixin MsgProp!("upLayer", "&Up Layer"); /// ditto
-	mixin MsgProp!("downLayer", "&Down Layer"); /// ditto
 	mixin MsgProp!("resizeCanvas", "R&esize Canvas"); /// ditto
 
 	mixin MsgProp!("mode", "&Mode"); /// ditto
@@ -209,6 +230,7 @@ struct DMenuText {
 	mixin MsgProp!("maskMode", "Edit &mask"); /// ditto
 
 	mixin MsgProp!("tool", "&Tool"); /// ditto
+	mixin MsgProp!("editCombination", "Edit c&ombination..."); /// ditto
 	mixin MsgProp!("resize", "&Resize..."); /// ditto
 	mixin MsgProp!("mirrorHorizontal", "&Mirror horizontal"); /// ditto
 	mixin MsgProp!("mirrorVertical", "M&irror vertical"); /// ditto
@@ -219,6 +241,9 @@ struct DMenuText {
 	mixin MsgProp!("rotateUp", "Rotate &up\tCtrl+Arrow_Up"); /// ditto
 	mixin MsgProp!("rotateDown", "Rotate &down\tCtrl+Arrow_Down"); /// ditto
 	mixin MsgProp!("turn", "&Turn"); /// ditto
+
+	mixin MsgProp!("addCombination", "Add combination"); /// ditto
+	mixin MsgProp!("removeCombination", "Remove combination"); /// ditto
 
 	mixin MsgProp!("configuration", "&Configuration..."); /// ditto
 
@@ -289,6 +314,13 @@ class DConfig {
 	/// Palette state.
 	mixin Prop!("enabledBackColor", bool, false);
 	mixin Prop!("maskMode", bool, false); /// ditto
+
+	/// Combination relation parameters.
+	mixin Prop!("combinationDialog", WindowParameter, WindowParameter(int.min, int.min, 500, 500));
+	mixin Prop!("combinationImageType", int, 0);
+	mixin Prop!("combinationFolder", string, "");
+	mixin Prop!("sashPosPreview_Combinations", int, 200);
+	mixin Prop!("sashPosCombinations_Layers", int, 300);
 
 	mixin PropIO!("config");
 }
