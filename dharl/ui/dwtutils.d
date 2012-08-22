@@ -202,7 +202,7 @@ Tuple!(Text, "text", Composite, "pane") folderField(Composite parent, string dia
 /// Creates font for pixel number text in box.
 Font pixelTextFont(Display d, Font base, int boxWidth, int boxHeight) {
 	auto fontName = base ? base.p_fontData[0].p_name : "";
-	auto dpi = d.getDPI();
+	auto dpi = d.p_dpi;
 	auto fontWidth  = pixelToPoint(boxWidth  - 2 * 2, dpi.x).roundTo!int();
 	auto fontHeight = pixelToPoint(boxHeight - 2 * 2, dpi.y).roundTo!int();
 	return new Font(d, fontName, .min(fontWidth, fontHeight), SWT.NONE);

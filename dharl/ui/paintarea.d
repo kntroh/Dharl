@@ -3110,7 +3110,7 @@ class LayerList : Canvas {
 					e.gc.p_foreground = pixelTextColor(d, rgb);
 					tPixelText(.text(tPixel));
 				} else {
-					e.gc.p_foreground = pixelTextColor(d, e.gc.p_background.getRGB());
+					e.gc.p_foreground = pixelTextColor(d, e.gc.p_background.p_rgb);
 					tPixelText("-");
 				}
 
