@@ -1,5 +1,6 @@
 dharl.exe
 dharl.res
+build.log
 objs/*
 example/*
 plugin/*

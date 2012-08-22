@@ -4,6 +4,8 @@ module dwtutils.wrapper;
 
 private import std.algorithm;
 private import std.array;
+private import std.ascii;
+private import std.exception;
 private import std.string;
 private import std.traits;
 
@@ -52,6 +54,7 @@ mixin GetSetWrapper!("DefaultButton"); /// ditto
 mixin GetSetWrapper!("Display"); /// ditto
 mixin GetSetWrapper!("Disposed"); /// ditto
 mixin GetSetWrapper!("DoubleClickTime"); /// ditto
+mixin GetSetWrapper!("DPI"); /// ditto
 mixin GetSetWrapper!("Empty"); /// ditto
 mixin GetSetWrapper!("Enabled"); /// ditto
 mixin GetSetWrapper!("FileName"); /// ditto
@@ -102,6 +105,7 @@ mixin GetSetWrapper!("Overwrite"); /// ditto
 mixin GetSetWrapper!("PageIncrement"); /// ditto
 mixin GetSetWrapper!("Parent"); /// ditto
 mixin GetSetWrapper!("Redraw"); /// ditto
+mixin GetSetWrapper!("RGB"); /// ditto
 mixin GetSetWrapper!("VerticalBar"); /// ditto
 mixin GetSetWrapper!("Visible"); /// ditto
 mixin GetSetWrapper!("VisibleItemCount"); /// ditto
@@ -282,20 +286,20 @@ struct BeanWrapper(B) {
 	}
 	private static template MethodWrapper(string Method) {
 		static if (Method.startsWith("get")) {
-			static immutable MethodWrapper = `@property auto ` ~ LName!(Method["get".length .. $]) ~ `()() {
+			static immutable MethodWrapper = `@property auto ` ~ lccName(Method["get".length .. $]) ~ `()() {
 				return bean.` ~ Method ~ `();
 			}`;
 		} else static if (Method.startsWith("is")) {
 			// Avoids conflict of get*** and is***.
 			static if (-1 == Methods.countUntil("get" ~ Method["is".length .. $])) {
-				static immutable MethodWrapper = `@property auto ` ~ LName!(Method["is".length .. $]) ~ `()() {
+				static immutable MethodWrapper = `@property auto ` ~ lccName(Method["is".length .. $]) ~ `()() {
 					return bean.` ~ Method ~ `();
 				}`;
 			} else {
 				static immutable MethodWrapper = ``;
 			}
 		} else static if (Method.startsWith("set")) {
-			static immutable MethodWrapper = `@property void ` ~ LName!(Method["set".length .. $]) ~ `(Type)(Type value) {
+			static immutable MethodWrapper = `@property void ` ~ lccName(Method["set".length .. $]) ~ `(Type)(Type value) {
 				bean.` ~ Method ~ `(value);
 			}`;
 		} else {
@@ -342,14 +346,39 @@ string[] beansMember(in string[] members...) {
 	return result;
 }
 
-/// Creates a property name.
-private template LName(string Name) {
-	immutable LName = Name[0 .. 1].toLower() ~ Name[1 .. $];
+/// Creates a lower camel case string.
+@property
+pure
+private string lccName(string name) {
+	if (!name.length) return name;
+	if (name[0].isLower()) return name;
+	size_t lowerRange = name.length;
+	foreach (i, char c; name) {
+		if (!c.isUpper()) {
+			lowerRange = i;
+			break;
+		}
+	}
+	if (name.length == lowerRange) {
+		// All chars is uppercase.
+		return name.toLower();
+	}
+	if (1 < lowerRange) {
+		// A camel case string is followed by a uppercase string.
+		lowerRange--;
+	}
+	return name[0 .. lowerRange].toLower() ~ name[lowerRange .. $];
+} unittest {
+	assert (lccName("AbcDefg") == "abcDefg", lccName("AbcDefg"));
+	assert (lccName("ABCDefg") == "abcDefg", lccName("ABCDefg"));
+	assert (lccName("Abcdefg") == "abcdefg", lccName("Abcdefg"));
+	assert (lccName("ABCD")    == "abcd",    lccName("ABCD"));
+	assert (lccName("ABCDe")   == "abcDe",   lccName("ABCDe"));
 }
 
 /// Creates a property name, and add prefix 'p_'.
 private template PName(string Name) {
-	immutable PName = "p_" ~ LName!Name;
+	immutable PName = "p_" ~ lccName(Name);
 }
 
 /// Creates wrap property for a getter and a setter.
