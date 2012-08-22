@@ -579,7 +579,7 @@ class PaintArea : Canvas, Undoable {
 		}
 		_image.layer(layer).image.transparentPixel = v;
 		clearCache();
-		redrawCursorArea();
+		redraw();
 		drawReceivers.raiseEvent();
 	}
 
