@@ -991,7 +991,9 @@ class PaintArea : Canvas, Undoable {
 		}
 
 		auto bounds = this.p_bounds;
-		_status.p_location = toDisplay(CPoint(0, bounds.height));
+		auto cp = toDisplay(CPoint(0, bounds.height));
+		cp.y -= this.computeTextSize("#").y;
+		_status.p_location = cp;
 		_status.p_visible = true;
 	}
 

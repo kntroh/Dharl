@@ -608,10 +608,10 @@ private class PImageItem : Item {
 		auto ds = gc.textExtent("#");
 		int tsq = 2 * 2 + ds.y;
 
-		_cBounds.x = image.width - tsq;
-		_cBounds.width = tsq;
+		_cBounds.x = .max(0, cast(int) image.width - tsq);
+		_cBounds.width = .min(tsq, cast(int) image.width);
 		_cBounds.height = tsq;
-		_tBounds.width = image.width - _cBounds.width;
+		_tBounds.width = .max(0, cast(int) image.width - _cBounds.width);
 		_tBounds.height = tsq;
 		_iBounds.y = _tBounds.height;
 		_iBounds.width = image.width;
@@ -823,6 +823,14 @@ private class PImageItem : Item {
 		foreach (rect; rects) {
 			int w = .min(_bounds.width  - rect.x, rect.width);
 			int h = .min(_bounds.height - rect.y, rect.height);
+			if (rect.x < 0) {
+				w += rect.x;
+				rect.x = 0;
+			}
+			if (rect.y < 0) {
+				h += rect.y;
+				rect.y = 0;
+			}
 			if (w <= 0 || h <= 0) continue;
 			egc.drawImage(canvas, rect.x, rect.y, w, h, rect.x + _bounds.x, rect.y + _bounds.y, w, h);
 		}
@@ -887,7 +895,7 @@ private class PImageItem : Item {
 		int tx = _tBounds.x + (_tBounds.width - ts.x) / 2;
 		int ty = _tBounds.y + 2;
 		gc.drawText(t, tx, ty);
-		rects ~= _tBounds;
+		rects ~= CRect(_tBounds.x, _tBounds.y, _tBounds.width, _tBounds.height);
 
 		// Draws close button.
 		gc.fillRectangle(_cBounds.x, _cBounds.y, _cBounds.width, _cBounds.height);
@@ -908,7 +916,7 @@ private class PImageItem : Item {
 		gc.drawLine(cx1, cy1, cx2, cy2);
 		gc.drawLine(cx2, cy1, cx1, cy2);
 		gc.p_antialias = false;
-		rects ~= _cBounds;
+		rects ~= CRect(_cBounds.x, _cBounds.y, _cBounds.width, _cBounds.height);
 
 		return canvas;
 	}

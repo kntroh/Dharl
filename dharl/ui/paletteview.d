@@ -635,6 +635,10 @@ class PaletteView : Canvas, Undoable {
 			// Drops color.
 			if (_piTo == -1) return;
 			if (e.button != 1) return;
+			scope (exit) {
+				piRedrawColor(_piTo);
+				_piTo = -1;
+			}
 			if (!(e.stateMask & (SWT.SHIFT | SWT.CTRL))) return;
 			int piBtn = _pixel1;
 			if (_colors[_piTo] == _colors[piBtn]) return;
@@ -652,9 +656,7 @@ class PaletteView : Canvas, Undoable {
 				colorChangeReceivers.raiseEvent(_piTo, cast(const) _colors[piBtn]);
 				color(_piTo, color(piBtn));
 			}
-			piRedrawColor(_piTo);
 			piSelectColorImpl(e, _piTo);
-			_piTo = -1;
 		}
 	}
 	/// ditto
