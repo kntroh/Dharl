@@ -6,6 +6,7 @@ public import dwtutils.factory;
 public import dwtutils.wrapper;
 
 private import std.algorithm;
+private import std.conv;
 private import std.exception;
 private import std.math;
 private import std.range;
@@ -67,6 +68,23 @@ bool descendant(Control composite, Control control) {
 		control = control.p_parent;
 	}
 	return true;
+}
+
+/// Converts from point size to pixel based on dpi.
+int pointToPixel(real point, int dpi) {
+	return roundTo!int(point * dpi / 72.0);
+}
+/// Converts from pixel to point size based on dpi.
+real pixelToPoint(int pixel, int dpi) {
+	return cast(real) pixel / dpi * 72.0;
+}
+unittest {
+	assert (pointToPixel(7, 96) == 9);
+	assert (pointToPixel(8, 96) == 11);
+	assert (pointToPixel(9, 96) == 12);
+	assert (pixelToPoint(9, 96).roundTo!int() == 7);
+	assert (pixelToPoint(11, 96).roundTo!int() == 8);
+	assert (pixelToPoint(12, 96).roundTo!int() == 9);
 }
 
 /// Computes text size on drawable.

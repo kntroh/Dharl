@@ -806,10 +806,26 @@ private class PImageItem : Item {
 	private void drawImage(GC egc, bool selected) {
 		if (!_image || _image.empty) return;
 		checkWidget();
+		auto d = this.p_display;
 
-		auto canvas = createImage(selected);
+		// Draws image.
+		foreach_reverse (i; 0 .. image.layerCount) {
+			auto l = image.layer(i);
+			if (!l.visible) continue;
+			auto img = new Image(d, l.image);
+			scope (exit) img.dispose();
+			egc.drawImage(img, _bounds.x + _iBounds.x, _bounds.y + _iBounds.y);
+		}
+
+		Rectangle[] rects;
+		auto canvas = createPartsImage(selected, rects);
 		scope (exit) canvas.dispose();
-		egc.drawImage(canvas, _bounds.x, _bounds.y);
+		foreach (rect; rects) {
+			int w = .min(_bounds.width  - rect.x, rect.width);
+			int h = .min(_bounds.height - rect.y, rect.height);
+			if (w <= 0 || h <= 0) continue;
+			egc.drawImage(canvas, rect.x, rect.y, w, h, rect.x + _bounds.x, rect.y + _bounds.y, w, h);
+		}
 
 		/// focus
 		if (selected) {
@@ -818,7 +834,7 @@ private class PImageItem : Item {
 	}
 
 	/// Creates Image object from image of this item.
-	Image createImage(bool selected) {
+	private Image createPartsImage(bool selected, ref Rectangle[] rects) {
 		checkWidget();
 		if (!_image || _image.empty) return null;
 		auto d = this.p_display;
@@ -827,29 +843,6 @@ private class PImageItem : Item {
 		auto gc = new GC(canvas);
 		scope (exit) gc.dispose();
 
-		// Wallpaper.
-		bool transparent = true;
-		foreach (i; 0 .. image.layerCount) {
-			if (image.layer(i).image.transparentPixel < 0) {
-				transparent = false;
-				break;
-			}
-		}
-		if (transparent) {
-			gc.drawImage(parent._shadeCache,
-				_bounds.x, _bounds.y, _bounds.width, _bounds.height,
-				0, 0, _bounds.width, _bounds.height);
-		}
-
-		// Draws image.
-		foreach_reverse (i; 0 .. image.layerCount) {
-			auto l = image.layer(i);
-			if (!l.visible) continue;
-			auto img = new Image(d, l.image);
-			scope (exit) img.dispose();
-			gc.drawImage(img, _iBounds.x, _iBounds.y);
-		}
-
 		/// Draws selection area.
 		if (-1 != _selectedPiece.x) {
 			auto color1 = d.getSystemColor(SWT.COLOR_WHITE);
@@ -857,6 +850,11 @@ private class PImageItem : Item {
 			auto psp = _selectedPiece;
 			auto piece = CRect(_iBounds.x + psp.x, _iBounds.y + psp.y, psp.width, psp.height);
 			drawColorfulFocus(gc, color1, color2, piece);
+
+			rects ~= CRect(piece.x, piece.y, piece.width, 1);
+			rects ~= CRect(piece.x, piece.y, 1, piece.height);
+			rects ~= CRect(piece.x + piece.width, piece.y, 1, piece.height);
+			rects ~= CRect(piece.x, piece.y + piece.height, piece.width, 1);
 		}
 
 		// Draws name.
@@ -889,6 +887,7 @@ private class PImageItem : Item {
 		int tx = _tBounds.x + (_tBounds.width - ts.x) / 2;
 		int ty = _tBounds.y + 2;
 		gc.drawText(t, tx, ty);
+		rects ~= _tBounds;
 
 		// Draws close button.
 		gc.fillRectangle(_cBounds.x, _cBounds.y, _cBounds.width, _cBounds.height);
@@ -909,6 +908,7 @@ private class PImageItem : Item {
 		gc.drawLine(cx1, cy1, cx2, cy2);
 		gc.drawLine(cx2, cy1, cx1, cy2);
 		gc.p_antialias = false;
+		rects ~= _cBounds;
 
 		return canvas;
 	}

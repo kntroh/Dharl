@@ -10,6 +10,7 @@ private import util.utils;
 private import dharl.ui.dwtutils;
 
 private import std.algorithm;
+private import std.conv;
 private import std.exception;
 
 private import org.eclipse.swt.all;
@@ -26,6 +27,8 @@ class PaletteView : Canvas, Undoable {
 	/// Color swap event receivers.
 	/// This event raises before process executed.
 	void delegate(int pixel1, int pixel2)[] colorSwapReceivers;
+	/// Receivers of changed transparent pixel event.
+	void delegate(int tPixel)[] changedTransparentPixelReceivers;
 
 	/// Size for box of color.
 	private int _cBoxWidth = 16;
@@ -42,6 +45,8 @@ class PaletteView : Canvas, Undoable {
 	private int _pixel1 = 1, _pixel2 = 0;
 	/// Index of drop target.
 	private int _piTo = -1;
+	/// Index of transparent pixel;
+	private int _tPixel = -1;
 
 	/// If edit mask mode is true.
 	private bool _maskMode = false;
@@ -106,7 +111,7 @@ class PaletteView : Canvas, Undoable {
 	const
 	const(UndoManager) undoManager() { return _um; }
 
-	/// Gets selected pixel.
+	/// Selection pixels.
 	@property
 	const
 	size_t pixel1() {
@@ -139,6 +144,24 @@ class PaletteView : Canvas, Undoable {
 		piRedrawColor(_pixel2);
 		_pixel2 = index;
 		piRedrawColor(index);
+	}
+	/// ditto
+	@property
+	const
+	int transparentPixel() {
+		return _tPixel;
+	}
+
+	/// Transparent pixel. A default value is -1.
+	@property
+	void transparentPixel(int index) {
+		checkWidget();
+		if (index < -1 || cast(int) _colors.length <= index) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (-1 != _tPixel) piRedrawColor(_tPixel);
+		_tPixel = index;
+		if (-1 != index) piRedrawColor(index);
 	}
 
 	/// Settings of mask.
@@ -490,11 +513,37 @@ class PaletteView : Canvas, Undoable {
 			int cFocusH = _cBoxHeight - 1;
 			drawColorfulFocus(e.gc, color1, color2, cFocusX, cFocusY, cFocusW, cFocusH);
 		}
+		// Draws index to selection pixel box.
+		auto font = pixelTextFont(d, e.gc.p_font, _cBoxWidth, _cBoxHeight);
+		scope (exit) font.dispose();
+		void drawIndex(int pixel) {
+			if (-1 == pixel) return;
+			auto oldColor = e.gc.p_foreground;
+			scope (exit) e.gc.p_foreground = oldColor;
+			auto oldFont = e.gc.p_font;
+			scope (exit) e.gc.p_font = oldFont;
+			e.gc.p_font = font;
+			auto rgb = _colors[pixel];
+			e.gc.p_foreground = pixelTextColor(d, rgb);
+			auto cp = pitoc(pixel);
+			auto t = .text(pixel);
+			auto cSize = e.gc.textExtent(t);
+			auto ctx = cp.x + (_cBoxWidth  - cSize.x) / 2;
+			auto cty = cp.y + (_cBoxHeight - cSize.y) / 2;
+			e.gc.drawText(t, ctx, cty, true);
+		}
+		if (-1 != _tPixel) {
+			drawFocus(_tPixel, SWT.COLOR_GREEN);
+			drawIndex(_tPixel);
+		}
 		if (_pixel1 == _pixel2) {
 			drawFocus(_pixel1, SWT.COLOR_DARK_YELLOW);
+			drawIndex(_pixel1);
 		} else {
 			drawFocus(_pixel1, SWT.COLOR_RED);
+			drawIndex(_pixel1);
 			drawFocus(_pixel2, SWT.COLOR_DARK_CYAN);
+			drawIndex(_pixel2);
 		}
 		if (_piTo != -1) {
 			drawFocus(_piTo, SWT.COLOR_GRAY);
@@ -550,6 +599,13 @@ class PaletteView : Canvas, Undoable {
 			piRedrawColor(pi);
 			_downButton = e.button;
 			raiseSelectionEvent(e);
+		} else if (e.button == 3 && (e.stateMask & SWT.SHIFT)) {
+			if (transparentPixel == pi) {
+				transparentPixel = -1;
+			} else {
+				transparentPixel = pi;
+			}
+			changedTransparentPixelReceivers.raiseEvent(transparentPixel);
 		} else {
 			int piBtn = piFromButton(e.button);
 			if (piBtn == -1) return;

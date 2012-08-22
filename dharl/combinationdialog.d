@@ -301,7 +301,7 @@ class CombinationDialog : DharlDialog {
 		case 5: // 2-colors png
 			return 1;
 		default:
-			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 			assert (0);
 		}
 	}

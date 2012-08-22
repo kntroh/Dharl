@@ -11,6 +11,8 @@ private import util.utils;
 
 private import dharl.ui.splitter;
 
+private import std.algorithm;
+private import std.conv;
 private import std.exception;
 private import std.math;
 private import std.path;
@@ -154,7 +156,7 @@ void refText(C, V)(ref V text, C control) {
 /// Show message dialog.
 int showMessage(Shell parent, string msg, string title, int style = SWT.OK | SWT.ICON_INFORMATION) {
 	if (!parent) {
-		SWT.error(SWT.ERROR_NULL_ARGUMENT);
+		SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
 	}
 	auto dialog = new MessageBox(parent, style);
 	dialog.p_text = title;
@@ -195,6 +197,23 @@ Tuple!(Text, "text", Composite, "pane") folderField(Composite parent, string dia
 		}
 	});
 	return typeof(return)(field, area);
+}
+
+/// Creates font for pixel number text in box.
+Font pixelTextFont(Display d, Font base, int boxWidth, int boxHeight) {
+	auto fontName = base ? base.p_fontData[0].p_name : "";
+	auto dpi = d.getDPI();
+	auto fontWidth  = pixelToPoint(boxWidth  - 2 * 2, dpi.x).roundTo!int();
+	auto fontHeight = pixelToPoint(boxHeight - 2 * 2, dpi.y).roundTo!int();
+	return new Font(d, fontName, .min(fontWidth, fontHeight), SWT.NONE);
+}
+/// Selects system color for pixel number text in box.
+Color pixelTextColor(Display d, in RGB rgb) {
+	if (rgb.red + rgb.green + rgb.blue < 128 * 3) {
+		return d.getSystemColor(SWT.COLOR_WHITE);
+	} else {
+		return d.getSystemColor(SWT.COLOR_BLACK);
+	}
 }
 
 /// Draws alternately different color lines,

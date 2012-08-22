@@ -117,10 +117,31 @@ class MainPanel : Composite {
 			_paintArea.mask = _paletteView.mask;
 			_colorSlider.color = _paletteView.color(_paletteView.pixel1);
 		};
+		_paletteView.changedTransparentPixelReceivers ~= (int tPixel) {
+			auto layers = _paintArea.selectedLayers;
+			foreach (l; layers) {
+				_paintArea.transparentPixel(l, tPixel);
+			}
+		};
 		_paintArea.listeners!(SWT.Selection) ~= {
 			_um.resetRetryWord();
 			_paletteView.pixel1 = _paintArea.pixel;
 			_colorSlider.color = _paletteView.color(_paletteView.pixel1);
+		};
+		_layerList.listeners!(SWT.Selection) ~= {
+			int tPixel = -1;
+			auto layers = _paintArea.selectedLayers;
+			if (layers.length) {
+				tPixel = _paintArea.image.layer(layers[0]).image.transparentPixel;
+				if (tPixel < 0) tPixel = -1;
+				foreach (l; layers[1 .. $]) {
+					if (_paintArea.image.layer(l).image.transparentPixel != tPixel) {
+						tPixel = -1;
+						break;
+					}
+				}
+			}
+			_paletteView.transparentPixel = tPixel;
 		};
 		_colorSlider.listeners!(SWT.Selection) ~= {
 			auto pixel = _paletteView.pixel1;

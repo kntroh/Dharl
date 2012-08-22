@@ -562,6 +562,27 @@ class PaintArea : Canvas, Undoable {
 		statusChangedReceivers.raiseEvent();
 	}
 
+	/// Transparent pixel (Index of palette).
+	@property
+	const
+	int transparentPixel(size_t layer) {
+		checkInit();
+		return _image.layer(layer).image.transparentPixel;
+	}
+	/// ditto
+	@property
+	void transparentPixel(size_t layer, int v) {
+		checkWidget();
+		checkInit();
+		if (v < -1 || cast(int) _image.palette.colors.length <= v) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		_image.layer(layer).image.transparentPixel = v;
+		clearCache();
+		redrawCursorArea();
+		drawReceivers.raiseEvent();
+	}
+
 	/// Settings of mask color.
 	@property
 	const
@@ -2713,7 +2734,7 @@ class PaintPreview : Canvas {
 
 		int srcX = .max(0, _px);
 		int srcY = .max(0, _py);
-		int destX = iw < ca.width ? (ca.width - iw) / 2 : 0;
+		int destX = iw < ca.width  ? (ca.width  - iw) / 2 : 0;
 		int destY = ih < ca.height ? (ca.height - ih) / 2 : 0;
 		int w = .min(ca.width, iw - srcX);
 		int h = .min(ca.height, ih - srcY);
@@ -3017,6 +3038,12 @@ class LayerList : Canvas {
 			w = ib.width;
 		}
 		int th = e.gc.p_fontMetrics.p_height;
+
+		static immutable V_CHECK_W = 22;
+		static immutable V_CHECK_H = 16;
+		auto tPixelFont = pixelTextFont(d, e.gc.p_font, V_CHECK_W, V_CHECK_H);
+		scope (exit) tPixelFont.dispose();
+
 		foreach (l; 0 .. _paintArea.image.layerCount) {
 			if (vss + ca.height <= y) break;
 			if (0 <= y + LAYER_H + 2) {
@@ -3027,7 +3054,7 @@ class LayerList : Canvas {
 				if (selLayer[l]) {
 					// Draws selection mark.
 					e.gc.p_background = d.getSystemColor(SWT.COLOR_DARK_BLUE);
-					e.gc.fillRectangle(0, y, ca.width, LAYER_H + 2);
+					e.gc.fillRectangle(w, y, ca.width - w, LAYER_H + 2);
 					// color of name text.
 					e.gc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
 				} else {
@@ -3046,8 +3073,6 @@ class LayerList : Canvas {
 				_nameBounds[l] = PBounds(tx, ty, max(10, ts.x), th);
 
 				// Draws checkbox of visibility.
-				static const V_CHECK_W = 20;
-				static const V_CHECK_H = 15;
 				int vx = tx;
 				int vy = ty + th + 2;
 				e.gc.p_lineStyle = SWT.LINE_SOLID;
@@ -3061,6 +3086,34 @@ class LayerList : Canvas {
 				}
 				_vCheckBounds[l] = PBounds(vx, vy, V_CHECK_W, V_CHECK_H);
 
+				// Draws transparent pixel box.
+				vx += V_CHECK_W + 2;
+				e.gc.p_foreground = d.getSystemColor(SWT.COLOR_BLACK);
+				e.gc.p_background = d.getSystemColor(SWT.COLOR_WHITE);
+				e.gc.fillRectangle(vx, vy, V_CHECK_W, V_CHECK_H);
+				e.gc.drawRectangle(vx, vy, V_CHECK_W - 1, V_CHECK_H - 1);
+				auto imgData = _paintArea.image.layer(l).image;
+				auto tPixel = imgData.transparentPixel;
+				void tPixelText(string t) {
+					e.gc.p_font = tPixelFont;
+					auto cSize = e.gc.textExtent(t);
+					auto ctx = vx + (V_CHECK_W - cSize.x) / 2;
+					auto cty = vy + (V_CHECK_H - cSize.y) / 2;
+					e.gc.drawText(t, ctx, cty, true);
+				}
+				if (0 <= tPixel) {
+					auto rgb = imgData.palette.getRGB(tPixel);
+					auto tColor = new Color(d, rgb);
+					scope (exit) tColor.dispose();
+					e.gc.p_background = tColor;
+					e.gc.fillRectangle(vx + 2, vy + 2, V_CHECK_W - 4, V_CHECK_H - 4);
+					e.gc.p_foreground = pixelTextColor(d, rgb);
+					tPixelText(.text(tPixel));
+				} else {
+					e.gc.p_foreground = pixelTextColor(d, e.gc.p_background.getRGB());
+					tPixelText("-");
+				}
+
 				// Draws image preview.
 				if (LAYER_H < ib.height) {
 					e.gc.drawImage(img, ib.x, ib.y, ib.width, ib.height, 1, y + 1, w, LAYER_H);
@@ -3069,6 +3122,8 @@ class LayerList : Canvas {
 					if (ib.height < LAYER_H) y += (LAYER_H - ib.height) / 2;
 					e.gc.drawImage(img, ib.x + 1, iy + 1);
 				}
+
+				e.gc.p_foreground = d.getSystemColor(SWT.COLOR_DARK_BLUE);
 				int ly = y + LAYER_H + 1;
 				e.gc.p_lineStyle = SWT.LINE_DASH;
 				e.gc.drawLine(0, ly, ca.width, ly);
@@ -3142,6 +3197,7 @@ class LayerList : Canvas {
 			return;
 		}
 		checkWidget();
+		setFocus();
 		if (1 != e.button && 3 != e.button) return;
 		bool reverse = (e.stateMask & SWT.SHIFT) || (e.stateMask & SWT.CTRL) || 3 == e.button;
 

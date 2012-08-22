@@ -226,7 +226,7 @@ class Splitter : Composite {
 	void resizable(Control c) {
 		checkWidget();
 		if (this !is c.p_parent) {
-			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		_resizable = c;
 	}

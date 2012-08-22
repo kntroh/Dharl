@@ -62,6 +62,7 @@ mixin GetSetWrapper!("FilterNames"); /// ditto
 mixin GetSetWrapper!("FilterPath"); /// ditto
 mixin GetSetWrapper!("FocusControl"); /// ditto
 mixin GetSetWrapper!("Font"); /// ditto
+mixin GetSetWrapper!("FontData"); /// ditto
 mixin GetSetWrapper!("FontMetrics"); /// ditto
 mixin GetSetWrapper!("Foreground"); /// ditto
 mixin GetSetWrapper!("Grayed"); /// ditto
@@ -85,6 +86,7 @@ mixin GetSetWrapper!("MenuBar"); /// ditto
 mixin GetSetWrapper!("Message", systemReturnCodeToN, nToSystemReturnCode); /// ditto
 mixin GetSetWrapper!("Minimized"); /// ditto
 mixin GetSetWrapper!("Minimum"); /// ditto
+mixin GetSetWrapper!("Name"); /// ditto
 mixin GetSetWrapper!("Selection"); /// ditto
 mixin GetSetWrapper!("SelectionIndex"); /// ditto
 mixin GetSetWrapper!("SelectionIndices"); /// ditto
