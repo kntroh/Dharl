@@ -271,6 +271,22 @@ Button basicButton(Composite parent, string text, Image image, void delegate() s
 		selection();
 	} : null, style);
 }
+/// Creates basic style checkbox.
+Button basicCheck(Composite parent, string text, void delegate(Event) selection) {
+	return basicButton(parent, text, null, selection, SWT.CHECK);
+}
+/// ditto
+Button basicCheck(Composite parent, string text, void delegate() selection) {
+	return basicButton(parent, text, null, selection, SWT.CHECK);
+}
+/// Creates basic style radiobutton.
+Button basicRadio(Composite parent, string text, void delegate(Event) selection) {
+	return basicButton(parent, text, null, selection, SWT.RADIO);
+}
+/// ditto
+Button basicRadio(Composite parent, string text, void delegate() selection) {
+	return basicButton(parent, text, null, selection, SWT.RADIO);
+}
 
 /// Creates no border style Text for number input.
 /// When you received ModifyEvent,

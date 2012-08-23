@@ -277,18 +277,6 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		mainPanel.downLayer();
 	});
 
-	separator(toolBar);
-	auto resizeCW = basicSpinner(toolBar, 1, 9999);
-	auto tResizeCW = basicToolItem(toolBar, resizeCW);
-	auto resizeCH = basicSpinner(toolBar, 1, 9999);
-	auto tResizeCH = basicToolItem(toolBar, resizeCH);
-	c.conf.scaled.value.refSize(resizeCW, resizeCH);
-	auto tResizeC = basicToolItem(toolBar, c.text.menu.resizeCanvas, cimg(c.image.resizeCanvas), {
-		int w = resizeCW.p_selection;
-		int h = resizeCH.p_selection;
-		mainPanel.resizeCanvas(w, h, true);
-	});
-
 
 	/* ---- Mode menu -------------------------------------------------- */
 
@@ -327,11 +315,18 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		mainPanel.maskMode = tMask.p_selection;
 	}, SWT.CHECK);
 
+
+	/* ---- Tool menu -------------------------------------------------- */
+
 	separator(toolBar);
 
 	auto mCombi = basicMenuItem(mTool, toolBar, c.text.menu.editCombination, cimg(c.image.editCombination), {
 		mainPanel.editCombination();
 	});
+	separator(mTool, toolBar);
+	auto tResize = basicMenuItem(mTool, toolBar, c.text.menu.resize, cimg(c.image.resize), &mainPanel.resize);
+	separator(mTool, toolBar);
+	auto tResizeC = basicMenuItem(mTool, toolBar, c.text.menu.resizeCanvas, cimg(c.image.resizeCanvas), &mainPanel.resizeCanvas);
 	separator(mTool, toolBar);
 	basicMenuItem(mTool, toolBar, c.text.menu.mirrorHorizontal, cimg(c.image.mirrorHorizontal), {
 		mainPanel.paintArea.mirrorHorizontal();
@@ -359,18 +354,9 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	});
 	separator(mTool);
 
-
-	/* ---- Tool menu -------------------------------------------------- */
-
 	auto mConf = basicMenuItem(mTool, c.text.menu.configuration, cimg(c.image.configuration), {
-		auto dlg = new ConfigDialog(shell, c);
-		dlg.appliedReceivers ~= {
-			// Character (paint area) size.
-			// Default character size doesn't undo even if user undo.
-			auto s = c.conf.character;
-			mainPanel.paintArea.resize(s.width, s.height);
-		};
-		dlg.open();
+		auto dialog = new ConfigDialog(shell, c);
+		dialog.open();
 	});
 
 	separator(toolBar);
@@ -380,18 +366,6 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	basicToolItem(toolBar, c.text.menu.turn, cimg(c.image.turn), {
 		int deg = turnDegree.p_selection;
 		mainPanel.paintArea.turn(deg);
-	});
-
-	separator(toolBar);
-	auto resizeW = basicSpinner(toolBar, 1, 9999);
-	auto tResizeW = basicToolItem(toolBar, resizeW);
-	auto resizeH = basicSpinner(toolBar, 1, 9999);
-	auto tResizeH = basicToolItem(toolBar, resizeH);
-	c.conf.resizeCanvas.value.refSize(resizeW, resizeH);
-	auto tResize = basicToolItem(toolBar, c.text.menu.resize, cimg(c.image.resize), {
-		int w = resizeW.p_selection;
-		int h = resizeH.p_selection;
-		mainPanel.paintArea.scaledTo(w, h);
 	});
 
 
@@ -442,13 +416,6 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		tSaveOverwrite.p_enabled = -1 != index && mainPanel.isChanged(index);
 		tSaveWithName.p_enabled = -1 != index;
 		tSaveAll.p_enabled = mainPanel.isChanged(false);
-		resizeCW.p_enabled = -1 != index;
-		resizeCH.p_enabled = -1 != index;
-		if (-1 != selCanvas) {
-			auto size = mainPanel.canvasSize(selCanvas);
-			resizeCW.p_selection = size.width;
-			resizeCH.p_selection = size.height;
-		}
 		tResizeC.p_enabled = -1 != index;
 
 		tUpLayer.p_enabled = mainPanel.canUpLayer;

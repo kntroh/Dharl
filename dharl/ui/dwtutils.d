@@ -134,6 +134,24 @@ void refSelection(C, V)(ref V value, C control) {
 	};
 }
 
+/// Sets selection index to radios.
+/// And save index when disposed radios.
+void refRadioSelection(C, V)(ref V index, C[] radios) {
+	.enforce(radios.length);
+	int index2 = index.roundCast!int(0, radios.length - 1);
+	foreach (i, radio; radios) {
+		radio.p_selection = (i == index2);
+	}
+	radios[0].listeners!(SWT.Dispose) ~= (Event e) {
+		foreach (i, radio; radios) {
+			if (radio.p_selection) {
+				index = i;
+				break;
+			}
+		}
+	};
+}
+
 /// Sets index to control.
 /// And save index when disposed control.
 void refSelectionIndex(C, V)(ref V index, C control, bool canNoSelection = false) {

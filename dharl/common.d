@@ -168,6 +168,18 @@ class DText {
 	mixin MsgProp!("zoom", "Zoom"); /// ditto
 	mixin MsgProp!("lineWidth", "Line width"); /// ditto
 
+	mixin MsgProp!("fResize", "Resize character - %s"); /// ditto
+	mixin MsgProp!("fResizeCanvas", "Resize canvas - %s"); /// ditto
+
+	mixin MsgProp!("width", "Width"); /// ditto
+	mixin MsgProp!("height", "Height"); /// ditto
+	mixin MsgProp!("resizeTo", "Size"); /// ditto
+	mixin MsgProp!("resizeWithPixelCount", "Resize with pixel count"); /// ditto
+	mixin MsgProp!("resizeWithPercentage", "Resize with percentage"); /// ditto
+	mixin MsgProp!("resizeOption", "Option"); /// ditto
+	mixin MsgProp!("maintainAspectRatio", "Maintain aspect ratio"); /// ditto
+	mixin MsgProp!("scaling", "Perform image scaling"); /// ditto
+
 	mixin MsgProp!("fEditCombinationDialog", "Combination - %s"); /// ditto
 	mixin MsgProp!("fConfigDialog", "Configuration - %s"); /// ditto
 	mixin MsgProp!("characterSize", "Character size"); /// ditto
@@ -212,7 +224,6 @@ struct DMenuText {
 	mixin MsgProp!("down", "Down"); /// ditto
 	mixin MsgProp!("addLayer", "Add &Layer"); /// ditto
 	mixin MsgProp!("removeLayer", "Remove La&yer"); /// ditto
-	mixin MsgProp!("resizeCanvas", "R&esize Canvas"); /// ditto
 
 	mixin MsgProp!("mode", "&Mode"); /// ditto
 	mixin MsgProp!("enabledBackColor", "Background color is &transparent\tCtrl+P"); /// ditto
@@ -231,7 +242,8 @@ struct DMenuText {
 
 	mixin MsgProp!("tool", "&Tool"); /// ditto
 	mixin MsgProp!("editCombination", "Edit c&ombination..."); /// ditto
-	mixin MsgProp!("resize", "&Resize..."); /// ditto
+	mixin MsgProp!("resize", "&Resize character..."); /// ditto
+	mixin MsgProp!("resizeCanvas", "R&esize canvas..."); /// ditto
 	mixin MsgProp!("mirrorHorizontal", "&Mirror horizontal"); /// ditto
 	mixin MsgProp!("mirrorVertical", "M&irror vertical"); /// ditto
 	mixin MsgProp!("flipHorizontal", "&Flip horizontal"); /// ditto
@@ -297,10 +309,8 @@ class DConfig {
 
 	mixin Prop!("lastOpenedFiles", PArray!("path", string), PArray!("path", string).init); /// ditto
 
-	/// Resizing values.
-	mixin Prop!("scaled", PSize, PSize(16, 16));
-	mixin Prop!("turnDegree", int, 90); /// ditto
-	mixin Prop!("resizeCanvas", PSize, PSize(100, 100)); /// ditto
+	/// Value of turning.
+	mixin Prop!("turnDegree", int, 90);
 
 	/// Selected drawing tool. 0 is range select mode.
 	mixin Prop!("tool", uint, 1);
@@ -315,12 +325,22 @@ class DConfig {
 	mixin Prop!("enabledBackColor", bool, false);
 	mixin Prop!("maskMode", bool, false); /// ditto
 
+	/// Resize relation parameters.
+	mixin Prop!("resizePixelCountMax", uint, 9999);
+	mixin Prop!("resizePercentMax", uint, 1000);
+	mixin Prop!("maintainAspectRatio", bool, true);
+	mixin Prop!("scaling", bool, true);
+	mixin Prop!("canvasMaintainAspectRatio", bool, true);
+	mixin Prop!("canvasScaling", bool, false);
+	mixin Prop!("resizeValueType", uint, 0);
+	mixin Prop!("canvasResizeValueType", uint, 0);
+
 	/// Combination relation parameters.
 	mixin Prop!("combinationDialog", WindowParameter, WindowParameter(int.min, int.min, 500, 500));
-	mixin Prop!("combinationImageType", int, 0);
-	mixin Prop!("combinationFolder", string, "");
-	mixin Prop!("sashPosPreview_Combinations", int, 200);
-	mixin Prop!("sashPosCombinations_Layers", int, 300);
+	mixin Prop!("combinationImageType", int, 0); /// ditto
+	mixin Prop!("combinationFolder", string, ""); /// ditto
+	mixin Prop!("sashPosPreview_Combinations", int, 200); /// ditto
+	mixin Prop!("sashPosCombinations_Layers", int, 300); /// ditto
 
 	mixin PropIO!("config");
 }

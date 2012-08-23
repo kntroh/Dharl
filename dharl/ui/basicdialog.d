@@ -152,6 +152,15 @@ abstract class BasicDialog {
 		if (pApply) pApply.p_enabled = false;
 
 		_shl.pack();
+		auto parent = _shl.p_parent;
+		if (parent) {
+			auto pb = parent.p_bounds;
+			auto ss = _shl.p_size;
+			int x = pb.x + (pb.width  - ss.x) / 2;
+			int y = pb.y + (pb.height - ss.y) / 2;
+			_shl.p_location = CPoint(x, y);
+		}
+
 		onOpen(_shl);
 		_shl.open();
 	}

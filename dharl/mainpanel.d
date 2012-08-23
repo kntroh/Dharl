@@ -1034,22 +1034,60 @@ class MainPanel : Composite {
 		return true;
 	}
 
+	/// Resizes character (paint area).
+	void resize() {
+		auto dialog = new ResizeDialog(this.p_shell, _c, ResizeTarget.Character);
+		auto area = paintArea.resizeArea;
+		dialog.init(area.width, area.height);
+		dialog.appliedReceivers ~= {
+			resize(dialog.width, dialog.height, dialog.scaling);
+		};
+		dialog.open();
+	}
+	/// ditto
+	void resize(uint w, uint h, bool scaling) {
+		checkWidget();
+		checkInit();
+
+		auto area = paintArea.resizeArea;
+		if (area.width == w && area.height == h) return;
+		_paintArea.resize(w, h, scaling);
+	}
+
 	/// Resizes canvas on imageList.
-	void resizeCanvas(uint w, uint h, bool rescale) {
+	void resizeCanvas() {
 		checkWidget();
 		checkInit();
 		int sel = _imageList.selectedIndex;
 		if (-1 == sel) return;
-		resizeCanvas(sel, w, h, rescale);
+
+		auto dialog = new ResizeDialog(this.p_shell, _c, ResizeTarget.Canvas);
+
+		auto size = canvasSize(sel);
+		dialog.init(size.width, size.height);
+		dialog.appliedReceivers ~= {
+			resizeCanvas(sel, dialog.width, dialog.height, dialog.scaling);
+		};
+
+		dialog.open();
 	}
 	/// ditto
-	void resizeCanvas(size_t index, uint w, uint h, bool rescale) {
+	void resizeCanvas(uint w, uint h, bool scaling) {
+		checkWidget();
+		checkInit();
+		int sel = _imageList.selectedIndex;
+		if (-1 == sel) return;
+		resizeCanvas(sel, w, h, scaling);
+	}
+	/// ditto
+	void resizeCanvas(size_t index, uint w, uint h, bool scaling) {
 		checkWidget();
 		checkInit();
 
 		auto item = _imageList.item(index);
+		if (item.image.width == w && item.image.height == h) return;
 		_um.store(item.image);
-		if (rescale) {
+		if (scaling) {
 			item.scaledTo(w, h);
 		} else {
 			item.resize(w, h, _paletteView.pixel2);

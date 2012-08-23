@@ -417,6 +417,7 @@ class MLImage : Undoable {
 					}
 				}
 			}
+			nl.transparentPixel = l.image.transparentPixel;
 			l.image = nl;
 		}
 
@@ -998,6 +999,8 @@ class MLImage : Undoable {
 		uint width, height;
 		/// Data of palette.
 		CRGB[256] palette;
+		/// Transparent pixel of layers.
+		int[] transparentPixel;
 		/// Data of layers.
 		byte[][] layers = null;
 		/// Name of layers.
@@ -1028,6 +1031,7 @@ class MLImage : Undoable {
 		}
 		foreach (i, ref l; _layers) {
 			if (l.image.data != data.layers[i]) return false;
+			if (l.image.transparentPixel != data.transparentPixel[i]) return false;
 			if (l.name != data.name[i]) return false;
 			if (l.visible != data.visible[i]) return false;
 		}
@@ -1052,10 +1056,12 @@ class MLImage : Undoable {
 			}
 		}
 		data.layers = new byte[][_layers.length];
+		data.transparentPixel = new int[_layers.length];
 		data.name = new string[_layers.length];
 		data.visible = new bool[_layers.length];
 		foreach (i, ref l; _layers) {
 			data.layers[i] = l.image.data.dup;
+			data.transparentPixel[i] = l.image.transparentPixel;
 			data.name[i] = l.name;
 			data.visible[i] = l.visible;
 		}
@@ -1087,6 +1093,7 @@ class MLImage : Undoable {
 				l.image = new ImageData(st.width, st.height, 8, _palette);
 			}
 			l.image.data = st.layers[i].dup;
+			l.image.transparentPixel = st.transparentPixel[i];
 			l.name = st.name[i];
 			l.visible = st.visible[i];
 		}

@@ -1392,8 +1392,23 @@ class PaintArea : Canvas, Undoable {
 		drawReceivers.raiseEvent();
 	}
 
+	/// Gets area of resize operation.
+	@property
+	Rectangle resizeArea() {
+		checkInit();
+		if (_pasteLayer) {
+			return CRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
+		} else {
+			auto iSelRange = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
+			if (!iSelRange.p_empty) {
+				return iSelRange;
+			} else {
+				return CRect(0, 0, _image.width, _image.height);
+			}
+		}
+	}
 	/// Resizes paint area.
-	void resize(int w, int h) {
+	void resizePaintArea(int w, int h, bool scaling) {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
@@ -1402,79 +1417,85 @@ class PaintArea : Canvas, Undoable {
 
 		if (_um) _um.store(this);
 		resetPasteParams();
-		_image.resize(w, h, backgroundPixel);
+		if (scaling) {
+			_image.scaledTo(w, h);
+		} else {
+			_image.resize(w, h, backgroundPixel);
+		}
 
 		resizeReceivers.raiseEvent(w, h);
 		drawReceivers.raiseEvent();
 	}
-
-	/// Change image scale.
-	void scaledTo(int newW, int newH) {
+	/// Do resizing or scaling.
+	void resize(int newW, int newH, bool scaling) {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
 
+		auto iRArea = resizeArea();
 		int iNewW = newW;
 		int iNewH = newH;
+		if (iNewW == iRArea.width && iNewH == iRArea.height) return;
+
 		int iw, ih;
+		void iSetBackPixel(int ix, int iy) {
+			iSetPixels(ix, iy, _backPixel);
+		}
 		void fillRest(int ifx, int ify) {
 			if (iNewW < iw && iNewH < ih) {
-				iFillRect((int ix, int iy) {
-					iSetPixels(ix, iy, _backPixel);
-				}, ifx + iNewW, ify, iw - iNewW, iNewH + (ih - iNewH));
-				iFillRect((int ix, int iy) {
-					iSetPixels(ix, iy, _backPixel);
-				}, ifx, ify + iNewH, iNewW, ih - iNewH);
+				iFillRect(&iSetBackPixel, ifx + iNewW, ify, iw - iNewW, iNewH + (ih - iNewH));
+				iFillRect(&iSetBackPixel, ifx, ify + iNewH, iNewW, ih - iNewH);
 				return;
 			}
 			if (iNewW < iw) {
-				iFillRect((int ix, int iy) {
-					iSetPixels(ix, iy, _backPixel);
-				}, ifx + iNewW, ify, iw - iNewW , iNewH);
+				iFillRect(&iSetBackPixel, ifx + iNewW, ify, iw - iNewW , iNewH);
 			}
 			if (iNewH < ih) {
-				iFillRect((int ix, int iy) {
-					iSetPixels(ix, iy, _backPixel);
-				}, ifx, ify + iNewH, iNewW, ih - iNewH);
+				iFillRect(&iSetBackPixel, ifx, ify + iNewH, iNewW, ih - iNewH);
 			}
 		}
 		if (_pasteLayer) {
 			redrawCursorArea();
 			iw = _pasteLayer.width;
 			ih = _pasteLayer.height;
-			auto newLayer = _pasteLayer.createMLImage();
-			.resize!(int[])(iNewW, iNewH, &iPGetPixels, (int ix, int iy, int[] pixels) {
-				assert (pixels.length == newLayer.layerCount);
-				foreach (i, p; pixels) {
-					newLayer.layer(i).image.setPixel(ix, iy, p);
-				}
-			}, 0, 0, iw, ih);
+			if (scaling) {
+				_pasteLayer.scaledTo(iNewW, iNewH);
+			} else {
+				_pasteLayer.resize(iNewW, iNewH, _backPixel);
+			}
 			_iSelRange.width = iNewW;
 			_iSelRange.height = iNewH;
 			redrawCursorArea();
-		} else if (_iSelRange.p_empty) {
-			iw = _image.width;
-			ih = _image.height;
-			if (iw == iNewW && ih == iNewH) return;
-			if (_um) _um.store(this);
-			.resize!(int[])(iNewW, iNewH, &iGetPixels, &iSetPixels2, 0, 0, iw, ih);
-			fillRest(0, 0);
 		} else {
-			redrawCursorArea();
-			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
-			int ix = ir.x;
-			int iy = ir.y;
-			iw = ir.width;
-			ih = ir.height;
-			if (iw == iNewW && ih == iNewH) return;
-			if (_um) _um.store(this);
-			.resize!(int[])(iNewW, iNewH, &iGetPixels, &iSetPixels2, ix, iy, iw, ih);
-			_iSelRange.x = ix;
-			_iSelRange.y = iy;
-			_iSelRange.width = iNewW;
-			_iSelRange.height = iNewH;
-			fillRest(ix, iy);
-			redrawCursorArea();
+			auto iSelRange = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
+			if (!iSelRange.p_empty) {
+				int ix = iSelRange.x;
+				int iy = iSelRange.y;
+				iw = iSelRange.width;
+				ih = iSelRange.height;
+				if (iw == iNewW && ih == iNewH) return;
+				if (_um) _um.store(this);
+				redrawCursorArea();
+				if (scaling) {
+					.resize!(int[])(iNewW, iNewH, &iGetPixels, &iSetPixels2, ix, iy, iw, ih);
+				} else {
+					if (iw < iNewW) {
+						iFillRect(&iSetBackPixel, ix + iw, iy, iNewW - iw, ih);
+					}
+					if (ih < iNewH) {
+						iFillRect(&iSetBackPixel, ix, iy + ih, iw, iNewH - ih);
+					}
+				}
+				_iSelRange.width = ix;
+				_iSelRange.width = iy;
+				_iSelRange.width = iNewW;
+				_iSelRange.height = iNewH;
+				fillRest(ix, iy);
+				redrawCursorArea();
+			} else {
+				resizePaintArea(iNewW, iNewH, scaling);
+				return;
+			}
 		}
 		clearCache();
 		drawReceivers.raiseEvent();
@@ -2575,7 +2596,7 @@ class PaintArea : Canvas, Undoable {
 		data.layers = _layers.dup;
 		data.image = _image.storeData;
 		if (_pasteLayer) {
-			data.pasteLayer = _pasteLayer;
+			data.pasteLayer = _pasteLayer.createMLImage();
 			data.iPasteX = _iSelRange.x;
 			data.iPasteY = _iSelRange.y;
 			data.iMoveX = _iMoveRange.x;
@@ -2596,7 +2617,7 @@ class PaintArea : Canvas, Undoable {
 			auto layers = _layers;
 			scope (exit) _layers = layers;
 			_layers = st.layers;
-			_pasteLayer = st.pasteLayer;
+			_pasteLayer = st.pasteLayer.createMLImage();
 			initPasteLayer(st.iPasteX, st.iPasteY);
 			_iMoveRange.x = st.iMoveX;
 			_iMoveRange.y = st.iMoveY;
