@@ -808,7 +808,7 @@ private class PImageItem : Item {
 		checkWidget();
 		auto d = this.p_display;
 
-		// Draws image.
+		// image
 		foreach_reverse (i; 0 .. image.layerCount) {
 			auto l = image.layer(i);
 			if (!l.visible) continue;
@@ -817,6 +817,7 @@ private class PImageItem : Item {
 			egc.drawImage(img, _bounds.x + _iBounds.x, _bounds.y + _iBounds.y);
 		}
 
+		// title, selection piece.
 		Rectangle[] rects;
 		auto canvas = createPartsImage(selected, rects);
 		scope (exit) canvas.dispose();
@@ -835,9 +836,12 @@ private class PImageItem : Item {
 			egc.drawImage(canvas, rect.x, rect.y, w, h, rect.x + _bounds.x, rect.y + _bounds.y, w, h);
 		}
 
-		/// focus
+		// focus
 		if (selected) {
-			egc.drawFocus(_bounds.x - 1, _bounds.y - 1, _bounds.width + 2, _bounds.height + 2);
+			egc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
+			egc.p_alpha = 0x7F;
+			scope (exit) egc.p_alpha = 0xFF;
+			egc.drawRectangle(_bounds.x - 1, _bounds.y - 1, _bounds.width + 1, _bounds.height + 1);
 		}
 	}
 
