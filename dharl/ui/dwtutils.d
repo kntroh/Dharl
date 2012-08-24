@@ -221,8 +221,8 @@ Tuple!(Text, "text", Composite, "pane") folderField(Composite parent, string dia
 Font pixelTextFont(Display d, Font base, int boxWidth, int boxHeight) {
 	auto fontName = base ? base.p_fontData[0].p_name : "";
 	auto dpi = d.p_dpi;
-	auto fontWidth  = pixelToPoint(boxWidth  - 2 * 2, dpi.x).roundTo!int();
-	auto fontHeight = pixelToPoint(boxHeight - 2 * 2, dpi.y).roundTo!int();
+	auto fontWidth  = cast(int) pixelToPoint(boxWidth  - 2 * 2, dpi.x);
+	auto fontHeight = cast(int) pixelToPoint(boxHeight - 2 * 2, dpi.y);
 	return new Font(d, fontName, .min(fontWidth, fontHeight), SWT.NONE);
 }
 /// Selects system color for pixel number text in box.

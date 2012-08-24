@@ -123,6 +123,10 @@ class MainPanel : Composite {
 				_paintArea.transparentPixel(l, tPixel);
 			}
 		};
+		_paintArea.changedMaskReceivers ~= (size_t pixel) {
+			_um.resetRetryWord();
+			_paletteView.reverseMask(pixel);
+		};
 		_paintArea.listeners!(SWT.Selection) ~= {
 			_um.resetRetryWord();
 			_paletteView.pixel1 = _paintArea.pixel;
@@ -142,6 +146,34 @@ class MainPanel : Composite {
 				}
 			}
 			_paletteView.transparentPixel = tPixel;
+		};
+		_layerList.listeners!(SWT.MouseMove) ~= (Event e) {
+			string toolTip = "";
+			if (!toolTip.length) {
+				foreach (b; _layerList.nameBounds) {
+					if (b.contains(e.x, e.y)) {
+						toolTip = _c.text.descLayerName;
+						break;
+					}
+				}
+			}
+			if (!toolTip.length) {
+				foreach (b; _layerList.visibilityBoxBounds) {
+					if (b.contains(e.x, e.y)) {
+						toolTip = _c.text.descLayerVisibility;
+						break;
+					}
+				}
+			}
+			if (!toolTip.length) {
+				foreach (b; _layerList.transparentPixelBoxBounds) {
+					if (b.contains(e.x, e.y)) {
+						toolTip = _c.text.descLayerTransparentPixel;
+						break;
+					}
+				}
+			}
+			_layerList.p_toolTipText = toolTip;
 		};
 		_colorSlider.listeners!(SWT.Selection) ~= {
 			auto pixel = _paletteView.pixel1;
@@ -973,6 +1005,7 @@ class MainPanel : Composite {
 		params.depth = depth;
 		params.modCountS = params.modCount;
 		item.p_text = params.name;
+		item.toolTip = params.name;
 
 		statusChangedReceivers.raiseEvent();
 		loadedReceivers.raiseEvent(file.absolutePath().buildNormalizedPath());
@@ -1096,6 +1129,24 @@ class MainPanel : Composite {
 			_paintArea.setCanvasSize(w, h);
 		}
 		modified(item);
+	}
+
+	void turn() {
+		checkWidget();
+		checkInit();
+		auto dialog = new TurnDialog(this.p_shell, _c);
+		dialog.init(0);
+		dialog.appliedReceivers ~= {
+			turn(dialog.degree);
+		};
+		dialog.open();
+	}
+	void turn(int degree) {
+		checkWidget();
+		checkInit();
+		degree = normalizeRange(degree, 0, 360);
+		if (0 == degree) return;
+		_paintArea.turn(degree);
 	}
 
 	/// Creates gradation colors from selected pixel 1 to pixel 2.

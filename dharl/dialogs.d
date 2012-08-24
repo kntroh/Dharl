@@ -2,6 +2,8 @@
 /// This module includes dialogs and members related to it.
 module dharl.dialogs;
 
+private import util.utils;
+
 private import dharl.common;
 
 private import dharl.ui.basicdialog;
@@ -104,9 +106,9 @@ class ResizeDialog : DharlDialog {
 	/// Is maintain aspect ratio?
 	private Button _mRatio;
 	/// Do scale an image?
-	private Button _scale;
+	private Button _scaling;
 	/// ditto
-	private bool _scaling = false;
+	private bool _scalingValue = false;
 
 	/// Size.
 	private uint _width  = 0;
@@ -153,7 +155,7 @@ class ResizeDialog : DharlDialog {
 	/// Do scale an image?
 	@property
 	const
-	bool scaling() { return _scaling; }
+	bool scaling() { return _scalingValue; }
 
 	/// If specifies pixel count, returns true.
 	@property
@@ -180,22 +182,32 @@ class ResizeDialog : DharlDialog {
 		// pixel count
 		pixel = basicRadio(size, c.text.resizeWithPixelCount, &updateResizeType);
 		pixel.p_layoutData = GD(SWT.NONE).hSpan(4);
-		basicLabel(size, c.text.width);
+		auto pxwLabel = basicLabel(size, c.text.width);
 		_pxw = basicSpinner(size, 1, c.conf.resizePixelCountMax);
 		mod(_pxw);
-		basicLabel(size, c.text.height);
+		auto pxhLabel = basicLabel(size, c.text.height);
 		_pxh = basicSpinner(size, 1, c.conf.resizePixelCountMax);
 		mod(_pxh);
 
 		// percent
 		percent = basicRadio(size, c.text.resizeWithPercentage, &updateResizeType);
 		percent.p_layoutData = GD(SWT.NONE).hSpan(4);
-		basicLabel(size, c.text.width);
+		auto pewLabel = basicLabel(size, c.text.width);
 		_pew = basicSpinner(size, 1, c.conf.resizePercentMax);
 		mod(_pew);
-		basicLabel(size, c.text.height);
+		auto pehLabel = basicLabel(size, c.text.height);
 		_peh = basicSpinner(size, 1, c.conf.resizePercentMax);
 		mod(_peh);
+
+		// layout of spinners
+		pxwLabel.p_layoutData = GD.end(true, false);
+		_pxw.p_layoutData = GD.begin(true, false);
+		pxhLabel.p_layoutData = GD.end(true, false);
+		_pxh.p_layoutData = GD.begin(true, false);
+		pewLabel.p_layoutData = GD.end(true, false);
+		_pew.p_layoutData = GD.begin(true, false);
+		pehLabel.p_layoutData = GD.end(true, false);
+		_peh.p_layoutData = GD.begin(true, false);
 
 		bool inEvt = false;
 		/// Update a width or height from other side.
@@ -250,11 +262,11 @@ class ResizeDialog : DharlDialog {
 		});
 
 		// scaling
-		_scale = basicCheck(option, c.text.scaling, {
-			_scaling = _scale.p_selection;
+		_scaling = basicCheck(option, c.text.scaling, {
+			_scalingValue = _scaling.p_selection;
 		});
 
-		// initializes control
+		// initializes controls
 		_pxw.p_selection = _width;
 		_pxh.p_selection = _height;
 		_pew.p_selection = 100; // %
@@ -262,17 +274,111 @@ class ResizeDialog : DharlDialog {
 		final switch (_targ) {
 		case ResizeTarget.Character:
 			c.conf.maintainAspectRatio.value.refSelection(_mRatio);
-			c.conf.scaling.value.refSelection(_scale);
+			c.conf.scaling.value.refSelection(_scaling);
 			c.conf.resizeValueType.value.refRadioSelection([pixel, percent]);
 			break;
 		case ResizeTarget.Canvas:
 			c.conf.canvasMaintainAspectRatio.value.refSelection(_mRatio);
-			c.conf.canvasScaling.value.refSelection(_scale);
+			c.conf.canvasScaling.value.refSelection(_scaling);
 			c.conf.canvasResizeValueType.value.refRadioSelection([pixel, percent]);
 			break;
 		}
 		updateResizeType();
-		_scaling = _scale.p_selection;
+		_scalingValue = _scaling.p_selection;
+	}
+
+	protected override bool apply() {
+		// No processing
+		return true;
+	}
+}
+
+/// Dialog of turn image operation.
+class TurnDialog : DharlDialog {
+
+	/// Angle (degree).
+	private Spinner _degree = null;
+	/// ditto
+	private int _degreeValue = 0;
+
+	/// The only constructor.
+	this (Shell parent, DCommon c) {
+		auto title = c.text.fTurn.value.format(c.text.appName);
+		auto image = .cimg(c.image.turn);
+		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
+		super (c, parent, title, image, true, false, true, buttons);
+	}
+	/// Sets size before change.
+	void init(int dgree) {
+		_degreeValue = degree;
+	}
+
+	/// Angle (degree).
+	@property
+	int degree() {
+		return normalizeRange(_degreeValue, 0, 360);
+	}
+
+	protected override void setup(Composite area) {
+		area.p_layout = GL(1, true);
+
+		// angle
+		auto angle = basicGroup(area, c.text.angle);
+		angle.p_layoutData = GD.fill(true, true);
+		angle.p_layout = GL(1, true);
+
+		auto angleInner = basicComposite(angle);
+		angleInner.p_layoutData = GD.center(true, true);
+		angleInner.p_layout = GL.noMargin(3, false);
+
+		auto label = basicLabel(angleInner, c.text.angleDegree);
+
+		_degree = basicSpinner(angleInner, 0, 360);
+		mod(_degree);
+		_degree.listeners!(SWT.Modify) ~= { _degreeValue  = _degree.p_selection; };
+
+		// support buttons
+		auto buttons = basicComposite(angleInner);
+		buttons.p_layout = GL.minimum(2, false).margin(0);
+		void numButton(int num) {
+			auto button = basicButton(buttons, ((0 <= num) ? "+%s" : "%s").format(num), {
+				_degree.p_selection = _degree.p_selection + num;
+			});
+		}
+		numButton(-90);
+		numButton(90);
+
+		// initializes controls
+		_degree.p_selection = _degreeValue;
+	}
+
+	protected override bool apply() {
+		// No processing
+		return true;
+	}
+}
+
+/// Dialog of about of application..
+class AboutDialog : DharlDialog {
+
+	/// The only constructor.
+	this (Shell parent, DCommon c) {
+		auto title = c.text.fAbout.value.format(c.text.appName);
+		auto image = .cimg(c.image.about);
+		auto buttons = DBtn.Ok;
+		super (c, parent, title, image, true, false, true, buttons);
+	}
+
+	protected override void setup(Composite area) {
+		area.p_layout = GL(2, false);
+
+		auto img = basicImageBox(area, .cimg(c.image.dharlLogo));
+		img.p_layoutData = GD.center(true, true).vSpan(2);
+
+		auto msg1 = basicLabel(area, c.text.aboutMessage1);
+		msg1.p_layoutData = GD().alignment(SWT.BEGINNING, SWT.END).grabExcessSpace(true, true);
+		auto msg2 = basicLabel(area, c.text.aboutMessage2);
+		msg2.p_layoutData = GD().alignment(SWT.BEGINNING, SWT.BEGINNING).grabExcessSpace(true, true);
 	}
 
 	protected override bool apply() {

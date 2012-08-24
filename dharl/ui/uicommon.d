@@ -31,8 +31,8 @@ enum CursorSpot {
 
 /// Common function for cimg and ccur.
 private T cimgImpl(T)(in DImage dimg, CursorSpot hotspot) {
-	.enforce(dimg.id);
-	.enforce(dimg.data);
+	if (!dimg.id) return null;
+	if (!dimg.data) return null;
 
 	auto d2 = Display.getCurrent();
 	if (!d2) {

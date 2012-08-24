@@ -39,6 +39,8 @@ class PaintArea : Canvas, Undoable {
 	void delegate()[] changedLayerReceivers;
 	/// Receivers of area resized event.
 	void delegate(int w, int h)[] resizeReceivers;
+	/// Receivers of change mask event.
+	void delegate(size_t pixel)[] changedMaskReceivers;
 
 	/// ID of this instance.
 	private string _id;
@@ -2458,6 +2460,23 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		resetCatchParams();
 		if (_image.empty) return;
+		int dropper() {
+			assert (cInImage(e.x, e.y));
+			int ix = cxtoix(e.x);
+			int iy = cytoiy(e.y);
+
+			// Selects most upper opacity pixel
+			int pixel = iGetPixel(ix, iy, _image.layerCount - 1);
+			foreach (l; 0 .. _image.layerCount - 1) {
+				if (!_image.layer(l).visible) continue;
+				auto p = iGetPixel(ix, iy, l);
+				if (_image.layer(l).image.transparentPixel != p) {
+					pixel = p;
+					break;
+				}
+			}
+			return pixel;
+		}
 		switch (e.button) {
 		case 1:
 			scope (exit) this.p_cursor = iCursorNow(cxtoix(e.x), cytoiy(e.y));
@@ -2482,24 +2501,20 @@ class PaintArea : Canvas, Undoable {
 			});
 			drawReceivers.raiseEvent();
 			break;
+		case 2:
+			// Sets mask color.
+			if (cInImage(e.x, e.y)) {
+				size_t pixel = dropper();
+				_mask[pixel] = !_mask[pixel];
+				changedMaskReceivers.raiseEvent(pixel);
+			}
+			break;
 		case 3:
 			// Do dropper.
 			scope (exit) this.p_cursor = iCursorNow(cxtoix(e.x), cytoiy(e.y));
 			_mouseDown = -1;
 			if (cInImage(e.x, e.y)) {
-				int ix = cxtoix(e.x);
-				int iy = cytoiy(e.y);
-
-				// Selects most upper opacity pixel
-				_pixel = iGetPixel(ix, iy, _image.layerCount - 1);
-				foreach (l; 0 .. _image.layerCount - 1) {
-					if (!_image.layer(l).visible) continue;
-					auto p = iGetPixel(ix, iy, l);
-					if (_image.layer(l).image.transparentPixel != p) {
-						_pixel = p;
-						break;
-					}
-				}
+				_pixel = dropper();
 				redrawCursorArea();
 
 				auto se = new Event;
@@ -2864,6 +2879,8 @@ class LayerList : Canvas {
 	private PBounds[] _nameBounds;
 	/// Bounds of checkbox for visibility.
 	private PBounds[] _vCheckBounds;
+	/// Bounds of box for transparent pixel.
+	private PBounds[] _transparentPixelBounds;
 
 	/// Editor for layer name.
 	private Editor _editor;
@@ -2924,6 +2941,7 @@ class LayerList : Canvas {
 
 		_nameBounds.length = _paintArea.image.layerCount;
 		_vCheckBounds.length = _paintArea.image.layerCount;
+		_transparentPixelBounds.length = _paintArea.image.layerCount;
 		calcScrollParams();
 
 		auto se = new Event;
@@ -2988,6 +3006,19 @@ class LayerList : Canvas {
 			redraw();
 		});
 	}
+
+	/// Bounds of name area.
+	@property
+	const
+	const(PBounds)[] nameBounds() { return _nameBounds; }
+	/// Bounds of checkbox for visibility.
+	@property
+	const
+	const(PBounds)[] visibilityBoxBounds() { return _vCheckBounds; }
+	/// Bounds of box for transparent pixel.
+	@property
+	const
+	const(PBounds)[] transparentPixelBoxBounds() { return _transparentPixelBounds; }
 
 	/// Raises selection event.
 	private void raiseSelectionEvent(Event e) {
@@ -3077,7 +3108,7 @@ class LayerList : Canvas {
 				if (selLayer[l]) {
 					// Draws selection mark.
 					e.gc.p_background = d.getSystemColor(SWT.COLOR_DARK_BLUE);
-					e.gc.fillRectangle(w, y, ca.width - w, LAYER_H + 2);
+					e.gc.fillRectangle(w, y - 1, ca.width - w, LAYER_H + 2 + 1);
 					// color of name text.
 					e.gc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
 				} else {
@@ -3136,6 +3167,7 @@ class LayerList : Canvas {
 					e.gc.p_foreground = pixelTextColor(d, e.gc.p_background.p_rgb);
 					tPixelText("-");
 				}
+				_transparentPixelBounds[l] = PBounds(vx, vy, V_CHECK_W, V_CHECK_H);
 
 				// Draws image preview.
 				if (LAYER_H < ib.height) {
@@ -3255,6 +3287,26 @@ class LayerList : Canvas {
 			size_t[1] sel = [l];
 			_paintArea.selectedLayers = sel;
 		}
+		raiseSelectionEvent(e);
+	}
+
+	/// Switch selection layer.
+	private void onMouseWheel(Event e) {
+		checkWidget();
+		if (0 == e.count) return;
+
+		auto layers = _paintArea.selectedLayers.sort;
+		if (e.count > 0) {
+			// up
+			if (layers[0] <= 0) return;
+			layers = [layers[0] - 1];
+		} else {
+			assert (e.count < 0);
+			// down
+			if (_paintArea.image.layerCount <= layers[$ - 1] + 1) return;
+			layers = [layers[$ - 1] + 1];
+		}
+		_paintArea.selectedLayers = layers;
 		raiseSelectionEvent(e);
 	}
 

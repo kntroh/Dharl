@@ -163,6 +163,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto mMode = basicDropDownMenu(shell, c.text.menu.mode);
 	auto mPalette = basicDropDownMenu(shell, c.text.menu.palette);
 	auto mTool = basicDropDownMenu(shell, c.text.menu.tool);
+	auto mHelp = basicDropDownMenu(shell, c.text.menu.help);
 
 	// Sets title of shell from state.
 	void refreshTitle() {
@@ -328,44 +329,51 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	separator(mTool, toolBar);
 	auto tResizeC = basicMenuItem(mTool, toolBar, c.text.menu.resizeCanvas, cimg(c.image.resizeCanvas), &mainPanel.resizeCanvas);
 	separator(mTool, toolBar);
+	basicMenuItem(mTool, toolBar, c.text.menu.turn90,  cimg(c.image.turn90),  { mainPanel.turn(90);  });
+	basicMenuItem(mTool, toolBar, c.text.menu.turn270, cimg(c.image.turn270), { mainPanel.turn(270); });
+	basicMenuItem(mTool, toolBar, c.text.menu.turn180, cimg(c.image.turn180), { mainPanel.turn(180); });
+	separator(mTool, toolBar);
+	basicMenuItem(mTool, toolBar, c.text.menu.turn, cimg(c.image.turn), &mainPanel.turn);
+	separator(mTool, toolBar);
 	basicMenuItem(mTool, toolBar, c.text.menu.mirrorHorizontal, cimg(c.image.mirrorHorizontal), {
 		mainPanel.paintArea.mirrorHorizontal();
 	});
 	basicMenuItem(mTool, toolBar, c.text.menu.mirrorVertical, cimg(c.image.mirrorVertical), {
 		mainPanel.paintArea.mirrorVertical();
 	});
+	separator(mTool, toolBar);
 	basicMenuItem(mTool, toolBar, c.text.menu.flipHorizontal, cimg(c.image.flipHorizontal), {
 		mainPanel.paintArea.flipHorizontal();
 	});
 	basicMenuItem(mTool, toolBar, c.text.menu.flipVertical, cimg(c.image.flipVertical), {
 		mainPanel.paintArea.flipVertical();
 	});
-	basicMenuItem(mTool, toolBar, c.text.menu.rotateRight, cimg(c.image.rotateRight), {
-		mainPanel.paintArea.rotateRight();
-	});
+	separator(mTool, toolBar);
 	basicMenuItem(mTool, toolBar, c.text.menu.rotateLeft, cimg(c.image.rotateLeft), {
 		mainPanel.paintArea.rotateLeft();
-	});
-	basicMenuItem(mTool, toolBar, c.text.menu.rotateUp, cimg(c.image.rotateUp), {
-		mainPanel.paintArea.rotateUp();
 	});
 	basicMenuItem(mTool, toolBar, c.text.menu.rotateDown, cimg(c.image.rotateDown), {
 		mainPanel.paintArea.rotateDown();
 	});
-	separator(mTool);
+	basicMenuItem(mTool, toolBar, c.text.menu.rotateUp, cimg(c.image.rotateUp), {
+		mainPanel.paintArea.rotateUp();
+	});
+	basicMenuItem(mTool, toolBar, c.text.menu.rotateRight, cimg(c.image.rotateRight), {
+		mainPanel.paintArea.rotateRight();
+	});
+	separator(mTool, toolBar);
 
-	auto mConf = basicMenuItem(mTool, c.text.menu.configuration, cimg(c.image.configuration), {
+	auto mConf = basicMenuItem(mTool, toolBar, c.text.menu.configuration, cimg(c.image.configuration), {
 		auto dialog = new ConfigDialog(shell, c);
 		dialog.open();
 	});
 
-	separator(toolBar);
-	auto turnDegree = basicSpinner(toolBar, 0, 360);
-	c.conf.turnDegree.value.refSelection(turnDegree);
-	basicToolItem(toolBar, turnDegree);
-	basicToolItem(toolBar, c.text.menu.turn, cimg(c.image.turn), {
-		int deg = turnDegree.p_selection;
-		mainPanel.paintArea.turn(deg);
+
+	/* ---- Help menu -------------------------------------------------- */
+
+	basicMenuItem(mHelp, c.text.menu.about, cimg(c.image.about), {
+		auto dialog = new AboutDialog(shell, c);
+		dialog.open();
 	});
 
 

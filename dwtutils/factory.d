@@ -226,6 +226,12 @@ Label basicLabel(Composite parent, string text, int style = SWT.NONE) {
 	lb.p_text = text;
 	return lb;
 }
+/// Creates basic style Image box.
+Label basicImageBox(Composite parent, Image image, int style = SWT.NONE) {
+	auto lb = new Label(parent, style);
+	lb.p_image = image;
+	return lb;
+}
 
 /// Creates basic style Text.
 Text basicText(Composite parent, void delegate(Event) modify, string text = "", int style = SWT.BORDER) {
@@ -588,6 +594,13 @@ struct GD {
 	/// ditto
 	alias data this;
 
+	/// Creates new GD.
+	@property
+	static GD opCall() {
+		GD gd;
+		gd.data = new GridData;
+		return gd;
+	}
 	/// Creates new GD with style.
 	@property
 	static GD opCall(int style) {
@@ -601,8 +614,35 @@ struct GD {
 		GD gd;
 		int style = SWT.NONE;
 		if (horizontal) style |= GridData.FILL_HORIZONTAL;
-		if (vertical) style |= GridData.FILL_VERTICAL;
+		if (vertical)   style |= GridData.FILL_VERTICAL;
 		gd.data = new GridData(style);
+		return gd;
+	}
+	/// Creates new GD with center position.
+	@property
+	static GD center(bool horizontal, bool vertical) {
+		GD gd;
+		gd.data = new GridData;
+		if (horizontal) gd.hAlign(SWT.CENTER).hGrabExcessSpace(true);
+		if (vertical)   gd.vAlign(SWT.CENTER).vGrabExcessSpace(true);
+		return gd;
+	}
+	/// Creates new GD with begininng position.
+	@property
+	static GD begin(bool horizontal, bool vertical) {
+		GD gd;
+		gd.data = new GridData;
+		if (horizontal) gd.hAlign(SWT.BEGINNING).hGrabExcessSpace(true);
+		if (vertical)   gd.vAlign(SWT.BEGINNING).vGrabExcessSpace(true);
+		return gd;
+	}
+	/// Creates new GD with end position.
+	@property
+	static GD end(bool horizontal, bool vertical) {
+		GD gd;
+		gd.data = new GridData;
+		if (horizontal) gd.hAlign(SWT.END).hGrabExcessSpace(true);
+		if (vertical)   gd.vAlign(SWT.END).vGrabExcessSpace(true);
 		return gd;
 	}
 
@@ -633,6 +673,36 @@ struct GD {
 	/// Sets data.heightHint.
 	GD hHint(int hint) {
 		data.heightHint = hint;
+		return this;
+	}
+
+	/// Sets data.horizontalAlignment and data.verticalAlignment.
+	GD alignment(int horizontalAlignment, int verticalAlignment) {
+		return hAlign(horizontalAlignment).vAlign(verticalAlignment);
+	}
+	/// Sets data.horizontalSpan.
+	GD hAlign(int alignment) {
+		data.horizontalAlignment = alignment;
+		return this;
+	}
+	/// Sets data.verticalSpan.
+	GD vAlign(int alignment) {
+		data.verticalAlignment = alignment;
+		return this;
+	}
+
+	/// Sets data.grabExcessHorizontalSpace and data.grabExcessVerticalSpace.
+	GD grabExcessSpace(bool grabExcessHorizontalSpace, bool grabExcessVerticalSpace) {
+		return hGrabExcessSpace(grabExcessHorizontalSpace).vGrabExcessSpace(grabExcessVerticalSpace);
+	}
+	/// Sets data.horizontalSpan.
+	GD hGrabExcessSpace(bool grab) {
+		data.grabExcessHorizontalSpace = grab;
+		return this;
+	}
+	/// Sets data.verticalSpan.
+	GD vGrabExcessSpace(bool grab) {
+		data.grabExcessVerticalSpace = grab;
 		return this;
 	}
 }

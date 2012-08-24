@@ -54,13 +54,20 @@ struct DImage {
 /// Creates DImage instance from File.
 @property
 private DImage importImage(string File)() {
-	return DImage(File.stripExtension(), cast(ubyte[]) import(File).dup);
+	static if (is(typeof(import(File)))) {
+		return DImage(File.stripExtension(), cast(ubyte[]) import(File).dup);
+	} else {
+		pragma(msg, "Resource not found: " ~ File);
+		return DImage(File.stripExtension(), []);
+	}
 }
 
 /// All images ID and data in the application.
 class DImages {
 	/// Application icon.
 	const DImage dharl = importImage!("dharl.png");
+	/// Application logo.
+	const DImage dharlLogo = importImage!("dharl_logo.png");
 
 	/// Image file icon.
 	const DImage imageFile = importImage!("image_file.png");
@@ -117,6 +124,9 @@ class DImages {
 	const DImage rotateLeft = importImage!("rotate_left.png"); /// ditto
 	const DImage rotateUp = importImage!("rotate_up.png"); /// ditto
 	const DImage rotateDown = importImage!("rotate_down.png"); /// ditto
+	const DImage turn90 = importImage!("turn_90.png"); /// ditto
+	const DImage turn180 = importImage!("turn_180.png"); /// ditto
+	const DImage turn270 = importImage!("turn_270.png"); /// ditto
 	const DImage turn = importImage!("turn.png"); /// ditto
 
 	const DImage editCombination = importImage!("edit_combination.png"); /// ditto
@@ -124,6 +134,8 @@ class DImages {
 	const DImage removeCombination = importImage!("remove_combination.png"); /// ditto
 
 	const DImage configuration = importImage!("configuration.png"); /// ditto
+
+	const DImage about = importImage!("about.png"); /// ditto
 }
 
 /// All messages and texts in the application.
@@ -153,6 +165,9 @@ class DText {
 	mixin MsgProp!("newLayer", "(New layer)"); /// ditto
 	mixin MsgProp!("layerName", "Name"); /// ditto
 	mixin MsgProp!("layerVisible", "Visible"); /// ditto
+	mixin MsgProp!("descLayerVisibility", "Click to toggle the visibility."); /// ditto
+	mixin MsgProp!("descLayerTransparentPixel", "Transparent pixel.\nIt switches by Shift+Rightclick on the palette."); /// ditto
+	mixin MsgProp!("descLayerName", "Click to edit the layer name."); /// ditto
 
 	mixin MsgProp!("question", "Question"); /// ditto
 	mixin MsgProp!("paintAreaChanged", "The paint area has been changed.\nAre you sure you want to quit?"); /// ditto
@@ -170,7 +185,6 @@ class DText {
 
 	mixin MsgProp!("fResize", "Resize character - %s"); /// ditto
 	mixin MsgProp!("fResizeCanvas", "Resize canvas - %s"); /// ditto
-
 	mixin MsgProp!("width", "Width"); /// ditto
 	mixin MsgProp!("height", "Height"); /// ditto
 	mixin MsgProp!("resizeTo", "Size"); /// ditto
@@ -179,6 +193,10 @@ class DText {
 	mixin MsgProp!("resizeOption", "Option"); /// ditto
 	mixin MsgProp!("maintainAspectRatio", "Maintain aspect ratio"); /// ditto
 	mixin MsgProp!("scaling", "Perform image scaling"); /// ditto
+
+	mixin MsgProp!("fTurn", "Turn - %s"); /// ditto
+	mixin MsgProp!("angle", "Angle of turn"); /// ditto
+	mixin MsgProp!("angleDegree", "Angle (degree)"); /// ditto
 
 	mixin MsgProp!("fEditCombinationDialog", "Combination - %s"); /// ditto
 	mixin MsgProp!("fConfigDialog", "Configuration - %s"); /// ditto
@@ -194,6 +212,10 @@ class DText {
 	mixin MsgProp!("saveCombination", "&Save"); /// ditto
 	mixin MsgProp!("selectFolderDialogTitle", "Select folder"); /// ditto
 	mixin MsgProp!("selectCombinationOutputFolder", "Please select layer combinations output folder."); /// ditto
+
+	mixin MsgProp!("fAbout", "About - %s"); /// ditto
+	mixin MsgProp!("aboutMessage1", "Dharl - The Pixelation Editor."); /// ditto
+	mixin MsgProp!("aboutMessage2", "The Dharl is an example of DWT application."); /// ditto
 
 	mixin PropIO!("i18n");
 }
@@ -252,6 +274,9 @@ struct DMenuText {
 	mixin MsgProp!("rotateLeft", "Rotate &left\tCtrl+Arrow_Left"); /// ditto
 	mixin MsgProp!("rotateUp", "Rotate &up\tCtrl+Arrow_Up"); /// ditto
 	mixin MsgProp!("rotateDown", "Rotate &down\tCtrl+Arrow_Down"); /// ditto
+	mixin MsgProp!("turn90", "&90 degree turn"); /// ditto
+	mixin MsgProp!("turn180", "&180 degree turn"); /// ditto
+	mixin MsgProp!("turn270", "&270 degree turn"); /// ditto
 	mixin MsgProp!("turn", "&Turn"); /// ditto
 
 	mixin MsgProp!("addCombination", "Add combination"); /// ditto
@@ -260,7 +285,7 @@ struct DMenuText {
 	mixin MsgProp!("configuration", "&Configuration..."); /// ditto
 
 	mixin MsgProp!("help", "&Help"); /// ditto
-	mixin MsgProp!("ver", "&Version"); /// ditto
+	mixin MsgProp!("about", "&About"); /// ditto
 
 	mixin PropIO!("menu");
 }
@@ -308,9 +333,6 @@ class DConfig {
 	mixin Prop!("fileHistoryOmitLength", uint, 50, true); /// ditto
 
 	mixin Prop!("lastOpenedFiles", PArray!("path", string), PArray!("path", string).init); /// ditto
-
-	/// Value of turning.
-	mixin Prop!("turnDegree", int, 90);
 
 	/// Selected drawing tool. 0 is range select mode.
 	mixin Prop!("tool", uint, 1);

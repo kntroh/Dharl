@@ -181,6 +181,15 @@ class PaletteView : Canvas, Undoable {
 		_mask[] = v[0 .. _mask.length];
 		redraw();
 	}
+	/// ditto
+	void reverseMask(size_t pixel) {
+		if (_colors.length <= pixel) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkWidget();
+		_mask[pixel] = !_mask[pixel];
+		piRedrawColor(pixel);
+	}
 
 	/// Is editing color mask?
 	@property
