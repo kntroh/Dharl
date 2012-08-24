@@ -159,6 +159,7 @@ class DText {
 
 	mixin MsgProp!("selectFile", "..."); /// ditto
 	mixin MsgProp!("fAskFilesOverwrite", "%s files already exists,\noverwrite it?"); /// ditto
+	mixin MsgProp!("newFilename", "NewImage");
 
 	mixin MsgProp!("noName", "(No name)"); /// ditto
 	mixin MsgProp!("fChanged", "*%s"); /// ditto

@@ -846,7 +846,7 @@ class MainPanel : Composite {
 		auto item = _imageList.item(index);
 		auto params = item.dataTo!PImageParams;
 		auto dlg = new FileDialog(this.p_shell, SWT.SAVE | SWT.SINGLE);
-		dlg.p_fileName = params.path;
+		dlg.p_fileName = params.path.length ? params.path : _c.text.newFilename;
 		string dhr = _c.text.fSaveImageTypeDharl;
 		string bmp = _c.text.fSaveImageTypeBitmap;
 		string png = _c.text.fSaveImageTypePNG;
@@ -888,7 +888,6 @@ class MainPanel : Composite {
 			}
 		} else {
 			fi = 0;
-			dlg.p_fileName = params.path.setExtension(".dhr");
 		}
 		dlg.p_filterIndex = fi;
 		dlg.p_overwrite = true;
@@ -1320,6 +1319,18 @@ class MainPanel : Composite {
 			}
 		}
 		return r;
+	}
+
+	/// Base filepath of a index.
+	/// If it is new image, returns "".
+	string path(size_t index) {
+		checkWidget();
+		checkInit();
+
+		auto item = _imageList.item(index);
+		auto params = item.dataTo!PImageParams;
+		assert (params);
+		return params.path;
 	}
 
 	/// Executes undo or redo operation.

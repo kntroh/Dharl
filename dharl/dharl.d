@@ -421,7 +421,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		mBack.p_selection = mainPanel.paintArea.enabledBackColor;
 
 		int index = mainPanel.selectedIndex;
-		tSaveOverwrite.p_enabled = -1 != index && mainPanel.isChanged(index);
+		tSaveOverwrite.p_enabled = -1 != index && (mainPanel.isChanged(index) || !mainPanel.path(index).length);
 		tSaveWithName.p_enabled = -1 != index;
 		tSaveAll.p_enabled = mainPanel.isChanged(false);
 		tResizeC.p_enabled = -1 != index;
