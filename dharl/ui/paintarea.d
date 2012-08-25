@@ -34,7 +34,7 @@ class PaintArea : Canvas, Undoable {
 	/// Receivers of select changed event.
 	void delegate(int x, int y, int w, int h)[] selectChangedReceivers;
 	/// Receivers of restore event.
-	void delegate()[] restoreReceivers;
+	void delegate(UndoMode mode)[] restoreReceivers;
 	/// Receivers of changed layer event.
 	void delegate()[] changedLayerReceivers;
 	/// Receivers of area resized event.
@@ -745,6 +745,19 @@ class PaintArea : Canvas, Undoable {
 
 		_image.swapColor(pixel1, pixel2);
 
+		clearCache();
+		redraw();
+		drawReceivers.raiseEvent();
+	}
+
+	/// Sets palettes.
+	void setPalettes(in PaletteData[] palettes, size_t selectedPalette) {
+		checkWidget();
+		checkInit();
+		_image.setPalettes(palettes, selectedPalette);
+		if (_pasteLayer) {
+			_pasteLayer.colors = this.palette.colors;
+		}
 		clearCache();
 		redraw();
 		drawReceivers.raiseEvent();
@@ -2647,7 +2660,7 @@ class PaintArea : Canvas, Undoable {
 		clearCache();
 		redraw();
 		drawReceivers.raiseEvent();
-		restoreReceivers.raiseEvent();
+		restoreReceivers.raiseEvent(mode);
 	}
 	@property
 	override bool enabledUndo() {
@@ -2963,13 +2976,13 @@ class LayerList : Canvas {
 		if (_paintArea) {
 			_paintArea.drawReceivers.removeReceiver(&redraw);
 			_paintArea.changedLayerReceivers.removeReceiver(&changedLayerReceiver);
-			_paintArea.image.restoreReceivers.removeReceiver(&redraw);
+			_paintArea.image.restoreReceivers.removeReceiver(&redrawU);
 		}
 		if (paintArea) {
 			paintArea.checkInit();
 			paintArea.drawReceivers ~= &redraw;
 			paintArea.changedLayerReceivers ~= &changedLayerReceiver;
-			paintArea.image.restoreReceivers ~= &redraw;
+			paintArea.image.restoreReceivers ~= &redrawU;
 		}
 		_paintArea = paintArea;
 		changedLayerReceiver();
@@ -3024,6 +3037,9 @@ class LayerList : Canvas {
 	const
 	const(PBounds)[] transparentPixelBoxBounds() { return _transparentPixelBounds; }
 
+	/// Calls redraw().
+	private void redrawU(UndoMode mode) { redraw(); }
+
 	/// Raises selection event.
 	private void raiseSelectionEvent(Event e) {
 		auto se = new Event;
@@ -3069,7 +3085,7 @@ class LayerList : Canvas {
 		if (_paintArea && !_paintArea.p_disposed) {
 			_paintArea.drawReceivers.removeReceiver(&redraw);
 			_paintArea.changedLayerReceivers.removeReceiver(&calcScrollParams);
-			_paintArea.image.restoreReceivers.removeReceiver(&redraw);
+			_paintArea.image.restoreReceivers.removeReceiver(&redrawU);
 		}
 	}
 

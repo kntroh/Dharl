@@ -2,6 +2,7 @@
 /// This module includes PImageList and members related to it. 
 module dharl.ui.pimagelist;
 
+private import util.undomanager;
 private import util.utils;
 
 private import dharl.image.mlimage;
@@ -714,6 +715,8 @@ private class PImageItem : Item {
 		_parent.calcScrollParams();
 		_parent.redraw();
 	}
+	/// Calls calcBounds().
+	private void calcBoundsU(UndoMode mode) { calcBounds(); }
 
 	/// Parent of this.
 	@property
@@ -728,11 +731,11 @@ private class PImageItem : Item {
 		checkWidget();
 		if (_image) {
 			_image.resizeReceivers.removeReceiver(&calcBounds);
-			_image.restoreReceivers.removeReceiver(&calcBounds);
+			_image.restoreReceivers.removeReceiver(&calcBoundsU);
 		}
 		_image = v;
 		v.resizeReceivers ~= &calcBounds;
-		v.restoreReceivers ~= &calcBounds;
+		v.restoreReceivers ~= &calcBoundsU;
 		calcBounds();
 	}
 	/// ditto

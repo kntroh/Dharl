@@ -6,12 +6,17 @@ private import util.utils;
 
 private import dharl.common;
 
+private import dharl.image.mlimage;
+
 private import dharl.ui.basicdialog;
 private import dharl.ui.dwtutils;
+private import dharl.ui.paletteview;
 private import dharl.ui.splitter;
 private import dharl.ui.uicommon;
 
+private import std.algorithm;
 private import std.conv;
+private import std.range;
 private import std.string;
 
 private import org.eclipse.swt.all;
@@ -380,6 +385,157 @@ class AboutDialog : DharlDialog {
 		msg1.p_layoutData = GD().alignment(SWT.BEGINNING, SWT.END).grabExcessSpace(true, true);
 		auto msg2 = basicLabel(area, c.text.aboutMessage2);
 		msg2.p_layoutData = GD().alignment(SWT.BEGINNING, SWT.BEGINNING).grabExcessSpace(true, true);
+	}
+
+	protected override bool apply() {
+		// No processing
+		return true;
+	}
+}
+
+/// Dialog of palette operation.
+class PaletteOperationDialog : DharlDialog {
+
+	/// List of palettes.
+	private List _palettes = null;
+
+	/// Palettes data.
+	private PaletteData[] _paletteData = [];
+
+	/// Index of selection palette.
+	private size_t _selectedPalette = 0;
+
+	/// Preview of palette.
+	private PaletteView _paletteView = null;
+
+	/// Items of toolbar.
+	private ToolItem _tAdd = null, _tRemove = null, _tUp = null, _tDown = null;
+
+	/// The only constructor.
+	this (Shell parent, DCommon c) {
+		auto title = c.text.fPaletteOperation.value.format(c.text.appName);
+		auto image = .cimg(c.image.paletteOperation);
+		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
+		super (c, parent, title, image, true, true, true, buttons);
+	}
+
+	/// Sets items of palette list.
+	void init(in PaletteData[] palettes, size_t selectedPalette) {
+		if (!palettes) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
+		}
+		if (!palettes.length) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (palettes.length <= selectedPalette) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		_paletteData.length = palettes.length;
+		foreach (i, ref palette; _paletteData) {
+			palette = MLImage.copyPalette(palettes[i]);
+		}
+		_selectedPalette = selectedPalette;
+	}
+
+	/// Palettes data.
+	@property
+	const
+	const(PaletteData)[] palettes() { return _paletteData; }
+
+	/// Index of selection palette.
+	@property
+	const
+	size_t selectedPalette() { return _selectedPalette; }
+
+	protected override void setup(Composite area) {
+		area.p_layout = GL.window(2, false);
+
+		auto palettesGrp = basicGroup(area, c.text.palettes);
+		palettesGrp.p_layout = GL.window(1, true);
+		palettesGrp.p_layoutData = GD.fill(true, true);
+
+		auto toolBar = basicToolBar(palettesGrp);
+
+		// list
+		toolBar.p_layoutData = GD.fill(true, false);
+		_palettes = basicList(palettesGrp, false);
+		mod(_palettes);
+		_palettes.p_layoutData = GD.fill(true, true);
+
+		_palettes.listeners!(SWT.Selection) ~= {
+			_selectedPalette = _palettes.p_selectionIndex();
+			_paletteView.colors = _paletteData[_selectedPalette];
+			updateEnabled();
+		};
+
+		// toolbar
+		_tAdd = basicToolItem(toolBar, c.text.menu.addPalette, .cimg(c.image.addPalette), {
+			auto index = _selectedPalette;
+			_paletteData.insertInPlace(index, MLImage.copyPalette(_paletteData[index]));
+			_palettes.select(index);
+			enableApply();
+			updateList();
+		});
+		_tRemove = basicToolItem(toolBar, c.text.menu.removePalette, .cimg(c.image.removePalette), {
+			if (1 == _palettes.p_itemCount) return;
+			auto index = _selectedPalette;
+			_paletteData = _paletteData.remove(index);
+			if (_paletteData.length <= index) {
+				_selectedPalette = index - 1;
+			}
+			enableApply();
+			updateList();
+		});
+		separator(toolBar);
+		_tUp = basicToolItem(toolBar, c.text.menu.up, .cimg(c.image.up), {
+			auto index = _selectedPalette;
+			if (0 == index) return;
+			.swap(_paletteData[index], _paletteData[index - 1]);
+			_selectedPalette = index - 1;
+			enableApply();
+			updateList();
+		});
+		_tDown = basicToolItem(toolBar, c.text.menu.down, .cimg(c.image.down), {
+			auto index = _selectedPalette;
+			if (_paletteData.length <= index + 1) return;
+			.swap(_paletteData[index], _paletteData[index + 1]);
+			_selectedPalette = index + 1;
+			enableApply();
+			updateList();
+		});
+
+		auto previewGrp = basicGroup(area, c.text.palettePreview);
+		previewGrp.p_layout = GL.window(1, true);
+		previewGrp.p_layoutData = GD.fill(false, true);
+		_paletteView = new PaletteView(previewGrp, SWT.BORDER | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED | SWT.READ_ONLY);
+
+		// initializes controls
+		updateList();
+	}
+
+	/// Update palette list and selection index.
+	private void updateList() {
+		_palettes.removeAll();
+		foreach (i; 0 .. _paletteData.length) {
+			_palettes.add(c.text.fPaletteName.value.format(i + 1));
+		}
+		_palettes.select(_selectedPalette);
+
+		_paletteView.colors = _paletteData[_selectedPalette];
+		updateEnabled();
+	}
+
+	/// Sets enabled or disabled of a controls from state.
+	private void updateEnabled() {
+		_tAdd.p_enabled = true;
+		_tRemove.p_enabled = 1 < _paletteData.length;
+		_tUp.p_enabled = 0 < _selectedPalette;
+		_tDown.p_enabled = _selectedPalette + 1 < _paletteData.length;
+	}
+
+	protected override void onOpen(Shell shell) {
+		// dialog bounds
+		c.conf.paletteOperationDialog.value.refWindow(shell);
 	}
 
 	protected override bool apply() {

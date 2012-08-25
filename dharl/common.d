@@ -103,6 +103,9 @@ class DImages {
 	const DImage createGradation = importImage!("create_gradation.png"); /// ditto
 	const DImage enabledBackColor = importImage!("enabled_back_color.png"); /// ditto
 	const DImage maskMode = importImage!("mask_mode.png"); /// ditto
+	const DImage paletteOperation = importImage!("palette_operation.png"); /// ditto
+	const DImage addPalette = importImage!("add_palette.png"); /// ditto
+	const DImage removePalette = importImage!("remove_palette.png"); /// ditto
 	const DImage paletteTransfer = importImage!("palette_transfer.png"); /// ditto
 
 	const DImage selection = importImage!("selection.png"); /// ditto
@@ -188,9 +191,13 @@ class DText {
 	mixin MsgProp!("zoom", "Zoom"); /// ditto
 	mixin MsgProp!("lineWidth", "Line width"); /// ditto
 
+	mixin MsgProp!("fPaletteOperation", "Palette operation - %s"); /// ditto
+	mixin MsgProp!("palettes", "Palettes"); /// ditto
+	mixin MsgProp!("palettePreview", "Preview"); /// ditto
+
 	mixin MsgProp!("fPaletteTransfer", "Palette transfer - %s"); /// ditto
-	mixin MsgProp!("paletteTransferSource", "Transfer source");
-	mixin MsgProp!("paletteTransferDestination", "Transfer destination");
+	mixin MsgProp!("paletteTransferSource", "Transfer source"); /// ditto
+	mixin MsgProp!("paletteTransferDestination", "Transfer destination"); /// ditto
 
 	mixin MsgProp!("fResize", "Resize character - %s"); /// ditto
 	mixin MsgProp!("fResizeCanvas", "Resize canvas - %s"); /// ditto
@@ -273,6 +280,9 @@ struct DMenuText {
 	mixin MsgProp!("palette", "&Palette"); /// ditto
 	mixin MsgProp!("createGradation", "Create &gradation"); /// ditto
 	mixin MsgProp!("maskMode", "Edit &mask"); /// ditto
+	mixin MsgProp!("paletteOperation", "Pale&tte operation"); /// ditto
+	mixin MsgProp!("addPalette", "&Add palette"); /// ditto
+	mixin MsgProp!("removePalette", "&Remove palette"); /// ditto
 	mixin MsgProp!("paletteTransfer", "Pale&tte transfer"); /// ditto
 
 	mixin MsgProp!("tool", "&Tool"); /// ditto
@@ -360,7 +370,8 @@ class DConfig {
 	mixin Prop!("enabledBackColor", bool, false);
 	mixin Prop!("maskMode", bool, false); /// ditto
 
-	/// Palette transfer parameters.
+	/// Palette operation parameters.
+	mixin Prop!("paletteOperationDialog", WindowParameter, WindowParameter(int.min, int.min, 500, 350));
 	mixin Prop!("paletteTransferDialog", WindowParameter, WindowParameter(int.min, int.min, 500, 400));
 	mixin Prop!("sashPosPaletteFrom_PaletteTo", int, -1); /// ditto
 

@@ -18,7 +18,7 @@ private import org.eclipse.swt.all;
 /// Viewer and chooser for colors of palette.
 class PaletteView : Canvas, Undoable {
 	/// Receivers of restore event.
-	void delegate()[] restoreReceivers;
+	void delegate(UndoMode mode)[] restoreReceivers;
 	/// Receivers of status changed event.
 	void delegate()[] statusChangedReceivers;
 	/// Receivers of color change event.
@@ -541,21 +541,23 @@ class PaletteView : Canvas, Undoable {
 			auto cty = cp.y + (_cBoxHeight - cSize.y) / 2;
 			e.gc.drawText(t, ctx, cty, true);
 		}
-		if (-1 != _tPixel) {
-			drawFocus(_tPixel, SWT.COLOR_GREEN);
-			drawIndex(_tPixel);
-		}
-		if (_pixel1 == _pixel2) {
-			drawFocus(_pixel1, SWT.COLOR_DARK_YELLOW);
-			drawIndex(_pixel1);
-		} else {
-			drawFocus(_pixel1, SWT.COLOR_RED);
-			drawIndex(_pixel1);
-			drawFocus(_pixel2, SWT.COLOR_DARK_CYAN);
-			drawIndex(_pixel2);
-		}
-		if (_piTo != -1) {
-			drawFocus(_piTo, SWT.COLOR_GRAY);
+		if (!(this.p_style & SWT.READ_ONLY)) {
+			if (-1 != _tPixel) {
+				drawFocus(_tPixel, SWT.COLOR_GREEN);
+				drawIndex(_tPixel);
+			}
+			if (_pixel1 == _pixel2) {
+				drawFocus(_pixel1, SWT.COLOR_DARK_YELLOW);
+				drawIndex(_pixel1);
+			} else {
+				drawFocus(_pixel1, SWT.COLOR_RED);
+				drawIndex(_pixel1);
+				drawFocus(_pixel2, SWT.COLOR_DARK_CYAN);
+				drawIndex(_pixel2);
+			}
+			if (_piTo != -1) {
+				drawFocus(_piTo, SWT.COLOR_GRAY);
+			}
 		}
 	}
 
@@ -590,6 +592,7 @@ class PaletteView : Canvas, Undoable {
 	/// Controls color.
 	private void onMouseDown(Event e) {
 		checkWidget();
+		if (this.p_style & SWT.READ_ONLY) return;
 		int pi = ctopi(e.x, e.y);
 		if (pi == -1) return;
 		if (_maskMode) {
@@ -632,6 +635,7 @@ class PaletteView : Canvas, Undoable {
 	/// ditto
 	private void onMouseUp(Event e) {
 		checkWidget();
+		if (this.p_style & SWT.READ_ONLY) return;
 		if (_maskMode) {
 			if (e.button == 1) {
 				fixEditMask(e);
@@ -671,6 +675,7 @@ class PaletteView : Canvas, Undoable {
 	/// ditto
 	private void onMouseMove(Event e) {
 		checkWidget();
+		if (this.p_style & SWT.READ_ONLY) return;
 		int pi = ctopi(e.x, e.y);
 		if (pi == -1) return;
 		if (_maskMode) {
@@ -700,6 +705,7 @@ class PaletteView : Canvas, Undoable {
 	/// ditto
 	private void onMouseWheel(Event e) {
 		checkWidget();
+		if (this.p_style & SWT.READ_ONLY) return;
 		if (0 == e.count) return;
 
 		int pixel;
@@ -728,6 +734,7 @@ class PaletteView : Canvas, Undoable {
 	/// Handling key traversal.
 	private void onTraverse(Event e) {
 		checkWidget();
+		if (this.p_style & SWT.READ_ONLY) return;
 		switch (e.detail) {
 		case SWT.TRAVERSE_RETURN, SWT.TRAVERSE_TAB_PREVIOUS, SWT.TRAVERSE_TAB_NEXT:
 			e.doit = true;
@@ -739,6 +746,8 @@ class PaletteView : Canvas, Undoable {
 	}
 	/// Change selection
 	private void onKeyDown(Event e) {
+		checkWidget();
+		if (this.p_style & SWT.READ_ONLY) return;
 		auto ca = this.p_clientArea;
 		int col = ca.width / _cBoxWidth;
 		int row = _colors.length / col;
@@ -843,7 +852,7 @@ class PaletteView : Canvas, Undoable {
 		foreach (i, ref rgb; st.colors) {
 			color(i, rgb.r, rgb.g, rgb.b);
 		}
-		restoreReceivers.raiseEvent();
+		restoreReceivers.raiseEvent(mode);
 	}
 	@property
 	override bool enabledUndo() {

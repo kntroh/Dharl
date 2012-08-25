@@ -44,7 +44,7 @@ struct Combination {
 /// Multi layer image.
 class MLImage : Undoable {
 	/// Receivers of restore event.
-	void delegate()[] restoreReceivers;
+	void delegate(UndoMode mode)[] restoreReceivers;
 	/// Receivers of resize event.
 	void delegate()[] resizeReceivers;
 	/// Receivers of initialize event.
@@ -1337,7 +1337,7 @@ class MLImage : Undoable {
 		_iw = st.width;
 		_ih = st.height;
 		cloneCombi(_combi, st.combi);
-		restoreReceivers.raiseEvent();
+		restoreReceivers.raiseEvent(mode);
 	}
 	@property
 	override bool enabledUndo() {

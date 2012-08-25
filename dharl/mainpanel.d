@@ -279,7 +279,7 @@ class MainPanel : Composite {
 			}
 			statusChangedReceivers.raiseEvent();
 		};
-		_paletteView.restoreReceivers ~= {
+		_paletteView.restoreReceivers ~= (UndoMode mode) {
 			_paintArea.colors = _paletteView.colors;
 			_colorSlider.color = _paletteView.color(_paletteView.pixel1);
 			int sel = _imageList.selectedIndex;
@@ -336,7 +336,7 @@ class MainPanel : Composite {
 
 		// Viewer of palette.
 		_paletteView = new PaletteView(comp, SWT.BORDER | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
-		_paletteView.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING).vSpan(3);
+		_paletteView.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING).vSpan(4);
 		_paletteView.maskMode = _c.conf.maskMode;
 
 		// Drawing tools.
@@ -344,12 +344,13 @@ class MainPanel : Composite {
 		lToolBar.p_layoutData = GD(GridData.FILL_HORIZONTAL);
 		basicToolItem(lToolBar, _c.text.menu.addLayer, cimg(_c.image.addLayer), &addLayer);
 		basicToolItem(lToolBar, _c.text.menu.removeLayer, cimg(_c.image.removeLayer), &removeLayer);
+		separator(lToolBar);
 		auto tUpLayer = basicToolItem(lToolBar, _c.text.menu.up, cimg(_c.image.up), &upLayer);
 		auto tDownLayer = basicToolItem(lToolBar, _c.text.menu.down, cimg(_c.image.down), &downLayer);
 
 		// List of layers.
 		_layerList = new LayerList(comp, SWT.BORDER | SWT.DOUBLE_BUFFERED);
-		_layerList.p_layoutData = GD(GridData.FILL_BOTH).vSpan(2);
+		_layerList.p_layoutData = GD(GridData.FILL_BOTH).vSpan(3);
 		_layerList.undoManager = um;
 		_layerList.listeners!(SWT.Selection) ~= {
 			tUpLayer.p_enabled = canUpLayer;
@@ -379,6 +380,10 @@ class MainPanel : Composite {
 		}
 		statusChangedReceivers ~= &updatePaletteMenu;
 		updatePaletteMenu();
+
+		auto pToolBar2 = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
+		pToolBar2.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_CENTER);
+		basicToolItem(pToolBar2, _c.text.menu.paletteOperation, cimg(_c.image.paletteOperation), &paletteOperation);
 
 		// Initializes controls.
 		auto cs = _c.conf.character;
@@ -813,8 +818,15 @@ class MainPanel : Composite {
 		selectImage(index);
 		_imageList.showSelection();
 
-		pi.image.restoreReceivers ~= () {
-			params.modCount--;
+		pi.image.restoreReceivers ~= (UndoMode mode) {
+			final switch (mode) {
+			case UndoMode.Undo:
+				params.modCount--;
+				break;
+			case UndoMode.Redo:
+				params.modCount++;
+				break;
+			}
 			auto item = _imageList.item(index);
 			string fChanged = _c.text.fChanged;
 			if (params.modify) {
@@ -1281,6 +1293,43 @@ class MainPanel : Composite {
 	bool canEditCombination() {
 		checkInit();
 		return -1 != _imageList.selectedIndex;
+	}
+
+	/// Open palette operation dialog.
+	void paletteOperation() {
+		checkWidget();
+		checkInit();
+
+		auto dialog = new PaletteOperationDialog(this.p_shell, _c);
+		dialog.init(_paintArea.image.palettes, _paintArea.image.selectedPalette);
+		dialog.appliedReceivers ~= {
+			auto palettes = dialog.palettes;
+			.enforce(palettes.length);
+			auto sel = dialog.selectedPalette;
+			.enforce(sel < dialog.palettes.length);
+
+			Undoable[] storeData = [cast(Undoable) _paintArea, _paletteView];
+			auto selImage = _imageList.selectedIndex;
+			PImageItem item = null;
+			if (-1 != selImage) {
+				item = _imageList.item(selImage);
+				storeData ~= item.image;
+			}
+			_um.store(storeData);
+
+			// update palette
+			_paintArea.setPalettes(palettes, sel);
+
+			// update controls
+			_paletteView.colors = _paintArea.palette;
+			_colorSlider.color = _paletteView.color(_paintArea.pixel);
+
+			if (item) {
+				item.colors = _paletteView.colors;
+				modified(item);
+			}
+		};
+		dialog.open();
 	}
 
 	/// Open palette transfer dialog.
