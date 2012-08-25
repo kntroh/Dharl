@@ -36,8 +36,9 @@ struct Layer {
 
 /// Information of layers combination.
 struct Combination {
-	string name;
-	bool[] visible;
+	string name; /// Combination name.
+	bool[] visible; /// Visibility of layers.
+	size_t selectedPalette = 0; /// Index of selection palette.
 }
 
 /// Multi layer image.
@@ -51,8 +52,11 @@ class MLImage : Undoable {
 
 	/// Layers.
 	private Layer[] _layers;
-	/// The palette. It is common in all layers.
-	private PaletteData _palette = null;
+	/// Palettes. There is at least one. It is common in all layers.
+	private PaletteData[] _palette;
+	/// Index of selection palette.
+	private size_t _selPalette = 0;
+
 	/// Image size. It is common in all layers.
 	private uint _iw = 0, _ih = 0;
 
@@ -102,6 +106,30 @@ class MLImage : Undoable {
 
 		ImageData baseImage = null;
 
+		// palettes
+		PaletteData[] palettes;
+		size_t selPalette = 0;
+		parser.onStartTag["palettes"] = (ElementParser ep) {
+			selPalette = to!size_t(ep.tag.attr["selected"]);
+			ep.onStartTag["palette"] = (ElementParser ep) {
+				RGB[] colors;
+				ep.onStartTag["color"] = (ElementParser ep) {
+					if (256 <= colors.length) return;
+					int r = to!int(ep.tag.attr["r"]);
+					int g = to!int(ep.tag.attr["g"]);
+					int b = to!int(ep.tag.attr["b"]);
+					colors ~= new RGB(r, g, b);
+				};
+				ep.parse();
+				foreach (i; colors.length .. 256 + 1) {
+					colors ~= new RGB(0, 0, 0);
+				}
+				assert (256 == colors.length);
+				palettes ~= new PaletteData(colors);
+			};
+			ep.parse();
+		};
+
 		// layers
 		Layer[] layers;
 		parser.onStartTag["layers"] = (ElementParser ep) {
@@ -136,6 +164,10 @@ class MLImage : Undoable {
 			ep.onStartTag["combination"] = (ElementParser ep) {
 				Combination combi;
 				combi.name = ep.tag.attr["name"];
+				combi.selectedPalette = .to!size_t(ep.tag.attr.get("palette", "0"));
+				if (palettes.length <= combi.selectedPalette) {
+					combi.selectedPalette = 0;
+				}
 				ep.onStartTag["visible"] = (ElementParser ep) {
 					ep.onText = (string text) {
 						combi.visible ~= .to!bool(text);
@@ -154,6 +186,10 @@ class MLImage : Undoable {
 		if (!baseImage) baseImage = layers[$ - 1].image;
 
 		init(baseImage.width, baseImage.height, baseImage.palette);
+		if (palettes.length) {
+			if (palettes.length <= selPalette) selPalette = 0;
+			setPalettes(palettes, selPalette);
+		}
 		foreach (i, l; layers) {
 			addLayer(i, l);
 		}
@@ -176,6 +212,7 @@ class MLImage : Undoable {
 		auto archive = new ZipArchive();
 
 		auto doc = new Document(new Tag("dharl"));
+		auto palettes = new Element("palettes");
 		auto layers = new Element("layers");
 		doc ~= layers;
 
@@ -192,6 +229,19 @@ class MLImage : Undoable {
 			return member;
 		}
 
+		// Palettes.
+		palettes.tag.attr["selected"] = .text(_selPalette);
+		foreach (palette; _palette) {
+			auto pe = new Element("palette");
+			palettes ~= pe;
+			foreach (rgb; palette.colors) {
+				auto ce = new Element("color");
+				pe ~= ce;
+				ce.tag.attr["r"] = .text(rgb.red);
+				ce.tag.attr["g"] = .text(rgb.green);
+				ce.tag.attr["b"] = .text(rgb.blue);
+			}
+		}
 		// Layers.
 		foreach (i, l; _layers) {
 			auto le = new Element("layer", l.name);
@@ -224,6 +274,7 @@ class MLImage : Undoable {
 			auto ce = new Element("combination");
 			combis ~= ce;
 			ce.tag.attr["name"] = combi.name;
+			ce.tag.attr["palette"] = .text(combi.selectedPalette);
 			foreach (v; combi.visible) {
 				ce ~= new Element("visible", .text(v));
 			}
@@ -330,7 +381,9 @@ class MLImage : Undoable {
 		_layers[0].visible = true;
 		_iw = layer.width;
 		_ih = layer.height;
-		_palette = layer.palette;
+		_palette.length = 1;
+		_palette[0] = layer.palette;
+		_selPalette = 0;
 		_combi.length  = 0;
 		if (ow != _iw || oh != _ih) {
 			resizeReceivers.raiseEvent();
@@ -352,7 +405,9 @@ class MLImage : Undoable {
 		_layers.length = 0;
 		_iw = w;
 		_ih = h;
-		_palette = palette;
+		_palette.length = 1;
+		_palette[0] = palette;
+		_selPalette = 0;
 		_combi.length  = 0;
 		if (ow != _iw || oh != _ih) {
 			resizeReceivers.raiseEvent();
@@ -369,7 +424,7 @@ class MLImage : Undoable {
 	@property
 	const
 	bool isInitialized() {
-		return _palette !is null;
+		return 0 < _palette.length;
 	}
 
 	/// Disposes this image.
@@ -400,7 +455,7 @@ class MLImage : Undoable {
 		if (w == 0 || h == 0) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
-		if (_palette.colors.length <= backgroundPixel) {
+		if (palette.colors.length <= backgroundPixel) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		checkInit();
@@ -495,6 +550,7 @@ class MLImage : Undoable {
 			addLayers(0, names);
 			changed = true;
 		}
+		changed |= pushPalette(src);
 		foreach (li; 0 .. src.layerCount) {
 			auto sl = src.layer(li);
 			auto tl = _layers[li].image;
@@ -547,6 +603,7 @@ class MLImage : Undoable {
 			addLayers(0, names);
 			changed = true;
 		}
+		changed |= pushPalette(src);
 		foreach (li; 0 .. src.layerCount) {
 			auto sl = src.layer(li);
 			auto tl = _layers[li].image;
@@ -574,6 +631,32 @@ class MLImage : Undoable {
 		}
 		return changed;
 	}
+	/// Push palettes data.
+	private bool pushPalette(in MLImage src) {
+		bool changed = false;
+		if (_palette.length != src._palette.length) {
+			_palette.length = src._palette.length;
+			changed = true;
+		}
+		foreach (pi, ref palette; _palette) {
+			if (palette) {
+				foreach (i, ref rgb; palette.colors) {
+					auto base = src._palette[pi].colors[i];
+					if (rgb != base) {
+						rgb.red   = base.red;
+						rgb.green = base.green;
+						rgb.blue  = base.blue;
+						changed = true;
+					}
+				}
+			} else {
+				// new palette
+				palette = src.copyPalette(pi);
+				changed = true;
+			}
+		}
+		return changed;
+	}
 
 	/// Creates MLImage based this instance.
 	MLImage createMLImage(in size_t[] layer = null) {
@@ -597,7 +680,7 @@ class MLImage : Undoable {
 		if (layer) {
 			ls = layer.dup.sort().uniq().array();
 		}
-		auto palette = copyPalette();
+		auto palette = copyPalette(_selPalette);
 		auto data = new ImageData[ls ? ls.length : _layers.length];
 		auto name = new string[data.length];
 
@@ -752,7 +835,7 @@ class MLImage : Undoable {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		checkInit();
-		layer.image.palette = _palette;
+		layer.image.palette = palette;
 		if (index < layerCount) {
 			_layers.insertInPlace(index, layer);
 			foreach (ref combi; _combi) {
@@ -798,7 +881,7 @@ class MLImage : Undoable {
 		checkInit();
 		.enforce(name);
 		.enforce(index <= layerCount);
-		auto data = new ImageData(_iw, _ih, 8, _palette);
+		auto data = new ImageData(_iw, _ih, 8, palette);
 		if (index < layerCount) {
 			data.transparentPixel = 0;
 			_layers.insertInPlace(index, Layer(data, name, true));
@@ -865,25 +948,166 @@ class MLImage : Undoable {
 		}
 	}
 
+	/// Index of selection palette.
+	@property
+	const
+	size_t selectedPalette() {
+		checkInit();
+		return _selPalette;
+	}
+	/// ditto
+	@property
+	void selectedPalette(size_t index) {
+		checkInit();
+		if (_palette.length <= index) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		foreach (ref l; _layers) {
+			l.image.palette = _palette[index];
+		}
+		_selPalette = index;
+	}
+
 	/// Gets palette.
 	@property
 	const
-	const(PaletteData) palette() {
+	const(PaletteData)[] palettes() {
 		checkInit();
 		return _palette;
 	}
 	/// ditto
 	@property
+	PaletteData[] palettes() {
+		checkInit();
+		return _palette.dup;
+	}
+	/// ditto
+	@property
+	const
+	const(PaletteData) palette() {
+		checkInit();
+		return _palette[_selPalette];
+	}
+	/// ditto
+	@property
 	PaletteData palette() {
 		checkInit();
-		return _palette;
+		return _palette[_selPalette];
 	}
-	/// Gets copy of this palette of image.
-	PaletteData copyPalette() {
+
+	/// ditto
+	@property
+	const
+	const(PaletteData) getPalette(size_t paletteIndex) {
+		if (_palette.length <= paletteIndex) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
 		checkInit();
-		auto rgbs = new RGB[_palette.colors.length];
+		return _palette[paletteIndex];
+	}
+	/// ditto
+	@property
+	PaletteData getPalette(size_t paletteIndex) {
+		if (_palette.length <= paletteIndex) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkInit();
+		return _palette[paletteIndex];
+	}
+
+	/// Add or remove palette.
+	void setPalettes(in PaletteData[] palettes, size_t selectIndex) {
+		if (!palettes) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
+		}
+		if (0 == palettes.length) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (palettes.length <= selectIndex) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		foreach (palette; palettes) {
+			if (!palette) {
+				SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
+			}
+			if (palette.isDirect) {
+				SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+			}
+			if (256 != palette.colors.length) {
+				SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+			}
+		}
+		checkInit();
+
+		_palette.length = palettes.length;
+		foreach (i, ref palette; _palette) {
+			palette = copyPalette(palettes[i]);
+		}
+		selectedPalette = selectIndex;
+	}
+	/// ditto
+	void addPalette(PaletteData palette) {
+		checkInit();
+		addPalette(_palette.length, palette);
+	}
+	/// ditto
+	void addPalette(size_t index, PaletteData palette) {
+		if (_palette.length < index) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		foreach (p; _palette) {
+			if (p is palette) {
+				SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+			}
+		}
+		_palette.insertInPlace(index, palette);
+		if (index <= selectedPalette) {
+			selectedPalette = selectedPalette + 1;
+		}
+	}
+	/// ditto
+	void removePalette(size_t index) {
+		if (_palette.length <= index) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (1 == _palette.length) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		_palette = _palette.remove(index);
+		auto sel = selectedPalette;
+		if (index == sel) {
+			selectedPalette = sel;
+		} else if (index < sel) {
+			selectedPalette = sel - 1;
+		}
+	}
+
+	/// Gets copy of this palette of image.
+	const
+	PaletteData copyPalette() {
+		return copyPalette(selectedPalette);
+	}
+	/// ditto
+	const
+	PaletteData copyPalette(size_t paletteIndex) {
+		if (_palette.length <= paletteIndex) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkInit();
+		auto palette = _palette[paletteIndex];
+		auto rgbs = new RGB[palette.colors.length];
 		foreach (i, ref rgb; rgbs) {
-			rgb = color(i);
+			auto base = palette.colors[i];
+			rgb = new RGB(base.red, base.green, base.blue);
+		}
+		return new PaletteData(rgbs);
+	}
+	/// ditto
+	static PaletteData copyPalette(in PaletteData palette) {
+		auto rgbs = new RGB[palette.colors.length];
+		foreach (i, ref rgb; rgbs) {
+			auto base = palette.colors[i];
+			rgb = new RGB(base.red, base.green, base.blue);
 		}
 		return new PaletteData(rgbs);
 	}
@@ -891,20 +1115,20 @@ class MLImage : Undoable {
 	/// Gets color of palette.
 	const
 	RGB color(size_t index) {
-		if (_palette.colors.length <= index) {
+		if (this.palette.colors.length <= index) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		checkInit();
-		auto rgb = _palette.colors[index];
+		auto rgb = this.palette.colors[index];
 		return new RGB(rgb.red, rgb.green, rgb.blue);
 	}
 	/// Sets color of palette.
 	void color(size_t index, int r, int g, int b) {
-		if (_palette.colors.length <= index) {
+		if (palette.colors.length <= index) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		checkInit();
-		auto rgb = _palette.colors[index];
+		auto rgb = palette.colors[index];
 		rgb.red   = r;
 		rgb.green = g;
 		rgb.blue  = b;
@@ -918,10 +1142,10 @@ class MLImage : Undoable {
 	@property
 	void colors(in RGB[] rgbs) {
 		checkInit();
-		if (_palette.colors.length != rgbs.length) {
+		if (palette.colors.length != rgbs.length) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
-		foreach (i, ref rgb; _palette.colors) {
+		foreach (i, ref rgb; palette.colors) {
 			auto v = rgbs[i];
 			rgb.red   = v.red;
 			rgb.green = v.green;
@@ -931,10 +1155,10 @@ class MLImage : Undoable {
 	/// Swap pixel colors.
 	void swapColor(int pixel1, int pixel2) {
 		checkInit();
-		if (pixel1 < 0 || _palette.colors.length <= pixel1) {
+		if (pixel1 < 0 || palette.colors.length <= pixel1) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
-		if (pixel2 < 0 || _palette.colors.length <= pixel2) {
+		if (pixel2 < 0 || palette.colors.length <= pixel2) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 
@@ -997,8 +1221,10 @@ class MLImage : Undoable {
 	private static class StoreData {
 		/// Size of image.
 		uint width, height;
-		/// Data of palette.
-		CRGB[256] palette;
+		/// Data of palettes.
+		CRGB[256][] palettes;
+		/// Index of selection index.
+		size_t selectedPalette;
 		/// Transparent pixel of layers.
 		int[] transparentPixel;
 		/// Data of layers.
@@ -1023,10 +1249,14 @@ class MLImage : Undoable {
 		if (!data) return false;
 		if (_iw != data.width || _ih != data.height) return false;
 		if (_layers.length != data.layers.length) return false;
+		if (_selPalette != data.selectedPalette) return false;
+		if (_palette.length != data.palettes.length) return false;
 		if (data.includePalette) {
-			foreach (i, ref rgb; data.palette) {
-				auto c = _palette.colors[i];
-				if (c.red != rgb.r || c.green != rgb.g || c.blue != rgb.b) return false;
+			foreach (pi, palette; data.palettes) {
+				foreach (i, ref rgb; palette) {
+					auto c = _palette[pi].colors[i];
+					if (c.red != rgb.r || c.green != rgb.g || c.blue != rgb.b) return false;
+				}
 			}
 		}
 		foreach (i, ref l; _layers) {
@@ -1047,12 +1277,16 @@ class MLImage : Undoable {
 		auto data = new StoreData;
 		data.width = _iw;
 		data.height = _ih;
+		data.selectedPalette = selectedPalette;
+		data.palettes.length = _palette.length;
 		if (includePalette) {
-			foreach (i, ref rgb; data.palette) {
-				auto c = _palette.colors[i];
-				rgb.r = cast(ubyte) c.red;
-				rgb.g = cast(ubyte) c.green;
-				rgb.b = cast(ubyte) c.blue;
+			foreach (pi, ref palette; data.palettes) {
+				foreach (i, ref rgb; palette) {
+					auto c = _palette[pi].colors[i];
+					rgb.r = cast(ubyte) c.red;
+					rgb.g = cast(ubyte) c.green;
+					rgb.b = cast(ubyte) c.blue;
+				}
 			}
 		}
 		data.layers = new byte[][_layers.length];
@@ -1079,18 +1313,21 @@ class MLImage : Undoable {
 	override void restore(Object data, UndoMode mode) {
 		auto st = cast(StoreData) data;
 		enforce(st);
-		foreach (i, ref rgb; _palette.colors) {
-			auto c = st.palette[i];
-			rgb.red   = c.r;
-			rgb.green = c.g;
-			rgb.blue  = c.b;
+		_palette.length = st.palettes.length;
+		foreach (pi, ref palette; _palette) {
+			palette = new PaletteData(new RGB[st.palettes[pi].length]);
+			foreach (i, ref rgb; palette.colors) {
+				auto c = st.palettes[pi][i];
+				rgb = new RGB(c.r, c.g, c.b);
+			}
 		}
+		selectedPalette = st.selectedPalette;
 		_layers.length = st.layers.length;
 		foreach (i, ref l; _layers) {
 			if (_iw != st.width || _ih != st.height) {
-				l.image = new ImageData(st.width, st.height, 8, _palette);
+				l.image = new ImageData(st.width, st.height, 8, _palette[selectedPalette]);
 			} else if (!l.image) {
-				l.image = new ImageData(st.width, st.height, 8, _palette);
+				l.image = new ImageData(st.width, st.height, 8, _palette[selectedPalette]);
 			}
 			l.image.data = st.layers[i].dup;
 			l.image.transparentPixel = st.transparentPixel[i];

@@ -216,7 +216,10 @@ class DText {
 	mixin MsgProp!("fStatusTextXY", "%s, %s"); /// ditto
 	mixin MsgProp!("fStatusTextRange", "%s, %s to %s, %s (%s x %s)"); /// ditto
 
+	mixin MsgProp!("combinations", "Combinations"); /// ditto
+	mixin MsgProp!("combinationVisibility", "Visibility"); /// ditto
 	mixin MsgProp!("combinationOutput", "Output"); /// ditto
+	mixin MsgProp!("fPaletteName", "Palette %s"); /// ditto
 	mixin MsgProp!("targetFolder", "Target Folder:"); /// ditto
 	mixin MsgProp!("saveCombination", "&Save"); /// ditto
 	mixin MsgProp!("selectFolderDialogTitle", "Select folder"); /// ditto

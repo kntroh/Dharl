@@ -520,6 +520,12 @@ struct RD {
 
 /// A wrapper for settings to a GridLayout.
 struct GL {
+	/// Default value for margin and spacing.
+	static immutable WINDOW_MARGIN   = 2;
+	static immutable WINDOW_SPACING  = 2; /// ditto
+	static immutable MINIMUM_MARGIN  = 1; /// ditto
+	static immutable MINIMUM_SPACING = 1; /// ditto
+
 	/// GridLayout.
 	GridLayout data = null;
 	/// ditto

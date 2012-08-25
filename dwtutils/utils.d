@@ -235,7 +235,8 @@ Editor createEditor(Table table, bool emptyIsCancel, void delegate(int index, st
 		lastText = itm.p_text;
 		itm.p_text = "";
 		auto bounds = itm.getTextBounds(0);
-		editor.start(bounds.x, bounds.y, lastText, (string name) {
+		auto th = table.computeTextSize("#").y;
+		editor.start(bounds.x, bounds.y + (bounds.height - th) / 2, lastText, (string name) {
 			if (decision) {
 				itm.p_text = lastText;
 				decision(table.indexOf(itm), name);

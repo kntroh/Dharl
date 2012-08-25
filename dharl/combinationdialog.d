@@ -46,6 +46,8 @@ class CombinationDialog : DharlDialog {
 
 	/// Layer list.
 	private Table _layers = null;
+	/// Selection palette of combination.
+	private Combo _palette = null;
 
 	/// Image type and depth.
 	private Combo _imageType = null;
@@ -86,11 +88,11 @@ class CombinationDialog : DharlDialog {
 		_splitterH.p_layoutData = GD.fill(true, true);
 
 		// Combination list.
-		auto combiPane = basicComposite(_splitterH);
-		_splitterH.resizable = combiPane;
-		combiPane.p_layout = GL.window(1, true).margin(0);
-		combinationToolBar(combiPane);
-		_combiList = listTable(combiPane, true);
+		auto combiGrp = basicGroup(_splitterH, c.text.combinations);
+		_splitterH.resizable = combiGrp;
+		combiGrp.p_layout = GL(1, true).spacing(GL.WINDOW_SPACING);
+		combinationToolBar(combiGrp);
+		_combiList = listTable(combiGrp, true);
 		_combiList.p_layoutData = GD.fill(true, true);
 		_combiList.listeners!(SWT.Selection) ~= &updateLayerList;
 		_combiName = createEditor(_combiList, true, (int index, string name) {
@@ -99,11 +101,27 @@ class CombinationDialog : DharlDialog {
 		});
 
 		// Layer list.
-		_layers = listTable(_splitterH, false, true);
+		auto layerGrp = basicGroup(_splitterH, c.text.combinationVisibility);
+		layerGrp.p_layout = GL(1, true).spacing(GL.WINDOW_SPACING);
+		_layers = listTable(layerGrp, false, true);
+		_layers.p_layoutData = GD.fill(true, true);
 		_layers.listeners!(SWT.Selection) ~= (Event e) {
 			if (SWT.CHECK != e.detail) return;
 			auto item = cast(TableItem) e.item;
 			checkLayer(_layers.indexOf(item), item.p_checked);
+		};
+		// palette
+		_palette = basicCombo(layerGrp);
+		mod(_palette);
+		_palette.p_layoutData = GD.fill(true, false);
+		_palette.listeners!(SWT.Selection) ~= {
+			auto index = _palette.p_selectionIndex;
+			if (-1 == index) return;
+			auto indices = _combiList.p_selectionIndices;
+			foreach (i; indices) {
+				_combiData[i].selectedPalette = index;
+			}
+			_preview.redraw();
 		};
 
 		// Settings for output.
@@ -138,6 +156,10 @@ class CombinationDialog : DharlDialog {
 			itm.p_checked = true;
 			itm.p_grayed = true;
 		}
+		// palette
+		foreach (i; 0 .. _image.palettes.length) {
+			_palette.add(c.text.fPaletteName.value.format(i + 1));
+		}
 
 		// image type and depth
 		string bmp = c.text.fSaveImageTypeBitmap;
@@ -153,7 +175,7 @@ class CombinationDialog : DharlDialog {
 		// output folder
 		c.conf.combinationFolder.value.refText(_target);
 
-		updateEnabled();
+		updateLayerList();
 	}
 
 	protected override void onOpen(Shell shell) {
@@ -232,6 +254,7 @@ class CombinationDialog : DharlDialog {
 		auto selCombi = _combiList.p_selectionIndices.sort;
 		_combiList.p_enabled = existsCombi;
 		_layers.p_enabled = 0 < selCombi.length;
+		_palette.p_enabled = _layers.p_enabled;
 		_save.p_enabled = existsCombi;
 		_tAdd.p_enabled = true;
 		_tRemove.p_enabled = 0 < selCombi.length;
@@ -249,11 +272,13 @@ class CombinationDialog : DharlDialog {
 				itm.p_grayed = true;
 				itm.p_checked = true;
 			}
+			_palette.deselectAll();
 		} else if (1 == indices.length) {
 			foreach (i, itm; _layers.p_items) {
 				itm.p_grayed = false;
 				itm.p_checked = _combiData[indices[0]].visible[i];
 			}
+			_palette.select(_combiData[indices[0]].selectedPalette);
 		} else {
 			auto checked = _combiData[indices[0]].visible.dup;
 			foreach (i, itm; _layers.p_items) {
@@ -272,6 +297,14 @@ class CombinationDialog : DharlDialog {
 					itm.p_checked = checked[i];
 				}
 			}
+			int selectedPalette = _combiData[indices[0]].selectedPalette;
+			foreach (ci; indices[1 .. $]) {
+				if (selectedPalette != _combiData[ci].selectedPalette) {
+					selectedPalette = -1;
+					break;
+				}
+			}
+			_palette.select(selectedPalette);
 		}
 		updateEnabled();
 	}
