@@ -66,7 +66,7 @@ class MainPanel : Composite {
 	void delegate(string file)[] loadedReceivers;
 
 	/// Default image file filter.
-	private static immutable FILTER = "*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx;*.edg".split(";");
+	private static immutable FILTER = "*.dhr;*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx;*.edg".split(";");
 
 	private DCommon _c = null;
 
