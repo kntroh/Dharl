@@ -1,6 +1,7 @@
 dharl.exe
 dharl.res
 build.log
+personal_memo.txt
 objs/*
 example/*
 plugin/*

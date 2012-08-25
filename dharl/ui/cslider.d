@@ -55,6 +55,8 @@ class CSlider : Canvas {
 	private int _sInc = 1; /// Value of increment for minimum slide.
 	private int _sPageInc = 8; /// Value of increment for a page.
 
+	private int _sPushedValue = -1; /// Value before a mouse button is pressed.
+
 	/// If it is true, a bar is displayed in the reverse direction.
 	private bool _reverseView = false;
 
@@ -494,6 +496,7 @@ class CSlider : Canvas {
 		if (e.button != 1) return;
 		if (_mouse != Mouse.None) return;
 		int s = ctos(e.x, e.y);
+		_sPushedValue = this.p_selection;
 		if (s < _sMin) {
 			// At down button.
 			this.p_selection = this.p_selection - _sInc;
@@ -535,8 +538,20 @@ class CSlider : Canvas {
 	private void onMouseMove(Event e) {
 		checkWidget();
 		if (_mouse != Mouse.PushedBar) return;
-		int s = max(_sMin, min(_sMax, ctos(e.x, e.y)));
-		this.p_selection = s;
+		static immutable POINTER_MOVABLE_RANGE_X = 100;
+		static immutable POINTER_MOVABLE_RANGE_Y = 10;
+		auto cb = this.p_bounds;
+		cb.x -= POINTER_MOVABLE_RANGE_X;
+		cb.width += POINTER_MOVABLE_RANGE_X * 2;
+		cb.y -= POINTER_MOVABLE_RANGE_Y;
+		cb.height += POINTER_MOVABLE_RANGE_Y * 2;
+		if (cb.contains(e.x, e.y)) {
+			int s = max(_sMin, min(_sMax, ctos(e.x, e.y)));
+			this.p_selection = s;
+		} else {
+			// pointer is away
+			this.p_selection = _sPushedValue;
+		}
 		redraw();
 		raiseSelectionEvent(e);
 	}

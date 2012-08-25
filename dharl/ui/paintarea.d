@@ -994,7 +994,9 @@ class PaintArea : Canvas, Undoable {
 
 		auto bounds = this.p_bounds;
 		auto cp = toDisplay(CPoint(0, bounds.height));
-		cp.y -= this.computeTextSize("#").y;
+		auto cTSize = this.computeTextSize(_status.p_message);
+		cp.x -= cTSize.x;
+		cp.y -= cTSize.y;
 		_status.p_location = cp;
 		_status.p_visible = true;
 	}
@@ -2160,32 +2162,35 @@ class PaintArea : Canvas, Undoable {
 			if (showCursor && 1 != _mouseDown && _mouseEnter && 0 != _layers.length) {
 				// Draws only pixel under a mouse cursor.
 				auto ia = iCursorArea;
-				int ix1 = ia.x, ix2 = ia.x + ia.width - 1;
-				int iy1 = ia.y, iy2 = ia.y + ia.height - 1;
-				auto color = new Color(d, _image.palette.colors[_pixel]);
-				scope (exit) color.dispose();
-				e.gc.p_background = color;
-				int ccs = itoc(1);
-				pointsOfPath((int ix, int iy) {
-					if (!iInImage(ix, iy)) return;
-					if (ccs <= 4) {
-						e.gc.fillRectangle(ixtocx(ix), iytocy(iy), ccs, ccs);
-					} else {
-						// Draws cursor square.
-						if (ix == ix1) {
-							e.gc.fillRectangle(ixtocx(ix), iytocy(iy), 2, ccs);
+				iInImageRect(ia);
+				if (!ia.p_empty) {
+					int ix1 = ia.x, ix2 = ia.x + ia.width - 1;
+					int iy1 = ia.y, iy2 = ia.y + ia.height - 1;
+					auto color = new Color(d, _image.palette.colors[_pixel]);
+					scope (exit) color.dispose();
+					e.gc.p_background = color;
+					int ccs = itoc(1);
+					pointsOfPath((int ix, int iy) {
+						if (!iInImage(ix, iy)) return;
+						if (ccs <= 4) {
+							e.gc.fillRectangle(ixtocx(ix), iytocy(iy), ccs, ccs);
+						} else {
+							// Draws cursor square.
+							if (ix == ix1) {
+								e.gc.fillRectangle(ixtocx(ix), iytocy(iy), 2, ccs);
+							}
+							if (ix == ix2) {
+								e.gc.fillRectangle(ixtocx(ix) + ccs - 2, iytocy(iy), 2, ccs);
+							}
+							if (iy == iy1) {
+								e.gc.fillRectangle(ixtocx(ix), iytocy(iy), ccs, 2);
+							}
+							if (iy == iy2) {
+								e.gc.fillRectangle(ixtocx(ix), iytocy(iy) + ccs - 2, ccs, 2);
+							}
 						}
-						if (ix == ix2) {
-							e.gc.fillRectangle(ixtocx(ix) + ccs - 2, iytocy(iy), 2, ccs);
-						}
-						if (iy == iy1) {
-							e.gc.fillRectangle(ixtocx(ix), iytocy(iy), ccs, 2);
-						}
-						if (iy == iy2) {
-							e.gc.fillRectangle(ixtocx(ix), iytocy(iy) + ccs - 2, ccs, 2);
-						}
-					}
-				}, PaintMode.RectLine, ix1, iy1, ix2, iy2, ib.width, ib.height, 1);
+					}, PaintMode.RectLine, ix1, iy1, ix2, iy2, ib.width, ib.height, 1);
+				}
 			}
 		}
 	}
@@ -2328,7 +2333,6 @@ class PaintArea : Canvas, Undoable {
 			if (_iCurFrom.x == ix && _iCurFrom.y == iy) {
 				return;
 			}
-			clearCache();
 			redrawCursorArea();
 			_iCurFrom.x = ix;
 			_iCurFrom.y = iy;
