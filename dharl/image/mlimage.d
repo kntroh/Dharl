@@ -288,15 +288,15 @@ class MLImage : Undoable {
 	private static string combinationFilename(int imageType, in Combination combi) {
 		string ext;
 		switch (imageType) {
-		case SWT.IMAGE_BMP:     ext = "bmp"; break;
-		case SWT.IMAGE_BMP_RLE: ext = "bmp"; break;
-		case SWT.IMAGE_GIF:     ext = "gif"; break;
-		case SWT.IMAGE_ICO:     ext = "ico"; break;
-		case SWT.IMAGE_JPEG:    ext = "jpg"; break;
-		case SWT.IMAGE_PNG:     ext = "png"; break;
+		case SWT.IMAGE_BMP:     ext = ".bmp"; break;
+		case SWT.IMAGE_BMP_RLE: ext = ".bmp"; break;
+		case SWT.IMAGE_GIF:     ext = ".gif"; break;
+		case SWT.IMAGE_ICO:     ext = ".ico"; break;
+		case SWT.IMAGE_JPEG:    ext = ".jpg"; break;
+		case SWT.IMAGE_PNG:     ext = ".png"; break;
 		default: SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
-		return combi.name.validFilename.setExtension(ext);
+		return combi.name.validFilename ~ ext;
 	}
 	/// ditto
 	private ImageLoader writeCombinationImpl(ubyte depth, in bool[] layerVisible) {

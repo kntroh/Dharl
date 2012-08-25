@@ -3,10 +3,10 @@
 module util.environment;
 
 private import std.algorithm;
-private import std.ascii;
 private import std.conv;
 private import std.exception;
 private import std.string;
+private import std.uni;
 private import std.path;
 
 /// Handle of module or symbol.
@@ -25,7 +25,25 @@ private immutable MAX_PATH = 0x8000;
 pure
 nothrow
 bool isFilenameChar(dchar c) {
-	return c.isPrintable() && -1 == INVALID_FILENAME.countUntil(c);
+	return c.isGraphical() && -1 == INVALID_FILENAME.countUntil(c);
+} unittest {
+	version (Windows) {
+		assert (!'/'.isFilenameChar);
+		assert (!'\n'.isFilenameChar);
+		assert (!'*'.isFilenameChar);
+		assert ('a'.isFilenameChar);
+		assert ('b'.isFilenameChar);
+		assert ('!'.isFilenameChar);
+		assert ('日'.isFilenameChar);
+	} else version (Posix) {
+		assert (!'/'.isFilenameChar);
+		assert (!'\n'.isFilenameChar);
+		assert ('*'.isFilenameChar);
+		assert ('a'.isFilenameChar);
+		assert ('b'.isFilenameChar);
+		assert ('!'.isFilenameChar);
+		assert ('日'.isFilenameChar);
+	}
 }
 
 /// If name contains characters that can't use in filename,
@@ -41,6 +59,12 @@ string validFilename(string name, dchar c = '_') {
 		}
 	}
 	return filename.text();
+} unittest {
+	version (Windows) {
+		assert ("*test/!日本語.bmp".validFilename == "_test_!日本語.bmp");
+	} else version (Posix) {
+		assert ("*test/!日本語.bmp".validFilename == "*test_!日本語.bmp");
+	}
 }
 
 version (Windows) {

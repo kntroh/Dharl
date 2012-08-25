@@ -3112,7 +3112,14 @@ class LayerList : Canvas {
 				if (selLayer[l]) {
 					// Draws selection mark.
 					e.gc.p_background = d.getSystemColor(SWT.COLOR_DARK_BLUE);
-					e.gc.fillRectangle(w, y - 1, ca.width - w, LAYER_H + 2 + 1);
+					e.gc.fillRectangle(w + 1, y - 1, ca.width - (w + 1), LAYER_H + 2 + 1);
+
+					e.gc.p_lineStyle = SWT.LINE_SOLID;
+					int ly = y - 1;
+					e.gc.drawLine(0, ly, ca.width, ly);
+					ly = y + LAYER_H + 1;
+					e.gc.drawLine(0, ly, ca.width, ly);
+
 					// color of name text.
 					e.gc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
 				} else {
@@ -3174,8 +3181,8 @@ class LayerList : Canvas {
 				_transparentPixelBounds[l] = PBounds(vx, vy, V_CHECK_W, V_CHECK_H);
 
 				// Draws image preview.
-				if (LAYER_H < ib.height) {
-					e.gc.drawImage(img, ib.x, ib.y, ib.width, ib.height, 1, y + 1, w, LAYER_H);
+				if (LAYER_H - 1 < ib.height) {
+					e.gc.drawImage(img, ib.x, ib.y, ib.width, ib.height, 1, y + 1, w - 1, LAYER_H - 1);
 				} else {
 					int iy = y;
 					if (ib.height < LAYER_H) y += (LAYER_H - ib.height) / 2;
@@ -3184,7 +3191,7 @@ class LayerList : Canvas {
 
 				e.gc.p_foreground = d.getSystemColor(SWT.COLOR_DARK_BLUE);
 				int ly = y + LAYER_H + 1;
-				e.gc.p_lineStyle = SWT.LINE_DASH;
+				e.gc.p_lineStyle = SWT.LINE_DOT;
 				e.gc.drawLine(0, ly, ca.width, ly);
 			}
 			y += LAYER_H + 2;

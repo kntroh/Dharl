@@ -21,6 +21,8 @@ class PImageList : Canvas {
 	bool delegate(size_t index)[] removeReceivers;
 	/// Receivers of removed event.
 	void delegate()[] removedReceivers;
+	/// Receivers of moved event.
+	void delegate(size_t fromIndex, size_t toIndex)[] movedReceivers;
 
 	/// Image spacing.
 	private const SPACING = 5;
@@ -34,6 +36,11 @@ class PImageList : Canvas {
 
 	/// Old coordinates of mouse cursor.
 	private int _oldX = -1, _oldY = -1;
+
+	/// Index of dragged item.
+	private int _drag = -1;
+	/// Selected index of when start of drag.
+	private int _dragStart = -1;
 
 	/// Cache of wallpaper.
 	private Image _shadeCache = null;
@@ -270,6 +277,52 @@ class PImageList : Canvas {
 		}
 	}
 
+	/// Move item.
+	void move(size_t fromIndex, size_t toIndex) {
+		checkWidget();
+		if (imageCount <= fromIndex) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (imageCount <= toIndex) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+
+		if (fromIndex == toIndex) return;
+
+		int newSel = selectedIndex;
+
+		// move
+		if (fromIndex < toIndex) {
+			auto item = _images[fromIndex];
+			foreach (i; fromIndex .. toIndex) {
+				_images[i] = _images[i + 1];
+				_images[i].calcBounds();
+				if (i + 1 == selectedIndex) newSel = i;
+			}
+			_images[toIndex] = item;
+			item.calcBounds();
+			if (fromIndex == selectedIndex) newSel = toIndex;
+		} else {
+			assert (toIndex < fromIndex);
+			auto item = _images[fromIndex];
+			foreach_reverse (i; toIndex .. fromIndex) {
+				_images[i + 1] = _images[i];
+				_images[i + 1].calcBounds();
+				if (i == selectedIndex) newSel = i + 1;
+			}
+			_images[toIndex] = item;
+			item.calcBounds();
+			if (fromIndex == selectedIndex) newSel = toIndex;
+		}
+
+		redraw();
+
+		// update selection
+		if (newSel != selectedIndex) {
+			selectedIndex = newSel;
+		}
+	}
+
 	/// Raises selection event.
 	private void raiseSelectionEvent(Event e) {
 		auto se = new Event;
@@ -421,6 +474,7 @@ class PImageList : Canvas {
 		auto rect = CRectangle(0, 0, 0, 0);
 		foreach (index, img; _images) {
 			if (1 == e.button) {
+				// close
 				rect.x = img._bounds.x + img._cBounds.x;
 				rect.y = img._bounds.y + img._cBounds.y;
 				rect.width = img._cBounds.width;
@@ -437,7 +491,21 @@ class PImageList : Canvas {
 					}
 					break;
 				}
+
+				// drag start
+				rect.x = img._bounds.x + img._tBounds.x;
+				rect.y = img._bounds.y + img._tBounds.y;
+				rect.width = img._tBounds.width;
+				rect.height = img._tBounds.height;
+				if (rect.contains(e.x, e.y)) {
+					selectedIndex = index;
+					_drag = index;
+					_dragStart = index;
+					raiseSelectionEvent(e);
+					break;
+				}
 			}
+			// change selection
 			if (img._bounds.contains(e.x, e.y)) {
 				if (_selected != index) {
 					selectedIndex = index;
@@ -447,6 +515,12 @@ class PImageList : Canvas {
 				break;
 			}
 		}
+	}
+	/// ditto
+	private void onMouseUp(Event e) {
+		checkWidget();
+		_drag = -1;
+		_dragStart = -1;
 	}
 	/// ditto
 	private void onMouseWheel(Event e) {
@@ -474,7 +548,25 @@ class PImageList : Canvas {
 			_oldX = e.x;
 			_oldY = e.y;
 		}
-	
+
+		if (-1 != _drag) {
+			size_t toIndex;
+			auto cb = this.p_bounds;
+			cb.x = 0;
+			cb.y = 0;
+			if (cb.contains(e.x, e.y)) {
+				toIndex = .min(indexOfLose(e.x, e.y), imageCount - 1);
+			} else {
+				toIndex = _dragStart;
+			}
+			if (_drag == toIndex) return;
+			move(_drag, toIndex);
+			movedReceivers.raiseEvent(cast(size_t) _drag, toIndex);
+			_drag = toIndex;
+			raiseSelectionEvent(e);
+			return;
+		}
+
 		auto iRect = CRectangle(0, 0, 0, 0);
 		void initRect(in PImageItem img, in Rectangle rect) {
 			iRect.x = img._bounds.x + rect.x;

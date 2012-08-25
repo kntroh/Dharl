@@ -103,6 +103,7 @@ class DImages {
 	const DImage createGradation = importImage!("create_gradation.png"); /// ditto
 	const DImage enabledBackColor = importImage!("enabled_back_color.png"); /// ditto
 	const DImage maskMode = importImage!("mask_mode.png"); /// ditto
+	const DImage paletteControl = importImage!("palette_control.png"); /// ditto
 
 	const DImage selection = importImage!("selection.png"); /// ditto
 	const DImage freePath = importImage!("free_path.png"); /// ditto
@@ -170,9 +171,12 @@ class DText {
 	mixin MsgProp!("descLayerTransparentPixel", "Transparent pixel.\nIt switches by Shift+Rightclick on the palette."); /// ditto
 	mixin MsgProp!("descLayerName", "Click to edit the layer name."); /// ditto
 
-	mixin MsgProp!("question", "Question"); /// ditto
+	mixin MsgProp!("fQuestion", "Question - %s"); /// ditto
+	mixin MsgProp!("fWarning", "Warning - %s"); /// ditto
+
 	mixin MsgProp!("paintAreaChanged", "The paint area has been changed.\nAre you sure you want to quit?"); /// ditto
 	mixin MsgProp!("fCanvasChanged", "%s has been changed.\nDo you want to save it?"); /// ditto
+	mixin MsgProp!("warningDisappearsData", "If you didn't save with *.dhr, data such as layers disappears.\nDo you want to save it?"); /// ditto
 
 	mixin MsgProp!("fLoadImageType", "Image file (%s)"); /// ditto
 	mixin MsgProp!("fSaveImageTypeDharl", "Dharl image (*.dhr)"); /// ditto
@@ -183,6 +187,10 @@ class DText {
 
 	mixin MsgProp!("zoom", "Zoom"); /// ditto
 	mixin MsgProp!("lineWidth", "Line width"); /// ditto
+
+	mixin MsgProp!("fPaletteControl", "Palette control - %s"); /// ditto
+	mixin MsgProp!("paletteTransferSource", "Transfer source");
+	mixin MsgProp!("paletteTransferDestination", "Transfer destination");
 
 	mixin MsgProp!("fResize", "Resize character - %s"); /// ditto
 	mixin MsgProp!("fResizeCanvas", "Resize canvas - %s"); /// ditto
@@ -262,6 +270,7 @@ struct DMenuText {
 	mixin MsgProp!("palette", "&Palette"); /// ditto
 	mixin MsgProp!("createGradation", "Create &gradation"); /// ditto
 	mixin MsgProp!("maskMode", "Edit &mask"); /// ditto
+	mixin MsgProp!("paletteControl", "Pale&tte control"); /// ditto
 
 	mixin MsgProp!("tool", "&Tool"); /// ditto
 	mixin MsgProp!("editCombination", "Edit c&ombination..."); /// ditto
@@ -348,15 +357,19 @@ class DConfig {
 	mixin Prop!("enabledBackColor", bool, false);
 	mixin Prop!("maskMode", bool, false); /// ditto
 
+	/// Palette control parameters.
+	mixin Prop!("paletteControlDialog", WindowParameter, WindowParameter(int.min, int.min, 500, 400));
+	mixin Prop!("sashPosPaletteFrom_PaletteTo", int, -1); /// ditto
+
 	/// Resize relation parameters.
 	mixin Prop!("resizePixelCountMax", uint, 9999);
-	mixin Prop!("resizePercentMax", uint, 1000);
-	mixin Prop!("maintainAspectRatio", bool, true);
-	mixin Prop!("scaling", bool, true);
-	mixin Prop!("canvasMaintainAspectRatio", bool, true);
-	mixin Prop!("canvasScaling", bool, false);
-	mixin Prop!("resizeValueType", uint, 0);
-	mixin Prop!("canvasResizeValueType", uint, 0);
+	mixin Prop!("resizePercentMax", uint, 1000); /// ditto
+	mixin Prop!("maintainAspectRatio", bool, true); /// ditto
+	mixin Prop!("scaling", bool, true); /// ditto
+	mixin Prop!("canvasMaintainAspectRatio", bool, true); /// ditto
+	mixin Prop!("canvasScaling", bool, false); /// ditto
+	mixin Prop!("resizeValueType", uint, 0); /// ditto
+	mixin Prop!("canvasResizeValueType", uint, 0); /// ditto
 
 	/// Combination relation parameters.
 	mixin Prop!("combinationDialog", WindowParameter, WindowParameter(int.min, int.min, 500, 500));

@@ -189,6 +189,10 @@ int showYesNoDialog(Shell parent, string msg, string title) {
 int showYesNoCancelDialog(Shell parent, string msg, string title) {
 	return showMessage(parent, msg, title, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 }
+/// Show ok / cancel dialog.
+int showOkCancelDialog(Shell parent, string msg, string title) {
+	return showMessage(parent, msg, title, SWT.OK | SWT.CANCEL | SWT.ICON_QUESTION);
+}
 /// Show warning dialog.
 int showWarningDialog(Shell parent, string msg, string title) {
 	return showMessage(parent, msg, title, SWT.OK | SWT.ICON_WARNING);

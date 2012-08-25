@@ -359,7 +359,7 @@ class MainPanel : Composite {
 
 		// Tools for color control.
 		auto pToolBar = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
-		pToolBar.p_layoutData = GD(GridData.VERTICAL_ALIGN_CENTER);
+		pToolBar.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_CENTER);
 		basicToolItem(pToolBar, _c.text.menu.createGradation,
 			cimg(_c.image.createGradation),
 			&createGradation);
@@ -373,12 +373,12 @@ class MainPanel : Composite {
 			_paintArea.enabledBackColor = tBack.p_selection;
 		}, SWT.CHECK);
 		_c.conf.enabledBackColor.value.refSelection(tBack);
-		void refreshPaletteMenu() {
+		void updatePaletteMenu() {
 			tMask.p_selection = maskMode;
 			tBack.p_selection = _paintArea.enabledBackColor;
 		}
-		statusChangedReceivers ~= &refreshPaletteMenu;
-		refreshPaletteMenu();
+		statusChangedReceivers ~= &updatePaletteMenu;
+		updatePaletteMenu();
 
 		// Initializes controls.
 		auto cs = _c.conf.character;
@@ -888,6 +888,7 @@ class MainPanel : Composite {
 			}
 		} else {
 			fi = 0;
+			dlg.p_fileName = dlg.p_fileName.setExtension(".dhr");
 		}
 		dlg.p_filterIndex = fi;
 		dlg.p_overwrite = true;
@@ -984,6 +985,12 @@ class MainPanel : Composite {
 		if (0 == ext.filenameCmp(".dhr")) {
 			item.image.write(file);
 		} else {
+			if (1 < item.image.layerCount || item.image.combinations.length) {
+				auto title = _c.text.fQuestion.value.format(_c.text.appName);
+				int yesNo = showYesNoDialog(this.p_shell, _c.text.warningDisappearsData, title);
+				if (SWT.YES != yesNo) return;
+			}
+
 			auto loader = new ImageLoader;
 			auto data = item.image.createImageData(params.depth);
 			loader.data ~= data;
@@ -1042,9 +1049,8 @@ class MainPanel : Composite {
 		checkWidget();
 		checkInit();
 		if (!isPaintAreaChanged) return true;
-		static const DLG_STYLE = SWT.OK | SWT.CANCEL | SWT.ICON_QUESTION;
-		int r = MessageBox.showMessageBox(_c.text.paintAreaChanged, _c.text.question, this.p_shell, DLG_STYLE);
-		return SWT.CANCEL != r;
+		auto title = _c.text.fQuestion.value.format(_c.text.appName);
+		return SWT.CANCEL != showOkCancelDialog(this.p_shell, _c.text.paintAreaChanged, title);
 	}
 	/// ditto
 	bool canCloseImage(size_t index) {
@@ -1056,7 +1062,8 @@ class MainPanel : Composite {
 
 		static const DLG_STYLE = SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION;
 		string cChanged = _c.text.fCanvasChanged;
-		int r = MessageBox.showMessageBox(cChanged.format(params.name), _c.text.question, this.p_shell, DLG_STYLE);
+		auto title = _c.text.fQuestion.value.format(_c.text.appName);
+		int r = showYesNoCancelDialog(this.p_shell, cChanged.format(params.name), title);
 		if (SWT.YES == r) {
 			return saveImageOverwrite(index);
 		} else if (SWT.CANCEL == r) {
@@ -1272,7 +1279,48 @@ class MainPanel : Composite {
 	@property
 	const
 	bool canEditCombination() {
+		checkInit();
 		return -1 != _imageList.selectedIndex;
+	}
+
+	/// Open palette control dialog.
+	void paletteControl() {
+		checkWidget();
+		checkInit();
+		if (!_imageList.imageCount) return;
+
+		auto names = new string[_imageList.imageCount];
+		foreach (i; 0 .. _imageList.imageCount) {
+			names[i] = _imageList.item(i).p_text;
+		}
+		auto dialog = new PaletteControlDialog(this.p_shell, _c);
+		dialog.init(names, 0, []);
+		dialog.appliedReceivers ~= {
+			auto from = dialog.from;
+			if (-1 == from) return;
+			auto to = dialog.to;
+			if (!to.length) return;
+
+			// palette transfer
+			auto colors = _imageList.item(from).palette.colors;
+			int sel = _imageList.selectedIndex;
+			PImageItem[] items;
+			Undoable[] storeData;
+			foreach (i; to) {
+				if (i == from) continue;
+				auto item = _imageList.item(i);
+				items ~= item;
+				storeData ~= item.image;
+			}
+			_um.store(storeData);
+			foreach (item; items) {
+				item.colors = colors;
+				modified(item);
+			}
+			// update palette view
+			if (-1 != to.countUntil(sel)) selectImage(sel);
+		};
+		dialog.open();
 	}
 
 	/// If paintArea is changed after push, returns true.

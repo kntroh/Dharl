@@ -307,6 +307,8 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 	/* ---- Paletete menu ---------------------------------------------- */
 
+	separator(toolBar);
+
 	auto tGrad = basicMenuItem(mPalette, c.text.menu.createGradation, cimg(c.image.createGradation), {
 		mainPanel.createGradation();
 	});
@@ -315,6 +317,8 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	tMask = basicMenuItem(mPalette, c.text.menu.maskMode, cimg(c.image.maskMode), {
 		mainPanel.maskMode = tMask.p_selection;
 	}, SWT.CHECK);
+	separator(mPalette);
+	auto mPCtrl = basicMenuItem(mPalette, toolBar, c.text.menu.paletteControl, .cimg(c.image.paletteControl), &mainPanel.paletteControl);
 
 
 	/* ---- Tool menu -------------------------------------------------- */
@@ -419,6 +423,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		}
 		tMask.p_selection = mainPanel.maskMode;
 		mBack.p_selection = mainPanel.paintArea.enabledBackColor;
+		mPCtrl.p_enabled = 0 < mainPanel.imageCount;
 
 		int index = mainPanel.selectedIndex;
 		tSaveOverwrite.p_enabled = -1 != index && (mainPanel.isChanged(index) || !mainPanel.path(index).length);

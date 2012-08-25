@@ -8,6 +8,7 @@ private import dharl.common;
 
 private import dharl.ui.basicdialog;
 private import dharl.ui.dwtutils;
+private import dharl.ui.splitter;
 private import dharl.ui.uicommon;
 
 private import std.conv;
@@ -379,6 +380,89 @@ class AboutDialog : DharlDialog {
 		msg1.p_layoutData = GD().alignment(SWT.BEGINNING, SWT.END).grabExcessSpace(true, true);
 		auto msg2 = basicLabel(area, c.text.aboutMessage2);
 		msg2.p_layoutData = GD().alignment(SWT.BEGINNING, SWT.BEGINNING).grabExcessSpace(true, true);
+	}
+
+	protected override bool apply() {
+		// No processing
+		return true;
+	}
+}
+
+/// Dialog of palette control.
+class PaletteControlDialog : DharlDialog {
+
+	/// Splitter.
+	private Splitter _splitter = null;
+
+	/// List of palette names.
+	private List _from = null, _to = null;
+
+	/// Palette names.
+	private string[] _paletteNames = [];
+	/// A source index of palette transfer.
+	private int _fromIndex = -1;
+	/// A destination indexes of palette transfer.
+	private int[] _toIndices = [];
+
+	/// The only constructor.
+	this (Shell parent, DCommon c) {
+		auto title = c.text.fPaletteControl.value.format(c.text.appName);
+		auto image = .cimg(c.image.paletteControl);
+		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
+		super (c, parent, title, image, true, true, true, buttons);
+	}
+
+	/// Sets items of palette list.
+	void init(in string[] paletteNames, int fromSelection, in int[] toSelection) {
+		_paletteNames = paletteNames.dup;
+		_fromIndex = fromSelection;
+		_toIndices = toSelection.dup;
+	}
+
+	/// A source index of palette transfer.
+	@property
+	const
+	int from() { return _fromIndex; }
+	/// A destination indexes of palette transfer.
+	@property
+	const
+	const(int)[] to() { return _toIndices; }
+
+	protected override void setup(Composite area) {
+		area.p_layout = GL.window(1, true);
+
+		_splitter = basicHSplitter(area);
+		_splitter.p_layoutData = GD.fill(true, true);
+
+		auto fromGrp = basicGroup(_splitter, c.text.paletteTransferSource);
+		fromGrp.p_layout = GL(1, true);
+		_from = basicList(fromGrp, false);
+		mod(_from);
+		_from.p_layoutData = GD.fill(true, true);
+
+		auto toGrp = basicGroup(_splitter, c.text.paletteTransferDestination);
+		toGrp.p_layout = GL(1, true);
+		_to = basicList(toGrp, true);
+		mod(_to);
+		_to.p_layoutData = GD.fill(true, true);
+
+		_from.listeners!(SWT.Selection) ~= { _fromIndex = _from.p_selectionIndex(); };
+		_to.listeners!(SWT.Selection) ~= { _toIndices = _to.p_selectionIndices(); };
+
+		// initializes controls
+		foreach (name; _paletteNames) {
+			_from.add(name);
+			_to.add(name);
+		}
+		_from.select(_fromIndex);
+		_to.select(_toIndices);
+	}
+
+	protected override void onOpen(Shell shell) {
+		// dialog bounds
+		c.conf.paletteControlDialog.value.refWindow(shell);
+		// splitter
+		c.conf.sashPosPaletteFrom_PaletteTo.value.refSelection(_splitter);
 	}
 
 	protected override bool apply() {

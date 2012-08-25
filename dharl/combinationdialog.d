@@ -76,6 +76,7 @@ class CombinationDialog : DharlDialog {
 		/* ----- Preview ----------------------------------------------- */
 		_splitterV = basicVSplitter(area);
 		_preview = new Preview(_splitterV, SWT.DOUBLE_BUFFERED);
+		_splitterV.resizable = _preview;
 
 		/* ----- Createes controls ------------------------------------- */
 		auto controls = basicComposite(_splitterV);
@@ -130,6 +131,7 @@ class CombinationDialog : DharlDialog {
 			_combiList.add(combi.name);
 			_combiData ~= Combination(combi.name, combi.visible.dup);
 		}
+		if (_combiList.p_itemCount) _combiList.select(0);
 		// layer list
 		foreach (i; 0 .. _image.layerCount) {
 			auto itm = basicTableItem(_layers, _image.layer(i).name);
@@ -305,11 +307,28 @@ class CombinationDialog : DharlDialog {
 			assert (0);
 		}
 	}
+	/// Selection image type.
+	@property
+	private int selectedImageType() {
+		switch (_imageType.p_selectionIndex) {
+		case 0: // 256-colors bitmap
+		case 1: // 16-colors bitmap
+		case 2: // 2-colors bitmap
+			return SWT.IMAGE_BMP;
+		case 3: // 256-colors png
+		case 4: // 16-colors png
+		case 5: // 2-colors png
+			return SWT.IMAGE_PNG;
+		default:
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+			assert (0);
+		}
+	}
 
 	/// Save combinations.
 	private void saveCombination() {
 		ubyte depth = selectedDepth;
-		int imageType;
+		int imageType = selectedImageType;
 		string dir = _target.p_text.absolutePath(c.moduleFileName.dirName());
 		try {
 			_image.writeCombination(imageType, depth, dir, (ref string[] filename, out bool cancel) {

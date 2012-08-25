@@ -530,7 +530,16 @@ class CSlider : Canvas {
 	/// ditto
 	private void onMouseWheel(Event e) {
 		checkWidget();
-		this.p_selection = this.p_selection + (-_sPageInc * e.count);
+		if (0 == e.count) return;
+		int sVal;
+		if (e.count < 0) {
+			sVal = _sPageInc;
+		} else {
+			assert (0 < e.count);
+			sVal = -_sPageInc;
+		}
+
+		this.p_selection = this.p_selection + sVal;
 		redraw();
 		raiseSelectionEvent(e);
 	}
