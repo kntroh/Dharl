@@ -388,8 +388,8 @@ class AboutDialog : DharlDialog {
 	}
 }
 
-/// Dialog of palette control.
-class PaletteControlDialog : DharlDialog {
+/// Dialog of palette transfer.
+class PaletteTransferDialog : DharlDialog {
 
 	/// Splitter.
 	private Splitter _splitter = null;
@@ -406,8 +406,8 @@ class PaletteControlDialog : DharlDialog {
 
 	/// The only constructor.
 	this (Shell parent, DCommon c) {
-		auto title = c.text.fPaletteControl.value.format(c.text.appName);
-		auto image = .cimg(c.image.paletteControl);
+		auto title = c.text.fPaletteTransfer.value.format(c.text.appName);
+		auto image = .cimg(c.image.paletteTransfer);
 		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
 		super (c, parent, title, image, true, true, true, buttons);
 	}
@@ -460,7 +460,7 @@ class PaletteControlDialog : DharlDialog {
 
 	protected override void onOpen(Shell shell) {
 		// dialog bounds
-		c.conf.paletteControlDialog.value.refWindow(shell);
+		c.conf.paletteTransferDialog.value.refWindow(shell);
 		// splitter
 		c.conf.sashPosPaletteFrom_PaletteTo.value.refSelection(_splitter);
 	}

@@ -318,7 +318,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		mainPanel.maskMode = tMask.p_selection;
 	}, SWT.CHECK);
 	separator(mPalette);
-	auto mPCtrl = basicMenuItem(mPalette, toolBar, c.text.menu.paletteControl, .cimg(c.image.paletteControl), &mainPanel.paletteControl);
+	auto mPTrans = basicMenuItem(mPalette, toolBar, c.text.menu.paletteTransfer, .cimg(c.image.paletteTransfer), &mainPanel.paletteTransfer);
 
 
 	/* ---- Tool menu -------------------------------------------------- */
@@ -423,7 +423,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		}
 		tMask.p_selection = mainPanel.maskMode;
 		mBack.p_selection = mainPanel.paintArea.enabledBackColor;
-		mPCtrl.p_enabled = 0 < mainPanel.imageCount;
+		mPTrans.p_enabled = 0 < mainPanel.imageCount;
 
 		int index = mainPanel.selectedIndex;
 		tSaveOverwrite.p_enabled = -1 != index && (mainPanel.isChanged(index) || !mainPanel.path(index).length);

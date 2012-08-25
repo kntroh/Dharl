@@ -1283,8 +1283,8 @@ class MainPanel : Composite {
 		return -1 != _imageList.selectedIndex;
 	}
 
-	/// Open palette control dialog.
-	void paletteControl() {
+	/// Open palette transfer dialog.
+	void paletteTransfer() {
 		checkWidget();
 		checkInit();
 		if (!_imageList.imageCount) return;
@@ -1293,7 +1293,7 @@ class MainPanel : Composite {
 		foreach (i; 0 .. _imageList.imageCount) {
 			names[i] = _imageList.item(i).p_text;
 		}
-		auto dialog = new PaletteControlDialog(this.p_shell, _c);
+		auto dialog = new PaletteTransferDialog(this.p_shell, _c);
 		dialog.init(names, 0, []);
 		dialog.appliedReceivers ~= {
 			auto from = dialog.from;

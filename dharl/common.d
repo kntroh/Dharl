@@ -103,7 +103,7 @@ class DImages {
 	const DImage createGradation = importImage!("create_gradation.png"); /// ditto
 	const DImage enabledBackColor = importImage!("enabled_back_color.png"); /// ditto
 	const DImage maskMode = importImage!("mask_mode.png"); /// ditto
-	const DImage paletteControl = importImage!("palette_control.png"); /// ditto
+	const DImage paletteTransfer = importImage!("palette_transfer.png"); /// ditto
 
 	const DImage selection = importImage!("selection.png"); /// ditto
 	const DImage freePath = importImage!("free_path.png"); /// ditto
@@ -188,7 +188,7 @@ class DText {
 	mixin MsgProp!("zoom", "Zoom"); /// ditto
 	mixin MsgProp!("lineWidth", "Line width"); /// ditto
 
-	mixin MsgProp!("fPaletteControl", "Palette control - %s"); /// ditto
+	mixin MsgProp!("fPaletteTransfer", "Palette transfer - %s"); /// ditto
 	mixin MsgProp!("paletteTransferSource", "Transfer source");
 	mixin MsgProp!("paletteTransferDestination", "Transfer destination");
 
@@ -273,7 +273,7 @@ struct DMenuText {
 	mixin MsgProp!("palette", "&Palette"); /// ditto
 	mixin MsgProp!("createGradation", "Create &gradation"); /// ditto
 	mixin MsgProp!("maskMode", "Edit &mask"); /// ditto
-	mixin MsgProp!("paletteControl", "Pale&tte control"); /// ditto
+	mixin MsgProp!("paletteTransfer", "Pale&tte transfer"); /// ditto
 
 	mixin MsgProp!("tool", "&Tool"); /// ditto
 	mixin MsgProp!("editCombination", "Edit c&ombination..."); /// ditto
@@ -360,8 +360,8 @@ class DConfig {
 	mixin Prop!("enabledBackColor", bool, false);
 	mixin Prop!("maskMode", bool, false); /// ditto
 
-	/// Palette control parameters.
-	mixin Prop!("paletteControlDialog", WindowParameter, WindowParameter(int.min, int.min, 500, 400));
+	/// Palette transfer parameters.
+	mixin Prop!("paletteTransferDialog", WindowParameter, WindowParameter(int.min, int.min, 500, 400));
 	mixin Prop!("sashPosPaletteFrom_PaletteTo", int, -1); /// ditto
 
 	/// Resize relation parameters.
