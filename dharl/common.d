@@ -104,8 +104,10 @@ class DImages {
 	const DImage enabledBackColor = importImage!("enabled_back_color.png"); /// ditto
 	const DImage maskMode = importImage!("mask_mode.png"); /// ditto
 	const DImage paletteOperation = importImage!("palette_operation.png"); /// ditto
+	const DImage palette = importImage!("palette.png"); /// ditto
 	const DImage addPalette = importImage!("add_palette.png"); /// ditto
 	const DImage removePalette = importImage!("remove_palette.png"); /// ditto
+	const DImage copyPalette = importImage!("copy_palette.png"); /// ditto
 	const DImage paletteTransfer = importImage!("palette_transfer.png"); /// ditto
 
 	const DImage selection = importImage!("selection.png"); /// ditto
@@ -194,6 +196,7 @@ class DText {
 	mixin MsgProp!("fPaletteOperation", "Palette operation - %s"); /// ditto
 	mixin MsgProp!("palettes", "Palettes"); /// ditto
 	mixin MsgProp!("palettePreview", "Preview"); /// ditto
+	mixin MsgProp!("to", "to"); /// ditto
 
 	mixin MsgProp!("fPaletteTransfer", "Palette transfer - %s"); /// ditto
 	mixin MsgProp!("paletteTransferSource", "Transfer source"); /// ditto
@@ -283,6 +286,7 @@ struct DMenuText {
 	mixin MsgProp!("paletteOperation", "Pale&tte operation"); /// ditto
 	mixin MsgProp!("addPalette", "&Add palette"); /// ditto
 	mixin MsgProp!("removePalette", "&Remove palette"); /// ditto
+	mixin MsgProp!("copyPalette", "&Copy"); /// ditto
 	mixin MsgProp!("paletteTransfer", "Pale&tte transfer"); /// ditto
 
 	mixin MsgProp!("tool", "&Tool"); /// ditto

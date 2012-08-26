@@ -409,7 +409,11 @@ class PaletteOperationDialog : DharlDialog {
 	private PaletteView _paletteView = null;
 
 	/// Items of toolbar.
-	private ToolItem _tAdd = null, _tRemove = null, _tUp = null, _tDown = null;
+	private ToolItem _tAdd = null, _tRemove = null;
+
+	/// For palette copy operation.
+	private Combo _copyFrom = null, _copyTo = null;
+	private Button _tCopy = null; /// ditto
 
 	/// The only constructor.
 	this (Shell parent, DCommon c) {
@@ -451,20 +455,21 @@ class PaletteOperationDialog : DharlDialog {
 		area.p_layout = GL.window(2, false);
 
 		auto palettesGrp = basicGroup(area, c.text.palettes);
-		palettesGrp.p_layout = GL.window(1, true);
+		palettesGrp.p_layout = GL.window(4, false);
 		palettesGrp.p_layoutData = GD.fill(true, true);
 
 		auto toolBar = basicToolBar(palettesGrp);
+		toolBar.p_layoutData = GD().hSpan(4);
 
 		// list
-		toolBar.p_layoutData = GD.fill(true, false);
 		_palettes = basicList(palettesGrp, false);
 		mod(_palettes);
-		_palettes.p_layoutData = GD.fill(true, true);
+		_palettes.p_layoutData = GD.fill(true, true).hSpan(4);
 
 		_palettes.listeners!(SWT.Selection) ~= {
 			_selectedPalette = _palettes.p_selectionIndex();
 			_paletteView.colors = _paletteData[_selectedPalette];
+			_copyFrom.select(_selectedPalette);
 			updateEnabled();
 		};
 
@@ -486,24 +491,28 @@ class PaletteOperationDialog : DharlDialog {
 			enableApply();
 			updateList();
 		});
-		separator(toolBar);
-		_tUp = basicToolItem(toolBar, c.text.menu.up, .cimg(c.image.up), {
-			auto index = _selectedPalette;
-			if (0 == index) return;
-			.swap(_paletteData[index], _paletteData[index - 1]);
-			_selectedPalette = index - 1;
+
+		// copy operation
+		_copyFrom = basicCombo(palettesGrp);
+		_copyFrom.p_layoutData = GD.fill(true, false);
+		_copyFrom.listeners!(SWT.Selection) ~= &updateEnabled;
+		auto toLabel = basicLabel(palettesGrp, c.text.to);
+		_copyTo = basicCombo(palettesGrp);
+		_copyTo.p_layoutData = GD.fill(true, false);
+		_copyTo.listeners!(SWT.Selection) ~= &updateEnabled;
+		_tCopy = basicButton(palettesGrp, c.text.menu.copyPalette, .cimg(c.image.copyPalette), {
+			auto from = _copyFrom.p_selectionIndex;
+			if (-1 == from) return;
+			auto to = _copyTo.p_selectionIndex;
+			if (-1 == to) return;
+			_paletteData[to] = MLImage.copyPalette(_paletteData[from]);
+			if (_selectedPalette == to) {
+				_paletteView.colors = _paletteData[_selectedPalette];
+			}
 			enableApply();
-			updateList();
-		});
-		_tDown = basicToolItem(toolBar, c.text.menu.down, .cimg(c.image.down), {
-			auto index = _selectedPalette;
-			if (_paletteData.length <= index + 1) return;
-			.swap(_paletteData[index], _paletteData[index + 1]);
-			_selectedPalette = index + 1;
-			enableApply();
-			updateList();
 		});
 
+		// preview
 		auto previewGrp = basicGroup(area, c.text.palettePreview);
 		previewGrp.p_layout = GL.window(1, true);
 		previewGrp.p_layoutData = GD.fill(false, true);
@@ -516,10 +525,25 @@ class PaletteOperationDialog : DharlDialog {
 	/// Update palette list and selection index.
 	private void updateList() {
 		_palettes.removeAll();
+		string from = _copyFrom.p_text;
+		string to = _copyTo.p_text;
+		_copyFrom.removeAll();
+		_copyTo.removeAll();
 		foreach (i; 0 .. _paletteData.length) {
-			_palettes.add(c.text.fPaletteName.value.format(i + 1));
+			auto name = c.text.fPaletteName.value.format(i + 1);
+			_palettes.add(name);
+			_copyFrom.add(name);
+			_copyTo.add(name);
+			if (from == name) _copyFrom.select(i);
+			if (to == name) _copyTo.select(i);
 		}
 		_palettes.select(_selectedPalette);
+		if (-1 == _copyFrom.p_selectionIndex) {
+			_copyFrom.select(0);
+		}
+		if (-1 == _copyTo.p_selectionIndex) {
+			_copyTo.select(0);
+		}
 
 		_paletteView.colors = _paletteData[_selectedPalette];
 		updateEnabled();
@@ -529,8 +553,9 @@ class PaletteOperationDialog : DharlDialog {
 	private void updateEnabled() {
 		_tAdd.p_enabled = true;
 		_tRemove.p_enabled = 1 < _paletteData.length;
-		_tUp.p_enabled = 0 < _selectedPalette;
-		_tDown.p_enabled = _selectedPalette + 1 < _paletteData.length;
+		auto copyFrom = _copyFrom.p_selectionIndex;
+		auto copyTo = _copyTo.p_selectionIndex;
+		_tCopy.p_enabled = (-1 != copyFrom && copyFrom != copyTo);
 	}
 
 	protected override void onOpen(Shell shell) {

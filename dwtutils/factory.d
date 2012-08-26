@@ -150,14 +150,7 @@ ToolItem basicToolItem(ToolBar parent, string text, Image image, void delegate(E
 	} else {
 		toolItem = new ToolItem(parent, style, index);
 	}
-	int tab = text.indexOf("\t");
-	if (-1 != tab) text = text[0 .. tab];
-	if (image) {
-		toolItem.p_toolTipText = text;
-		toolItem.p_image = image;
-	} else {
-		toolItem.p_text = text;
-	}
+	initToolItem(toolItem, text, image);
 	toolItem.p_selection = selection;
 	if (listener) {
 		toolItem.listeners!(SWT.Selection) ~= listener;
@@ -190,6 +183,54 @@ ToolItem basicToolItem(ToolBar parent, Control control, int index = -1) {
 	auto cs = control.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 	toolItem.p_width = cs.x;
 	return toolItem;
+}
+
+/// Creates drop down tool item.
+Tuple!(ToolItem, "toolItem", Menu, "menu") dropDownToolItem(ToolBar parent, string text, Image image, void delegate() buttonListener, int index = -1) {
+	return dropDownToolItem(parent, text, image, (Event) {
+		buttonListener();
+	}, index);
+}
+/// ditto
+Tuple!(ToolItem, "toolItem", Menu, "menu") dropDownToolItem(ToolBar parent, string text, Image image, void delegate(Event e) buttonListener, int index = -1) {
+	ToolItem toolItem;
+	if (index < 0) {
+		toolItem = new ToolItem(parent, SWT.DROP_DOWN);
+	} else {
+		toolItem = new ToolItem(parent, SWT.DROP_DOWN, index);
+	}
+	initToolItem(toolItem, text, image);
+	auto menu = new Menu(parent.p_shell);
+	toolItem.listeners!(SWT.Selection) ~= (Event e) {
+		if (!buttonListener || SWT.ARROW == e.detail) {
+			auto b = toolItem.p_bounds;
+			menu.p_location = parent.toDisplay(b.x, b.y + b.height);
+			menu.p_visible = true;
+		} else if (buttonListener) {
+			buttonListener(e);
+		}
+	};
+	return typeof(return)(toolItem, menu);
+}
+/// ditto
+Tuple!(ToolItem, "toolItem", Menu, "menu") dropDownToolItem(ToolBar parent, string text, void delegate(Event e) buttonListener, int index = -1) {
+	return dropDownToolItem(parent, text, null, buttonListener, index);
+}
+/// ditto
+Tuple!(ToolItem, "toolItem", Menu, "menu") dropDownToolItem(ToolBar parent, string text, void delegate() buttonListener, int index = -1) {
+	return dropDownToolItem(parent, text, null, buttonListener, index);
+}
+
+/// Common function for tool item.
+private void initToolItem(ToolItem toolItem, string text, Image image) {
+	int tab = text.indexOf("\t");
+	if (-1 != tab) text = text[0 .. tab];
+	if (image) {
+		toolItem.p_toolTipText = text;
+		toolItem.p_image = image;
+	} else {
+		toolItem.p_text = text;
+	}
 }
 
 /// Creates basic style a menu item and a tool item bound.

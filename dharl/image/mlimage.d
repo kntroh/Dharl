@@ -655,6 +655,10 @@ class MLImage : Undoable {
 				changed = true;
 			}
 		}
+		if (selectedPalette != src.selectedPalette) {
+			selectedPalette = src.selectedPalette;
+			changed = true;
+		}
 		return changed;
 	}
 

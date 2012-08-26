@@ -383,7 +383,21 @@ class MainPanel : Composite {
 
 		auto pToolBar2 = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
 		pToolBar2.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_CENTER);
-		basicToolItem(pToolBar2, _c.text.menu.paletteOperation, cimg(_c.image.paletteOperation), &paletteOperation);
+		auto tPOp = dropDownToolItem(pToolBar2, _c.text.menu.paletteOperation, .cimg(_c.image.paletteOperation), &paletteOperation);
+		tPOp.menu.listeners!(SWT.Show) ~= {
+			foreach (item; tPOp.menu.p_items) {
+				item.dispose();
+			}
+			void createMenu(size_t i) {
+				auto item = basicMenuItem(tPOp.menu, _c.text.fPaletteName.value.format(i + 1), {
+					selectPalette(i);
+				}, SWT.RADIO);
+				item.p_selection = (i == _paintArea.selectedPalette);
+			}
+			foreach (i; 0 .. _paintArea.palettes.length) {
+				createMenu(i);
+			}
+		};
 
 		// Initializes controls.
 		auto cs = _c.conf.character;
@@ -1301,35 +1315,59 @@ class MainPanel : Composite {
 		checkInit();
 
 		auto dialog = new PaletteOperationDialog(this.p_shell, _c);
-		dialog.init(_paintArea.image.palettes, _paintArea.image.selectedPalette);
+		dialog.init(_paintArea.palettes, _paintArea.selectedPalette);
 		dialog.appliedReceivers ~= {
 			auto palettes = dialog.palettes;
 			.enforce(palettes.length);
 			auto sel = dialog.selectedPalette;
 			.enforce(sel < dialog.palettes.length);
 
-			Undoable[] storeData = [cast(Undoable) _paintArea, _paletteView];
-			auto selImage = _imageList.selectedIndex;
-			PImageItem item = null;
-			if (-1 != selImage) {
-				item = _imageList.item(selImage);
-				storeData ~= item.image;
-			}
-			_um.store(storeData);
-
-			// update palette
-			_paintArea.setPalettes(palettes, sel);
-
-			// update controls
-			_paletteView.colors = _paintArea.palette;
-			_colorSlider.color = _paletteView.color(_paintArea.pixel);
-
-			if (item) {
-				item.colors = _paletteView.colors;
-				modified(item);
-			}
+			setPalettes(palettes, sel);
 		};
 		dialog.open();
+	}
+	/// Selects palette of paint area by index.
+	void selectPalette(size_t index) {
+		if (_paintArea.palettes.length <= index) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (_paintArea.selectedPalette == index) return;
+
+		setPalettes(null, index);
+	}
+	/// ditto
+	private void setPalettes(in PaletteData[] palettes, size_t sel) {
+		Undoable[] storeData = [cast(Undoable) _paintArea, _paletteView];
+		auto selImage = _imageList.selectedIndex;
+		PImageItem item = null;
+		if (-1 != selImage) {
+			auto item2 = _imageList.item(selImage);
+			auto pColors = _paletteView.colors;
+			foreach (i, rgb; item2.image.palette.colors) {
+				if (pColors[i] != rgb) {
+					item = item2;
+					storeData ~= item2.image;
+					break;
+				}
+			}
+		}
+		_um.store(storeData);
+
+		// update palette
+		if (palettes) {
+			_paintArea.setPalettes(palettes, sel);
+		} else {
+			_paintArea.selectedPalette = sel;
+		}
+
+		// update controls
+		_paletteView.colors = _paintArea.palette;
+		_colorSlider.color = _paletteView.color(_paintArea.pixel);
+
+		if (item) {
+			item.colors = _paletteView.colors;
+			modified(item);
+		}
 	}
 
 	/// Open palette transfer dialog.

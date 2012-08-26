@@ -755,6 +755,29 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		_image.setPalettes(palettes, selectedPalette);
+		this.selectedPalette = selectedPalette;
+	}
+	/// Gets palette.
+	@property
+	const
+	const(PaletteData)[] palettes() {
+		checkInit();
+		return _image.palettes;
+	}
+
+	/// Index of selection palette.
+	@property
+	const
+	size_t selectedPalette() {
+		checkInit();
+		return _image.selectedPalette;
+	}
+	/// ditto
+	@property
+	void selectedPalette(size_t index) {
+		checkWidget();
+		checkInit();
+		_image.selectedPalette = index;
 		if (_pasteLayer) {
 			_pasteLayer.colors = this.palette.colors;
 		}
