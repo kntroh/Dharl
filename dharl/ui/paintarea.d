@@ -1,5 +1,8 @@
 
 /// This module includes PaintArea and members related to it. 
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.ui.paintarea;
 
 private import util.graphics;
@@ -2577,10 +2580,10 @@ class PaintArea : Canvas, Undoable {
 		auto old = zoom;
 
 		if (e.count < 0) {
-			zoom = max(1, zoom - 1);
+			zoom = max(1, zoom / 2);
 		} else {
 			assert (0 < e.count);
-			zoom = min(cast(int) zoom + 1, ZOOM_MAX);
+			zoom = min(cast(int) zoom * 2, ZOOM_MAX);
 		}
 
 		if (zoom != old) {

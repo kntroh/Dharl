@@ -1,5 +1,8 @@
 
 /// This module includes ColorSlider and members related to it. 
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.ui.colorslider;
 
 private import util.utils;

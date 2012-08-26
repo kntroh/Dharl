@@ -1,5 +1,8 @@
 
 /// This module includes MLImage and members related to it.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.image.mlimage;
 
 private import util.environment;

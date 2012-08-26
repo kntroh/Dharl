@@ -1,5 +1,8 @@
 
 /// This module includes functions of process communication.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module util.commprocess;
 
 private import core.thread;

@@ -1,5 +1,8 @@
 
 /// This module include UndoManager and members related to it. 
+///
+/// License: Public Domain
+/// Authors: kntroh
 module util.undomanager;
 
 private import util.utils;

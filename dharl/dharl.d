@@ -1,5 +1,8 @@
 
 /// Dharl main.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.dharl;
 
 private import util.commprocess;

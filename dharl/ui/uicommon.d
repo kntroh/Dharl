@@ -1,5 +1,8 @@
 
 /// This module includes functions related to user interface.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.ui.uicommon;
 
 private import util.utils;

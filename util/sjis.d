@@ -1,4 +1,8 @@
 
+/// This module includes functions for reciprocal conversion for MS932 (Shift JIS) and Unicode.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module util.sjis;
 
 private import std.exception;

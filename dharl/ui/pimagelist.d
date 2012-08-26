@@ -1,5 +1,8 @@
 
 /// This module includes PImageList and members related to it. 
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.ui.pimagelist;
 
 private import util.undomanager;

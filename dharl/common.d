@@ -1,5 +1,8 @@
 
 /// This module includes Common and members related to it. 
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.common;
 
 private import util.types;

@@ -1,5 +1,8 @@
 
 /// This module includes functions for creating DWT widgets easily.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dwtutils.factory;
 
 private import dwtutils.utils;

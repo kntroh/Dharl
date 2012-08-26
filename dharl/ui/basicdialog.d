@@ -1,5 +1,8 @@
 
 /// This module includes basic style dialog and members related to it.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.ui.basicdialog;
 
 private import util.utils;

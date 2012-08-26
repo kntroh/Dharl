@@ -1,5 +1,8 @@
 
 /// This module includes functions to handle D-Pixed file (*.dpx).
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.image.dpx;
 
 private import util.convertendian;

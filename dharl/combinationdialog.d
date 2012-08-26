@@ -1,5 +1,8 @@
 
 /// This module includes dialog of editor for combinations of layers in MLImage.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.combinationdialog;
 
 private import util.undomanager;

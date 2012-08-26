@@ -1,5 +1,8 @@
 
 /// This module includes Splitter and members related to it. 
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.ui.splitter;
 
 private import dwtutils.utils;

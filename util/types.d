@@ -1,5 +1,8 @@
 
 /// This module includes common types and structures.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module util.types;
 
 private import util.utils : safeParse;

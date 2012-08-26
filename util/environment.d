@@ -1,5 +1,8 @@
 
 /// This module includes functions with result for each environment.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module util.environment;
 
 private import std.algorithm;

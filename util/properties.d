@@ -1,5 +1,8 @@
 
 /// This module includes property related functions and templates.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module util.properties;
 
 private import util.types;

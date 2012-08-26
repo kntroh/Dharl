@@ -1,5 +1,8 @@
 
 /// This module include common member for graphics.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module util.graphics;
 
 private import util.types;

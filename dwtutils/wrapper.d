@@ -1,5 +1,8 @@
 
 /// This module includes D-style wrapper for DWT widgets and events.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dwtutils.wrapper;
 
 private import std.algorithm;

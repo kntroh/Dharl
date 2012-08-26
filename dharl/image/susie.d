@@ -1,5 +1,8 @@
 
 /// This module includes functions to handle Susie Plug-in.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.image.susie;
 
 private import dharl.image.mlimage;

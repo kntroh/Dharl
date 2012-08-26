@@ -1,5 +1,8 @@
 
 /// This module includes PaletteView and members related to it. 
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.ui.paletteview;
 
 private import util.graphics;
@@ -527,6 +530,7 @@ class PaletteView : Canvas, Undoable {
 		scope (exit) font.dispose();
 		void drawIndex(int pixel) {
 			if (-1 == pixel) return;
+			if (_mask[pixel]) return;
 			auto oldColor = e.gc.p_foreground;
 			scope (exit) e.gc.p_foreground = oldColor;
 			auto oldFont = e.gc.p_font;

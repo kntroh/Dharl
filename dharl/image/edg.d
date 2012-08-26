@@ -1,5 +1,8 @@
 
 /// This module includes functions to handle EDGE file (*.edg).
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.image.edg;
 
 private import util.convertendian;

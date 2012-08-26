@@ -1,5 +1,8 @@
 
 /// This module includes MainPanel and members related to it. 
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.mainpanel;
 
 private import util.graphics;
@@ -730,6 +733,7 @@ class MainPanel : Composite {
 
 		auto fname = file.baseName();
 		auto ext = fname.extension();
+		ubyte[MLImage] depths;
 		auto imgs = _susiePlugin.loadWithSusie(file, _c.text.newLayer, (string ext, lazy ubyte[] data) {
 			MLImage[] r;
 			ext = ext.toLower();
@@ -749,9 +753,11 @@ class MainPanel : Composite {
 						if (filter.endsWith(ext)) {
 							auto buf = new ByteArrayInputStream(cast(byte[]) data());
 							auto imgData = new ImageData(buf);
+							auto depth = cast(ubyte) imgData.depth;
 							auto img = new MLImage;
 							img.init(imgData, _c.text.newLayer);
 							r ~= img;
+							depths[img] = depth;
 							break;
 						}
 					}
@@ -765,6 +771,8 @@ class MainPanel : Composite {
 			if (!img.layerCount) continue;
 			auto data = img.layer(0).image;
 			ubyte depth = cast(ubyte) .min(data.depth, 8);
+			auto pDepth = img in depths;
+			if (pDepth) depth = *pDepth;
 			bool saved = !data.palette.isDirect && depth <= 8;
 			if (saved) {
 				if (0 != ext.filenameCmp(".dhr") && 0 != ext.filenameCmp(".bmp") && 0 != ext.filenameCmp(".png")) {

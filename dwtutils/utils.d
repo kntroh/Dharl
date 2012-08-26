@@ -1,5 +1,8 @@
 
 /// This module includes utilities for DWT.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dwtutils.utils;
 
 public import dwtutils.factory;

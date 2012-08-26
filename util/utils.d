@@ -1,5 +1,8 @@
 
 /// This module includes common utility functions.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module util.utils;
 
 private import std.algorithm;

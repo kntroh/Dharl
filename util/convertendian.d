@@ -1,5 +1,8 @@
 
 /// This module includes functions for bytes I/O considering the endian.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module util.convertendian;
 
 private import std.stream;

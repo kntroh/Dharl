@@ -1,5 +1,8 @@
 
 /// This module includes CSlider and members related to it. 
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.ui.cslider;
 
 private import util.utils;

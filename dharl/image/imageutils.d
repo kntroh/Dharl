@@ -1,5 +1,8 @@
 
 /// This module includes utilities for image.
+///
+/// License: Public Domain
+/// Authors: kntroh
 module dharl.image.imageutils;
 
 private import util.graphics;
