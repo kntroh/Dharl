@@ -181,21 +181,11 @@ class MainPanel : Composite {
 			if (rgb == _paletteView.color(pixel)) return;
 
 			// Stores palette data of image on paintArea and imageList.
-			Undoable[] us = [_paletteView];
-			int sel = _imageList.selectedIndex;
-			if (-1 != sel) {
-				us ~= _imageList.item(sel).image;
-			}
-			_um.store(us, null, "Slide color");
+			_um.store(_paletteView, null, "Slide color");
 
 			// Reflects color.
 			_paletteView.color(pixel, rgb);
 			_paintArea.color(pixel, rgb);
-			if (-1 != sel) {
-				auto item = _imageList.item(sel);
-				item.color(pixel, rgb);
-				modified(item);
-			}
 			_paintPreview.redraw();
 		};
 
@@ -213,7 +203,7 @@ class MainPanel : Composite {
 				_um.store(item.image, {
 					_paintArea.fixPaste();
 					if (item.pushImage(_paintArea.image)) {
-						_pushBase = _paintArea.image.storeData(false, false);
+						_pushBase = _paintArea.image.storeData;
 						modified(item);
 						return true;
 					}
@@ -226,9 +216,12 @@ class MainPanel : Composite {
 				auto image = item.image;
 				auto bounds = item.selectedPiece;
 				_paintArea.pushImage(image, bounds.x, bounds.y);
+
+				_paletteView.colors = _paintArea.palette;
+				_colorSlider.color = _paletteView.color(_paintArea.pixel);
 				_paintPreview.redraw();
 				_layerList.redraw();
-				_pushBase = _paintArea.image.storeData(false, false);
+				_pushBase = _paintArea.image.storeData;
 				break;
 			default: assert (0);
 			}
@@ -249,27 +242,15 @@ class MainPanel : Composite {
 			statusChangedReceivers.raiseEvent();
 		};
 		_paletteView.colorChangeReceivers ~= (int pixel, in RGB afterRGB) {
-			int sel = _imageList.selectedIndex;
-			Undoable[] us = [_paletteView];
-			if (-1 != sel) us ~= _imageList.item(sel).image;
-			_um.store(us, {
+			_um.store(_paletteView, {
 				_paintArea.color(pixel, afterRGB);
 				return true;
 			});
 		};
 		_paletteView.colorSwapReceivers ~= (int pixel1, int pixel2) {
-			int sel = _imageList.selectedIndex;
 			Undoable[] us = [cast(Undoable) _paletteView, _paintArea];
-			MLImage img = null;
-			if (-1 != sel) {
-				img = _imageList.item(sel).image;
-				us ~= img;
-			}
 			_um.store(us, {
 				_paintArea.swapColor(pixel1, pixel2);
-				if (img) {
-					img.swapColor(pixel1, pixel2);
-				}
 				return true;
 			});
 		};
@@ -282,10 +263,6 @@ class MainPanel : Composite {
 		_paletteView.restoreReceivers ~= (UndoMode mode) {
 			_paintArea.colors = _paletteView.colors;
 			_colorSlider.color = _paletteView.color(_paletteView.pixel1);
-			int sel = _imageList.selectedIndex;
-			if (-1 != sel) {
-				_imageList.item(sel).colors(_paletteView.colors);
-			}
 			_paintPreview.redraw();
 		};
 		_imageList.removeReceivers ~= &canCloseImage;
@@ -434,7 +411,7 @@ class MainPanel : Composite {
 		constructModeToolBar(ptSplitter);
 
 		// Stores image data for undo operation.
-		_pushBase = _paintArea.image.storeData(false, false);
+		_pushBase = _paintArea.image.storeData;
 	}
 	/// Creates paint mode toolbar.
 	private void constructModeToolBar(Composite parent) {
@@ -1053,12 +1030,6 @@ class MainPanel : Composite {
 			return;
 		}
 		auto item = _imageList.item(index);
-
-		_paintArea.colors = item.palette.colors;
-		_paletteView.colors = _paintArea.palette;
-		_colorSlider.color = _paletteView.color(_paintArea.pixel);
-		_paintPreview.redraw();
-
 		auto params = item.dataTo!PImageParams;
 		assert (params);
 		_paletteView.depth = params.depth;
@@ -1185,33 +1156,23 @@ class MainPanel : Composite {
 	void createGradation() {
 		checkWidget();
 		checkInit();
-		int sel = _imageList.selectedIndex;
 
-		// Stores palette data of image on paintArea and imageList.
-		Undoable[] us = [_paletteView];
-		if (-1 != sel) {
-			us ~= _imageList.item(sel).image;
-		}
-		_um.store(us, {
+		// Stores palette data of image on paintArea.
+		_um.store(_paletteView, {
 			size_t p1 = _paletteView.pixel1;
 			size_t p2 = _paletteView.pixel2;
 			if (p1 > p2) swap(p1, p2);
 			_paletteView.createGradation();
 
-			auto item = -1 != sel ? _imageList.item(sel) : null;
 			bool mod = false;
 			foreach (p; p1 .. p2 + 1) {
 				auto rgb = _paletteView.color(p);
 				if (rgb == _paintArea.color(p)) continue;
 				_paintArea.color(p, rgb);
-				if (item) {
-					item.color(p, rgb);
-				}
 				mod = true;
 			}
 			if (mod) {
 				_paintPreview.redraw();
-				if (item) modified(item);
 			}
 			return mod;
 		});
@@ -1338,19 +1299,6 @@ class MainPanel : Composite {
 	/// ditto
 	private void setPalettes(in PaletteData[] palettes, size_t sel) {
 		Undoable[] storeData = [cast(Undoable) _paintArea, _paletteView];
-		auto selImage = _imageList.selectedIndex;
-		PImageItem item = null;
-		if (-1 != selImage) {
-			auto item2 = _imageList.item(selImage);
-			auto pColors = _paletteView.colors;
-			foreach (i, rgb; item2.image.palette.colors) {
-				if (pColors[i] != rgb) {
-					item = item2;
-					storeData ~= item2.image;
-					break;
-				}
-			}
-		}
 		_um.store(storeData);
 
 		// update palette
@@ -1363,11 +1311,6 @@ class MainPanel : Composite {
 		// update controls
 		_paletteView.colors = _paintArea.palette;
 		_colorSlider.color = _paletteView.color(_paintArea.pixel);
-
-		if (item) {
-			item.colors = _paletteView.colors;
-			modified(item);
-		}
 	}
 
 	/// Open palette transfer dialog.
@@ -1387,21 +1330,22 @@ class MainPanel : Composite {
 			if (-1 == from) return;
 			auto to = dialog.to;
 			if (!to.length) return;
+			int sel = _imageList.selectedIndex;
 
 			// palette transfer
-			auto colors = _imageList.item(from).palette.colors;
-			int sel = _imageList.selectedIndex;
+			auto source = _imageList.item(from).image;
 			PImageItem[] items;
 			Undoable[] storeData;
 			foreach (i; to) {
 				if (i == from) continue;
 				auto item = _imageList.item(i);
+				if (source.equalsPalette(item.image)) continue;
 				items ~= item;
 				storeData ~= item.image;
 			}
 			_um.store(storeData);
 			foreach (item; items) {
-				item.colors = colors;
+				item.setPalettes(source.palettes, source.selectedPalette);
 				modified(item);
 			}
 			// update palette view

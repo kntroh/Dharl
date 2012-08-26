@@ -797,6 +797,29 @@ private class PImageItem : Item {
 		_image.colors = colors;
 		redrawImage();
 	}
+	/// Sets palettes.
+	void setPalettes(in PaletteData[] palettes, size_t selectedPalette) {
+		_image.setPalettes(palettes, selectedPalette);
+		redrawImage();
+	}
+	/// Gets palette.
+	@property
+	const
+	const(PaletteData)[] palettes() {
+		return _image.palettes;
+	}
+	/// Index of selection palette.
+	@property
+	const
+	size_t selectedPalette() {
+		return _image.selectedPalette;
+	}
+	/// ditto
+	@property
+	void selectedPalette(size_t index) {
+		_image.selectedPalette = index;
+		redrawImage();
+	}
 
 	/// Resizes image.
 	void resize(uint w, uint h, size_t backgroundPixel) {

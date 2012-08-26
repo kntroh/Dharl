@@ -682,6 +682,19 @@ class MLImage : Undoable {
 		return changed;
 	}
 
+	/// If palettes equals src.palettes, returns true.
+	bool equalsPalette(in MLImage src) {
+		if (_palette.length != src._palette.length) return false;
+		if (selectedPalette != src.selectedPalette) return false;
+		foreach (pi, palette; _palette) {
+			foreach (i, ref rgb; palette.colors) {
+				auto base = src._palette[pi].colors[i];
+				if (rgb != base) return false;
+			}
+		}
+		return true;
+	}
+
 	/// Creates MLImage based this instance.
 	MLImage createMLImage(in size_t[] layer = null) {
 		return createMLImage(0, 0, _iw, _ih, layer);
@@ -1265,10 +1278,6 @@ class MLImage : Undoable {
 		bool[] visible = null;
 		/// Combination info.
 		Combination[] combi;
-		/// Is this include palette data?
-		bool includePalette = true;
-		/// Is this include combination info?
-		bool includeCombination = true;
 	}
 
 	/// Checks this is equal to o.
@@ -1281,12 +1290,10 @@ class MLImage : Undoable {
 		if (_layers.length != data.layers.length) return false;
 		if (_selPalette != data.selectedPalette) return false;
 		if (_palette.length != data.palettes.length) return false;
-		if (data.includePalette) {
-			foreach (pi, palette; data.palettes) {
-				foreach (i, ref rgb; palette) {
-					auto c = _palette[pi].colors[i];
-					if (c.red != rgb.r || c.green != rgb.g || c.blue != rgb.b) return false;
-				}
+		foreach (pi, palette; data.palettes) {
+			foreach (i, ref rgb; palette) {
+				auto c = _palette[pi].colors[i];
+				if (c.red != rgb.r || c.green != rgb.g || c.blue != rgb.b) return false;
 			}
 		}
 		foreach (i, ref l; _layers) {
@@ -1295,28 +1302,23 @@ class MLImage : Undoable {
 			if (l.name != data.name[i]) return false;
 			if (l.visible != data.visible[i]) return false;
 		}
-		if (data.includeCombination) {
-			if (_combi != data.combi) return false;
-		}
+		if (_combi != data.combi) return false;
 		return true;
 	}
 
-	/// Creates now state data.
 	@property
-	Object storeData(bool includePalette, bool includeCombination) {
+	override Object storeData() {
 		auto data = new StoreData;
 		data.width = _iw;
 		data.height = _ih;
 		data.selectedPalette = selectedPalette;
 		data.palettes.length = _palette.length;
-		if (includePalette) {
-			foreach (pi, ref palette; data.palettes) {
-				foreach (i, ref rgb; palette) {
-					auto c = _palette[pi].colors[i];
-					rgb.r = cast(ubyte) c.red;
-					rgb.g = cast(ubyte) c.green;
-					rgb.b = cast(ubyte) c.blue;
-				}
+		foreach (pi, ref palette; data.palettes) {
+			foreach (i, ref rgb; palette) {
+				auto c = _palette[pi].colors[i];
+				rgb.r = cast(ubyte) c.red;
+				rgb.g = cast(ubyte) c.green;
+				rgb.b = cast(ubyte) c.blue;
 			}
 		}
 		data.layers = new byte[][_layers.length];
@@ -1329,16 +1331,8 @@ class MLImage : Undoable {
 			data.name[i] = l.name;
 			data.visible[i] = l.visible;
 		}
-		if (includeCombination) {
-			cloneCombi(data.combi, _combi);
-		}
-		data.includePalette = includePalette;
-		data.includeCombination = includeCombination;
+		cloneCombi(data.combi, _combi);
 		return data;
-	}
-	@property
-	override Object storeData() {
-		return storeData(true, true);
 	}
 	override void restore(Object data, UndoMode mode) {
 		auto st = cast(StoreData) data;
