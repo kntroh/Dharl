@@ -39,6 +39,17 @@ struct Combination {
 	string name; /// Combination name.
 	bool[] visible; /// Visibility of layers.
 	size_t selectedPalette = 0; /// Index of selection palette.
+
+	/// Clone combination.
+	@property
+	const
+	Combination clone() {
+		Combination combi;
+		combi.name = name;
+		combi.visible = visible.dup;
+		combi.selectedPalette = selectedPalette;
+		return combi;
+	}
 }
 
 /// Multi layer image.
@@ -121,7 +132,7 @@ class MLImage : Undoable {
 					colors ~= new RGB(r, g, b);
 				};
 				ep.parse();
-				foreach (i; colors.length .. 256 + 1) {
+				foreach (i; colors.length .. 256) {
 					colors ~= new RGB(0, 0, 0);
 				}
 				assert (256 == colors.length);
@@ -213,6 +224,7 @@ class MLImage : Undoable {
 
 		auto doc = new Document(new Tag("dharl"));
 		auto palettes = new Element("palettes");
+		doc ~= palettes;
 		auto layers = new Element("layers");
 		doc ~= layers;
 
@@ -299,12 +311,12 @@ class MLImage : Undoable {
 	void writeCombination(int imageType, ubyte depth, string dir, void delegate(ref string[] filenames, out bool cancel) checkOverwrite = null, in Combination[] combinations = null) {
 		checkInit();
 		auto combis = combinations !is null ? combinations : this.combinations;
-		const(bool)[][string] nameTable;
+		const(Combination)[][string] nameTable;
 		string[] exists;
 		string[] notExists;
 		foreach (combi; combis) {
 			string filename = dir.buildPath(combinationFilename(imageType, combi));
-			nameTable[filename] = combi.visible;
+			nameTable[filename] = [combi];
 			if (filename.exists()) {
 				exists ~= filename;
 			} else {
@@ -317,7 +329,7 @@ class MLImage : Undoable {
 			if (cancel) return;
 		}
 		foreach (filename; exists ~ notExists) {
-			auto loader = writeCombinationImpl(depth, nameTable[filename]);
+			auto loader = writeCombinationImpl(depth, nameTable[filename][0]);
 			loader.save(filename, imageType);
 		}
 	}
@@ -328,7 +340,7 @@ class MLImage : Undoable {
 		ubyte[][string] r;
 		auto combis = combinations !is null ? combinations : this.combinations;
 		foreach (combi; combis) {
-			auto loader = writeCombinationImpl(depth, combi.visible);
+			auto loader = writeCombinationImpl(depth, combi);
 			auto buf = new ByteArrayOutputStream;
 			loader.save(buf, imageType);
 			r[combinationFilename(imageType, combi)] = cast(ubyte[]) buf.toByteArray();
@@ -350,18 +362,21 @@ class MLImage : Undoable {
 		return combi.name.validFilename ~ ext;
 	}
 	/// ditto
-	private ImageLoader writeCombinationImpl(ubyte depth, in bool[] layerVisible) {
+	private ImageLoader writeCombinationImpl(ubyte depth, in Combination combi) {
 		checkInit();
-		if (layerVisible.length != layerCount) {
+		if (combi.visible.length != layerCount) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (_palette.length <= combi.selectedPalette) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 
 		auto loader = new ImageLoader;
 		size_t[] ls;
-		foreach (l, v; layerVisible) {
+		foreach (l, v; combi.visible) {
 			if (v) ls ~= l;
 		}
-		loader.data ~= createImageData(0, 0, width, height, depth, ls);
+		loader.data ~= createImageData(0, 0, width, height, depth, ls, combi.selectedPalette);
 		return loader;
 	}
 
@@ -659,6 +674,11 @@ class MLImage : Undoable {
 			selectedPalette = src.selectedPalette;
 			changed = true;
 		}
+		foreach (ref combi; _combi) {
+			if(_palette.length <= combi.selectedPalette) {
+				combi.selectedPalette = 0;
+			}
+		}
 		return changed;
 	}
 
@@ -733,23 +753,23 @@ class MLImage : Undoable {
 	ImageData createImageData(ubyte depth) {
 		return createImageData(depth, visibleIndices);
 	}
-	ImageData createImageData(ubyte depth, in size_t[] layer) {
-		return createImageData(0, 0, _iw, _ih, depth, layer);
+	ImageData createImageData(ubyte depth, in size_t[] layer, int selectedPalette = -1) {
+		return createImageData(0, 0, _iw, _ih, depth, layer, selectedPalette);
 	}
 	/// ditto
 	ImageData createImageData(Rectangle iRange, ubyte depth) {
 		return createImageData(iRange, depth, visibleIndices);
 	}
 	/// ditto
-	ImageData createImageData(Rectangle iRange, ubyte depth, in size_t[] layer) {
-		return createImageData(iRange.x, iRange.y, iRange.width, iRange.height, depth, layer);
+	ImageData createImageData(Rectangle iRange, ubyte depth, in size_t[] layer, int selectedPalette = -1) {
+		return createImageData(iRange.x, iRange.y, iRange.width, iRange.height, depth, layer, selectedPalette);
 	}
 	/// ditto
 	ImageData createImageData(int ix, int iy, int iw, int ih, ubyte depth) {
 		return createImageData(ix, iy, iw, ih, depth, visibleIndices);
 	}
 	/// ditto
-	ImageData createImageData(int ix, int iy, int iw, int ih, ubyte depth, in size_t[] layer) {
+	ImageData createImageData(int ix, int iy, int iw, int ih, ubyte depth, in size_t[] layer, int selectedPalette = -1) {
 		if (1 != depth && 2 != depth && 4 != depth && 8 != depth
 				&& 16 != depth && 24 != depth && 32 != depth) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -760,6 +780,9 @@ class MLImage : Undoable {
 		if (iw < 1 || ih < 1 || _iw < ix + iw || _ih < iy + ih) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
+		if (-1 != selectedPalette && _palette.length <= selectedPalette) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
 		foreach (i; layer) {
 			if (_layers.length <= i) {
 				SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -767,13 +790,15 @@ class MLImage : Undoable {
 		}
 		checkInit();
 
+		auto basePalette = -1 == selectedPalette ? this.palette : _palette[selectedPalette];
 		size_t[] ls = layer.dup.sort().uniq().array();
+
 		/// Creates new palette.
 		size_t colors = 0x1 << depth;
 		auto rgbs = new RGB[colors];
 		foreach (i, ref rgb; rgbs) {
 			if (i < 256) {
-				rgb = color(i);
+				rgb = basePalette.colors[i];
 			} else {
 				rgb = new RGB(0, 0, 0);
 			}
@@ -1218,6 +1243,7 @@ class MLImage : Undoable {
 		foreach (i, c; combi) {
 			dest[i].name = c.name;
 			dest[i].visible = c.visible.dup;
+			dest[i].selectedPalette = c.selectedPalette;
 		}
 	}
 

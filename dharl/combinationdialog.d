@@ -147,7 +147,7 @@ class CombinationDialog : DharlDialog {
 		// combination list
 		foreach (combi; _image.combinations) {
 			_combiList.add(combi.name);
-			_combiData ~= Combination(combi.name, combi.visible.dup);
+			_combiData ~= combi.clone;
 		}
 		if (_combiList.p_itemCount) _combiList.select(0);
 		// layer list
@@ -195,7 +195,7 @@ class CombinationDialog : DharlDialog {
 			_combiList.add(name, index);
 			auto visible = new bool[_image.layerCount];
 			visible[] = true;
-			_combiData.insertInPlace(index, Combination(name, visible));
+			_combiData.insertInPlace(index, Combination(name, visible, 0));
 
 			_combiList.deselectAll();
 			_combiList.select(index);
@@ -304,7 +304,11 @@ class CombinationDialog : DharlDialog {
 					break;
 				}
 			}
-			_palette.select(selectedPalette);
+			if (-1 == selectedPalette) {
+				_palette.deselectAll();
+			} else {
+				_palette.select(selectedPalette);
+			}
 		}
 		updateEnabled();
 	}
@@ -418,9 +422,12 @@ class CombinationDialog : DharlDialog {
 			size_t[] ls;
 			int x = (ca.width - _image.width) / 2;
 			int y = (ca.height - _image.height) / 2;
+			auto selPalette = _image.palettes[_combiData[index].selectedPalette];
 			foreach_reverse (l, v; _combiData[index].visible) {
 				if (!v) continue;
-				auto img = new Image(d, _image.layer(l).image);
+				auto clone = cast(ImageData) _image.layer(l).image.clone();
+				clone.palette = selPalette;
+				auto img = new Image(d, clone);
 				scope (exit) img.dispose();
 				e.gc.drawImage(img, x, y);
 			}
