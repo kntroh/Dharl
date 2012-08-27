@@ -55,7 +55,11 @@ class PImageList : Canvas {
 	this (Composite parent, int style) {
 		super (parent, style | SWT.H_SCROLL | SWT.V_SCROLL);
 
-		_pieceSize = CPoint(100, 100);
+		if (style & SWT.READ_ONLY) {
+			_pieceSize = CPoint(0, 0);
+		} else {
+			_pieceSize = CPoint(100, 100);
+		}
 
 		auto d = parent.p_display;
 		this.p_background = d.getSystemColor(SWT.COLOR_GRAY);
@@ -396,6 +400,7 @@ class PImageList : Canvas {
 				selectedIndex = selectedIndex - 1;
 			}
 			showSelection();
+			raiseSelectionEvent(e);
 			break;
 		case SWT.ARROW_DOWN:
 		case SWT.ARROW_RIGHT:
@@ -407,6 +412,7 @@ class PImageList : Canvas {
 				selectedIndex = selectedIndex + 1;
 			}
 			showSelection();
+			raiseSelectionEvent(e);
 			break;
 		default:
 		}
@@ -477,36 +483,38 @@ class PImageList : Canvas {
 
 		auto rect = CRectangle(0, 0, 0, 0);
 		foreach (index, img; _images) {
-			if (1 == e.button) {
-				// close
-				rect.x = img._bounds.x + img._cBounds.x;
-				rect.y = img._bounds.y + img._cBounds.y;
-				rect.width = img._cBounds.width;
-				rect.height = img._cBounds.height;
-				if (rect.contains(e.x, e.y)) {
-					bool doit = removeReceivers.raiseEvent(index);
-					if (doit) {
-						size_t selected = _selected;
-						img.dispose();
-						removedReceivers.raiseEvent();
-						if (selected == index) {
-							raiseSelectionEvent(e);
+			if (!(this.p_style & SWT.READ_ONLY)) {
+				if (1 == e.button) {
+					// close
+					rect.x = img._bounds.x + img._cBounds.x;
+					rect.y = img._bounds.y + img._cBounds.y;
+					rect.width = img._cBounds.width;
+					rect.height = img._cBounds.height;
+					if (rect.contains(e.x, e.y)) {
+						bool doit = removeReceivers.raiseEvent(index);
+						if (doit) {
+							size_t selected = _selected;
+							img.dispose();
+							removedReceivers.raiseEvent();
+							if (selected == index) {
+								raiseSelectionEvent(e);
+							}
 						}
+						break;
 					}
-					break;
-				}
 
-				// drag start
-				rect.x = img._bounds.x + img._tBounds.x;
-				rect.y = img._bounds.y + img._tBounds.y;
-				rect.width = img._tBounds.width;
-				rect.height = img._tBounds.height;
-				if (rect.contains(e.x, e.y)) {
-					selectedIndex = index;
-					_drag = index;
-					_dragStart = index;
-					raiseSelectionEvent(e);
-					break;
+					// drag start
+					rect.x = img._bounds.x + img._tBounds.x;
+					rect.y = img._bounds.y + img._tBounds.y;
+					rect.width = img._tBounds.width;
+					rect.height = img._tBounds.height;
+					if (rect.contains(e.x, e.y)) {
+						selectedIndex = index;
+						_drag = index;
+						_dragStart = index;
+						raiseSelectionEvent(e);
+						break;
+					}
 				}
 			}
 			// change selection
@@ -578,35 +586,39 @@ class PImageList : Canvas {
 			iRect.width = rect.width;
 			iRect.height = rect.height;
 		}
-		string toolTip = null;
+		string toolTip = "";
 		foreach (img; _images) {
-			initRect(img, img._iBounds);
-			void set(int x, int y) {
-				if (img._selectedPiece.x != x || img._selectedPiece.y != y) {
-					img.redrawPieceFrame();
-					img._selectedPiece.x = x;
-					img._selectedPiece.y = y;
-					img.redrawPieceFrame();
+			if (!img._selectedPiece.p_empty) {
+				initRect(img, img._iBounds);
+				void set(int x, int y) {
+					if (img._selectedPiece.x != x || img._selectedPiece.y != y) {
+						img.redrawPieceFrame();
+						img._selectedPiece.x = x;
+						img._selectedPiece.y = y;
+						img.redrawPieceFrame();
+					}
 				}
-			}
-			if (iRect.contains(e.x, e.y)) {
-				int pw = _pieceSize.x;
-				int ph = _pieceSize.y;
-				int psx = (e.x - iRect.x) / pw * pw;
-				int psy = (e.y - iRect.y) / ph * ph;
-				set(psx, psy);
-			} else if (-1 != img._selectedPiece.x) {
-				// Mouse pointer is out of img.
-				set(-1, -1);
+				if (iRect.contains(e.x, e.y)) {
+					int pw = _pieceSize.x;
+					int ph = _pieceSize.y;
+					int psx = (e.x - iRect.x) / pw * pw;
+					int psy = (e.y - iRect.y) / ph * ph;
+					set(psx, psy);
+				} else if (-1 != img._selectedPiece.x) {
+					// Mouse pointer is out of img.
+					set(-1, -1);
+				}
 			}
 			initRect(img, img._tBounds);
 			if (iRect.contains(e.x, e.y)) {
 				toolTip = img.toolTip;
 			}
-			initRect(img, img._cBounds);
-			if (iRect.contains(e.x, e.y) || iRect.contains(_oldX, _oldY)) {
-				toolTip = img.toolTip;
-				img.redrawCloseButton();
+			if (!(this.p_style & SWT.READ_ONLY)) {
+				initRect(img, img._cBounds);
+				if (iRect.contains(e.x, e.y) || iRect.contains(_oldX, _oldY)) {
+					toolTip = img.toolTip;
+					img.redrawCloseButton();
+				}
 			}
 		}
 		this.p_toolTipText = toolTip;
@@ -655,6 +667,11 @@ private class PImageItem : Item {
 	private string _name; /// Name of this image.
 	private MLImage _image; /// Data of this image (multi layer).
 	private string _toolTip = null; /// Tool tip text.
+
+	/// Used combination at image drawing.
+	private Combination _combi = Combination("", [], 0);
+	/// Used color depth at image drawing.
+	private ubyte _depth = 8;
 
 	private Rectangle _bounds; /// Bounds of this image (including name).
 	private Rectangle _iBounds; /// Bounds of this image (excluding name).
@@ -705,7 +722,11 @@ private class PImageItem : Item {
 		int tsq = 2 * 2 + ds.y;
 
 		_cBounds.x = .max(0, cast(int) image.width - tsq);
-		_cBounds.width = .min(tsq, cast(int) image.width);
+		if (parent.p_style & SWT.READ_ONLY) {
+			_cBounds.width = 0;
+		} else {
+			_cBounds.width = .min(tsq, cast(int) image.width);
+		}
 		_cBounds.height = tsq;
 		_tBounds.width = .max(0, cast(int) image.width - _cBounds.width);
 		_tBounds.height = tsq;
@@ -759,6 +780,32 @@ private class PImageItem : Item {
 	@property
 	const
 	string toolTip() { return _toolTip; }
+
+	/// Used combination at image drawing.
+	@property
+	void combination(in Combination v) {
+		checkWidget();
+		if (_combi == v) return;
+		_combi = v.clone;
+		redrawImage();
+	}
+	/// ditto
+	@property
+	const
+	Combination combination() { return _combi.clone; }
+
+	/// Used color depth at image drawing.
+	@property
+	void depth(ubyte v) {
+		checkWidget();
+		if (_depth == v) return;
+		_depth = v;
+		redrawImage();
+	}
+	/// ditto
+	@property
+	const
+	ubyte depth() { return _depth; }
 
 	/// Gets palette of image.
 	@property
@@ -930,10 +977,19 @@ private class PImageItem : Item {
 		auto d = this.p_display;
 
 		// image
+		auto palettes = image.palettes;
+		auto useCombi = _combi.visible.length == image.layerCount && _combi.selectedPalette < palettes.length;
 		foreach_reverse (i; 0 .. image.layerCount) {
 			auto l = image.layer(i);
-			if (!l.visible) continue;
-			auto img = new Image(d, l.image);
+			ImageData imgData;
+			if (useCombi) {
+				if (!_combi.visible[i]) continue;
+				imgData = image.createImageData(_depth, [i], _combi.selectedPalette);
+			} else {
+				if (!l.visible) continue;
+				imgData = l.image;
+			}
+			auto img = new Image(d, imgData);
 			scope (exit) img.dispose();
 			egc.drawImage(img, _bounds.x + _iBounds.x, _bounds.y + _iBounds.y);
 		}
@@ -977,7 +1033,7 @@ private class PImageItem : Item {
 		scope (exit) gc.dispose();
 
 		/// Draws selection area.
-		if (-1 != _selectedPiece.x) {
+		if (-1 != _selectedPiece.x && !_selectedPiece.p_empty) {
 			auto color1 = d.getSystemColor(SWT.COLOR_WHITE);
 			auto color2 = d.getSystemColor(SWT.COLOR_RED);
 			auto psp = _selectedPiece;
@@ -1023,25 +1079,27 @@ private class PImageItem : Item {
 		rects ~= CRect(_tBounds.x, _tBounds.y, _tBounds.width, _tBounds.height);
 
 		// Draws close button.
-		gc.fillRectangle(_cBounds.x, _cBounds.y, _cBounds.width, _cBounds.height);
-		auto cRect = CRect(_bounds.x + _cBounds.x, _bounds.y + _cBounds.y, _cBounds.width, _cBounds.height);
-		int cs = 5;
-		if (cRect.contains(_parent._oldX, _parent._oldY)) {
-			cs = 4;
-			gc.p_lineWidth = 3;
-		} else {
-			gc.p_lineWidth = 2;
+		if (!(parent.p_style & SWT.READ_ONLY)) {
+			gc.fillRectangle(_cBounds.x, _cBounds.y, _cBounds.width, _cBounds.height);
+			auto cRect = CRect(_bounds.x + _cBounds.x, _bounds.y + _cBounds.y, _cBounds.width, _cBounds.height);
+			int cs = 5;
+			if (cRect.contains(_parent._oldX, _parent._oldY)) {
+				cs = 4;
+				gc.p_lineWidth = 3;
+			} else {
+				gc.p_lineWidth = 2;
+			}
+			scope (exit) gc.p_lineWidth = 1;
+			int cx1 = _cBounds.x + cs;
+			int cy1 = _cBounds.y + cs;
+			int cx2 = _cBounds.x + _cBounds.width - cs;
+			int cy2 = _cBounds.y + _cBounds.height - cs;
+			gc.p_antialias = true;
+			gc.drawLine(cx1, cy1, cx2, cy2);
+			gc.drawLine(cx2, cy1, cx1, cy2);
+			gc.p_antialias = false;
+			rects ~= CRect(_cBounds.x, _cBounds.y, _cBounds.width, _cBounds.height);
 		}
-		scope (exit) gc.p_lineWidth = 1;
-		int cx1 = _cBounds.x + cs;
-		int cy1 = _cBounds.y + cs;
-		int cx2 = _cBounds.x + _cBounds.width - cs;
-		int cy2 = _cBounds.y + _cBounds.height - cs;
-		gc.p_antialias = true;
-		gc.drawLine(cx1, cy1, cx2, cy2);
-		gc.drawLine(cx2, cy1, cx1, cy2);
-		gc.p_antialias = false;
-		rects ~= CRect(_cBounds.x, _cBounds.y, _cBounds.width, _cBounds.height);
 
 		return canvas;
 	}

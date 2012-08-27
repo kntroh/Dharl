@@ -9,6 +9,8 @@ private import util.graphics;
 private import util.types;
 private import util.utils;
 
+private import std.exception;
+
 private import org.eclipse.swt.all;
 
 /// Converts image to 8-bit indexed color.
@@ -123,4 +125,136 @@ ImageData colorReduction(ImageData image, bool errorDiffusion = true) {
 		}
 		return result;
 	}
+}
+
+/// Reductions polygon by divisor.
+int[] smallerPolygon(in int[] polygon, int divisor) {
+	.enforce(0 == (polygon.length & 0x1));
+
+	if (!polygon.length) return [];
+	if (!divisor) return [];
+	if (1 == divisor) return polygon.dup;
+
+	int[] result;
+	for (size_t i = 0; i < polygon.length; i += 2) {
+		int x = polygon[i];
+		int y = polygon[i + 1];
+
+		x = x / divisor;
+		y = y / divisor;
+
+		if (result.length) {
+			// Removes a extra point.
+			int ox = result[$ - 2];
+			int oy = result[$ - 1];
+			if (x == ox && y == oy) continue;
+		}
+
+		result ~= [x, y];
+	}
+	if (result.length <= 4) {
+		// Polygon size doesn't exist.
+		result.length = 0;
+	}
+	return result;
+}
+
+/// Magnifies polygon by multiplier.
+int[][] zoomPolygon(in int[] polygon, int multiplier) {
+	static immutable N = 0;
+	static immutable E = 1;
+	static immutable S = 2;
+	static immutable W = 3;
+
+	if (!polygon.length) return [];
+	if (!multiplier) return [];
+	if (1 == multiplier) return [polygon.dup];
+
+	.enforce(0 == (polygon.length & 0x1));
+	int z = multiplier;
+	int[][] result;
+
+	auto region = new Region;
+	scope (exit) region.dispose();
+	region.add(polygon.dup);
+
+	// Gets frame of polygon in magnified region.
+	int[] getFrame(int sx, int sy) {
+		int prevDir = S; // Always start from top left.
+		int x = sx, y = sy;
+		int[] pts;
+
+		do {
+			assert (region.contains(x, y));
+
+			// Each direction is in the region?
+			bool n = region.contains(x, y - 1);
+			bool e = region.contains(x + 1, y);
+			bool s = region.contains(x, y + 1);
+			bool w = region.contains(x - 1, y);
+
+			// Coordinates of the four corners on magnified point (x, y).
+			int[2] ne = [x * z + z, y * z];
+			int[2] es = [x * z + z, y * z + z];
+			int[2] sw = [x * z,     y * z + z];
+			int[2] wn = [x * z,     y * z];
+
+			int[2][4] putPoint = [ne, es, sw, wn];
+			bool[4] block = [e, s, w, n];
+			int[4] nDir = [W, N, E, S];
+			int[2][4] xyMove = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+
+			// Determine add coordinates of corners by clockwise.
+			// Start direction is determine by prevDir.
+			foreach (d; 0 .. 4) {
+				auto i = (d + prevDir) % 4;
+				pts ~= putPoint[i];
+				if (block[i]) {
+					prevDir = nDir[i];
+					// next point.
+					x += xyMove[i][0];
+					y += xyMove[i][1];
+					break;
+				}
+			}
+		} while (x != sx || y != sy);
+
+		if (pts.length <= 4) {
+			// Polygon size doesn't exist.
+			pts.length = 0;
+		}
+		return pts;
+	}
+
+	auto bounds = region.getBounds();
+
+	// Processed point is true.
+	bool[] fix = new bool[bounds.width * bounds.height];
+
+	// Starts from left top.
+	foreach (y; 0 .. bounds.height) {
+		foreach (x; 0 .. bounds.width) {
+			if (fix[y * bounds.width + x]) continue;
+
+			int bx = bounds.x + x;
+			int by = bounds.y + y;
+			if (!region.contains(bx, by)) continue;
+
+			result ~= getFrame(bx, by);
+
+			// Sets true to processed region.
+			pointsOfFill((int x, int y, int w, int h) {
+				foreach (yy; y .. y + h) {
+					int xx = yy * bounds.width + x;
+					fix[xx .. xx + w] = true;
+				}
+			}, (int x, int y) {
+				int bx = bounds.x + x;
+				int by = bounds.y + y;
+				return region.contains(bx, by);
+			}, x, y, bounds.width, bounds.height);
+		}
+	}
+
+	return result;
 }

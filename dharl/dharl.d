@@ -149,6 +149,7 @@ void main(string[] args) {
 
 /// Initialize main window.
 private MainPanel initialize(DCommon c, Shell shell) {
+	auto d = shell.p_display;
 
 	// The toolbar.
 	auto toolBar = basicToolBar(shell, SWT.FLAT | SWT.HORIZONTAL | SWT.WRAP);
@@ -214,7 +215,8 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	/* ---- File menu -------------------------------------------------- */
 
 	basicMenuItem(mFile, toolBar, c.text.menu.createNewImage, cimg(c.image.createNewImage), {
-		mainPanel.createNewImage(100, 100, true);
+		auto cs = c.conf.character;
+		mainPanel.createNewImage(cs.width, cs.height, true);
 	});
 	separator(mFile, toolBar);
 	basicMenuItem(mFile, toolBar, c.text.menu.openImage, cimg(c.image.openImage), {
@@ -332,44 +334,45 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		mainPanel.editCombination();
 	});
 	separator(mTool, toolBar);
-	auto tResize = basicMenuItem(mTool, toolBar, c.text.menu.resize, cimg(c.image.resize), &mainPanel.resize);
-	separator(mTool, toolBar);
 	auto tResizeC = basicMenuItem(mTool, toolBar, c.text.menu.resizeCanvas, cimg(c.image.resizeCanvas), &mainPanel.resizeCanvas);
-	separator(mTool, toolBar);
-	basicMenuItem(mTool, toolBar, c.text.menu.turn90,  cimg(c.image.turn90),  { mainPanel.turn(90);  });
-	basicMenuItem(mTool, toolBar, c.text.menu.turn270, cimg(c.image.turn270), { mainPanel.turn(270); });
-	basicMenuItem(mTool, toolBar, c.text.menu.turn180, cimg(c.image.turn180), { mainPanel.turn(180); });
-	separator(mTool, toolBar);
-	basicMenuItem(mTool, toolBar, c.text.menu.turn, cimg(c.image.turn), &mainPanel.turn);
-	separator(mTool, toolBar);
-	basicMenuItem(mTool, toolBar, c.text.menu.mirrorHorizontal, cimg(c.image.mirrorHorizontal), {
+
+	separator(mTool);
+	auto tResize = basicMenuItem(mTool, c.text.menu.resize, cimg(c.image.resize), &mainPanel.resize);
+	separator(mTool);
+	basicMenuItem(mTool, c.text.menu.turn90,  cimg(c.image.turn90),  { mainPanel.turn(90);  });
+	basicMenuItem(mTool, c.text.menu.turn270, cimg(c.image.turn270), { mainPanel.turn(270); });
+	basicMenuItem(mTool, c.text.menu.turn180, cimg(c.image.turn180), { mainPanel.turn(180); });
+	separator(mTool);
+	basicMenuItem(mTool, c.text.menu.turn, cimg(c.image.turn), &mainPanel.turn);
+	separator(mTool);
+	basicMenuItem(mTool, c.text.menu.mirrorHorizontal, cimg(c.image.mirrorHorizontal), {
 		mainPanel.paintArea.mirrorHorizontal();
 	});
-	basicMenuItem(mTool, toolBar, c.text.menu.mirrorVertical, cimg(c.image.mirrorVertical), {
+	basicMenuItem(mTool, c.text.menu.mirrorVertical, cimg(c.image.mirrorVertical), {
 		mainPanel.paintArea.mirrorVertical();
 	});
-	separator(mTool, toolBar);
-	basicMenuItem(mTool, toolBar, c.text.menu.flipHorizontal, cimg(c.image.flipHorizontal), {
+	separator(mTool);
+	basicMenuItem(mTool, c.text.menu.flipHorizontal, cimg(c.image.flipHorizontal), {
 		mainPanel.paintArea.flipHorizontal();
 	});
-	basicMenuItem(mTool, toolBar, c.text.menu.flipVertical, cimg(c.image.flipVertical), {
+	basicMenuItem(mTool, c.text.menu.flipVertical, cimg(c.image.flipVertical), {
 		mainPanel.paintArea.flipVertical();
 	});
-	separator(mTool, toolBar);
-	basicMenuItem(mTool, toolBar, c.text.menu.rotateLeft, cimg(c.image.rotateLeft), {
+	separator(mTool);
+	basicMenuItem(mTool, c.text.menu.rotateLeft, cimg(c.image.rotateLeft), {
 		mainPanel.paintArea.rotateLeft();
 	});
-	basicMenuItem(mTool, toolBar, c.text.menu.rotateDown, cimg(c.image.rotateDown), {
+	basicMenuItem(mTool, c.text.menu.rotateDown, cimg(c.image.rotateDown), {
 		mainPanel.paintArea.rotateDown();
 	});
-	basicMenuItem(mTool, toolBar, c.text.menu.rotateUp, cimg(c.image.rotateUp), {
+	basicMenuItem(mTool, c.text.menu.rotateUp, cimg(c.image.rotateUp), {
 		mainPanel.paintArea.rotateUp();
 	});
-	basicMenuItem(mTool, toolBar, c.text.menu.rotateRight, cimg(c.image.rotateRight), {
+	basicMenuItem(mTool, c.text.menu.rotateRight, cimg(c.image.rotateRight), {
 		mainPanel.paintArea.rotateRight();
 	});
-	separator(mTool, toolBar);
 
+	separator(mTool, toolBar);
 	auto mConf = basicMenuItem(mTool, toolBar, c.text.menu.configuration, cimg(c.image.configuration), {
 		auto dialog = new ConfigDialog(shell, c);
 		dialog.open();
@@ -402,6 +405,8 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 	/* ---- Others ----------------------------------------------------- */
 
+	auto cb = new Clipboard(d);
+
 	// Update menus state.
 	void refreshMenu() {
 		refreshTitle();
@@ -410,9 +415,18 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		auto selArea = mainPanel.paintArea.selectedArea;
 		bool sel = selArea.width > 0 && selArea.height > 0;
 		bool alive = !mainPanel.paintArea.empty;
+		bool cbHasImage = false;
+		auto tImg = ImageTransfer.getInstance();
+		foreach (tData; cb.p_availableTypes) {
+			if (tImg.isSupportedType(tData)) {
+				cbHasImage = true;
+				break;
+			}
+		}
+
 		tCut.p_enabled = sel;
 		tCopy.p_enabled = sel;
-		tPaste.p_enabled = alive;
+		tPaste.p_enabled = alive && cbHasImage;
 		tDelete.p_enabled = sel;
 		tSelectAll.p_enabled = alive;
 
@@ -441,6 +455,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	}
 	mainPanel.statusChangedReceivers ~= &refreshMenu;
 	mainPanel.selectedReceivers ~= &refreshMenu;
+	shell.listeners!(SWT.Activate) ~= &refreshMenu;
 
 	// Open last opened files.
 	foreach (file; c.conf.lastOpenedFiles.uniq()) {

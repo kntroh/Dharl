@@ -1074,6 +1074,8 @@ class PaintArea : Canvas, Undoable {
 		}
 		auto it = cast(Transfer) ImageTransfer.getInstance();
 		cb.setContents([data], [it]);
+
+		statusChangedReceivers.raiseEvent();
 	}
 	/// ditto
 	void paste() {

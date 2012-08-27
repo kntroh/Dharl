@@ -39,6 +39,8 @@ mixin GetSetWrapper!("Accelerator"); /// ditto
 mixin GetSetWrapper!("Alpha"); /// ditto
 mixin GetSetWrapper!("Antialias"); /// ditto
 mixin GetSetWrapper!("AutoHide"); /// ditto
+mixin GetSetWrapper!("AvailableTypeNames"); /// ditto
+mixin GetSetWrapper!("AvailableTypes"); /// ditto
 mixin GetSetWrapper!("Background"); /// ditto
 mixin GetSetWrapper!("BorderWidth"); /// ditto
 mixin GetSetWrapper!("Bounds"); /// ditto
@@ -99,11 +101,14 @@ mixin GetSetWrapper!("SelectionIndices"); /// ditto
 mixin GetSetWrapper!("Shell"); /// ditto
 mixin GetSetWrapper!("Size"); /// ditto
 mixin GetSetWrapper!("Style"); /// ditto
+mixin GetSetWrapper!("SupportedTypes"); /// ditto
 mixin GetSetWrapper!("Text", systemReturnCodeToN, nToSystemReturnCode);
 mixin GetSetWrapper!("TextLimit"); /// ditto
 mixin GetSetWrapper!("Thumb"); /// ditto
 mixin GetSetWrapper!("ToolTipText", systemReturnCodeToN, nToSystemReturnCode); /// ditto
 mixin GetSetWrapper!("Transfer"); /// ditto
+mixin GetSetWrapper!("TypeIds"); /// ditto
+mixin GetSetWrapper!("TypeNames"); /// ditto
 mixin GetSetWrapper!("Overwrite"); /// ditto
 mixin GetSetWrapper!("PageIncrement"); /// ditto
 mixin GetSetWrapper!("Parent"); /// ditto

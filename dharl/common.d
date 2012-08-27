@@ -290,7 +290,7 @@ struct DMenuText {
 	mixin MsgProp!("addPalette", "&Add palette"); /// ditto
 	mixin MsgProp!("removePalette", "&Remove palette"); /// ditto
 	mixin MsgProp!("copyPalette", "&Copy"); /// ditto
-	mixin MsgProp!("paletteTransfer", "Pale&tte transfer"); /// ditto
+	mixin MsgProp!("paletteTransfer", "Pale&tte transfer..."); /// ditto
 
 	mixin MsgProp!("tool", "&Tool"); /// ditto
 	mixin MsgProp!("editCombination", "Edit c&ombination..."); /// ditto

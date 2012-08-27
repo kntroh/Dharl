@@ -519,6 +519,25 @@ class MainPanel : Composite {
 			lineWidth.p_selection = _paintArea.cursorSize;
 		}
 		statusChangedReceivers ~= &refreshZoomAndLineWidth;
+
+		createSeparator();
+
+		// Toolbar of transform operation.
+		auto trans = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
+		trans.p_layoutData = GD(GridData.FILL_HORIZONTAL).wHint(0).hSpan(2);
+		basicToolItem(trans, _c.text.menu.turn90,  .cimg(_c.image.turn90),  { turn(90);  });
+		basicToolItem(trans, _c.text.menu.turn270, .cimg(_c.image.turn270), { turn(270); });
+		basicToolItem(trans, _c.text.menu.turn180, .cimg(_c.image.turn180), { turn(180); });
+		basicToolItem(trans, _c.text.menu.turn, .cimg(_c.image.turn), &turn);
+		basicToolItem(trans, _c.text.menu.mirrorHorizontal, .cimg(_c.image.mirrorHorizontal), &paintArea.mirrorHorizontal);
+		basicToolItem(trans, _c.text.menu.mirrorVertical, .cimg(_c.image.mirrorVertical), &paintArea.mirrorVertical);
+		basicToolItem(trans, _c.text.menu.flipHorizontal, .cimg(_c.image.flipHorizontal), &paintArea.flipHorizontal);
+		basicToolItem(trans, _c.text.menu.flipVertical, .cimg(_c.image.flipVertical), &paintArea.flipVertical);
+		basicToolItem(trans, _c.text.menu.rotateLeft, .cimg(_c.image.rotateLeft), &paintArea.rotateLeft);
+		basicToolItem(trans, _c.text.menu.rotateDown, .cimg(_c.image.rotateDown), &paintArea.rotateDown);
+		basicToolItem(trans, _c.text.menu.rotateUp, .cimg(_c.image.rotateUp), &paintArea.rotateUp);
+		basicToolItem(trans, _c.text.menu.rotateRight, .cimg(_c.image.rotateRight), &paintArea.rotateRight);
+		basicToolItem(trans, _c.text.menu.resize, .cimg(_c.image.resize), &resize);
 	}
 	/// Updates tones toolbar.
 	private void refreshTonesToolBar() {

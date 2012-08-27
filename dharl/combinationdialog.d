@@ -15,6 +15,7 @@ private import dharl.image.mlimage;
 
 private import dharl.ui.basicdialog;
 private import dharl.ui.dwtutils;
+private import dharl.ui.pimagelist;
 private import dharl.ui.splitter;
 private import dharl.ui.uicommon;
 
@@ -38,7 +39,7 @@ class CombinationDialog : DharlDialog {
 	private Splitter _splitterH = null; /// ditto
 
 	/// Preview.
-	private Preview _preview = null;
+	private PImageList _preview = null;
 
 	/// Combination data.
 	private Combination[] _combiData = [];
@@ -80,8 +81,14 @@ class CombinationDialog : DharlDialog {
 
 		/* ----- Preview ----------------------------------------------- */
 		_splitterV = basicVSplitter(area);
-		_preview = new Preview(_splitterV, SWT.DOUBLE_BUFFERED);
+		_preview = new PImageList(_splitterV, SWT.BORDER | SWT.DOUBLE_BUFFERED | SWT.READ_ONLY);
 		_splitterV.resizable = _preview;
+		_preview.listeners!(SWT.Selection) ~= {
+			_combiList.deselectAll();
+			_combiList.select(_preview.selectedIndex);
+			_combiList.showSelection();
+			updateLayerList();
+		};
 
 		/* ----- Createes controls ------------------------------------- */
 		auto controls = basicComposite(_splitterV);
@@ -97,10 +104,16 @@ class CombinationDialog : DharlDialog {
 		combinationToolBar(combiGrp);
 		_combiList = listTable(combiGrp, true);
 		_combiList.p_layoutData = GD.fill(true, true);
-		_combiList.listeners!(SWT.Selection) ~= &updateLayerList;
+		void updateList() {
+			_preview.selectedIndex = _combiList.p_selectionIndex;
+			_preview.showSelection();
+			updateLayerList();
+		}
+		_combiList.listeners!(SWT.Selection) ~= &updateList;
 		_combiName = createEditor(_combiList, true, (int index, string name) {
 			_combiData[index].name = name;
 			_combiList.getItem(index).p_text = name;
+			_preview.item(index).combination = _combiData[index];
 		});
 
 		// Layer list.
@@ -123,6 +136,7 @@ class CombinationDialog : DharlDialog {
 			auto indices = _combiList.p_selectionIndices;
 			foreach (i; indices) {
 				_combiData[i].selectedPalette = index;
+				_preview.item(i).combination = _combiData[i];
 			}
 			_preview.redraw();
 		};
@@ -135,7 +149,12 @@ class CombinationDialog : DharlDialog {
 		// image type and depth
 		_imageType = basicCombo(output);
 		_imageType.p_layoutData = GD.fill(true, false).hSpan(3);
-		_imageType.listeners!(SWT.Selection) ~= &_preview.redraw;
+		void updateImageType() {
+			foreach (l; 0 .. _preview.imageCount) {
+				_preview.item(l).depth = selectedDepth;
+			}
+		}
+		_imageType.listeners!(SWT.Selection) ~= &updateImageType;
 
 		// folder
 		basicLabel(output, c.text.targetFolder);
@@ -151,6 +170,13 @@ class CombinationDialog : DharlDialog {
 		foreach (combi; _image.combinations) {
 			_combiList.add(combi.name);
 			_combiData ~= combi.clone;
+
+			// preview
+			auto pi = new PImageItem(_preview, SWT.NONE);
+			pi.p_text = combi.name;
+			pi.image = _image;
+			pi.toolTip = combi.name;
+			pi.combination = combi;
 		}
 		if (_combiList.p_itemCount) _combiList.select(0);
 		// layer list
@@ -178,7 +204,8 @@ class CombinationDialog : DharlDialog {
 		// output folder
 		c.conf.combinationFolder.value.refText(_target);
 
-		updateLayerList();
+		updateImageType();
+		updateList();
 	}
 
 	protected override void onOpen(Shell shell) {
@@ -198,7 +225,14 @@ class CombinationDialog : DharlDialog {
 			_combiList.add(name, index);
 			auto visible = new bool[_image.layerCount];
 			visible[] = true;
-			_combiData.insertInPlace(index, Combination(name, visible, 0));
+			auto combi = Combination(name, visible, 0);
+			_combiData.insertInPlace(index, combi);
+			auto pi = new PImageItem(_preview, SWT.NONE, index);
+			pi.p_text = combi.name;
+			pi.image = _image;
+			pi.toolTip = combi.name;
+			pi.combination = combi;
+			pi.depth = selectedDepth;
 
 			_combiList.deselectAll();
 			_combiList.select(index);
@@ -211,7 +245,10 @@ class CombinationDialog : DharlDialog {
 			_combiList.remove(indices);
 			foreach_reverse (i; indices) {
 				_combiData.remove(i);
+				_preview.item(i).dispose();
 			}
+			_preview.selectedIndex = -1;
+			updateLayerList();
 			enableApply();
 			updateEnabled();
 		});
@@ -222,6 +259,7 @@ class CombinationDialog : DharlDialog {
 		void swapCombi(int index1, int index2) {
 			_combiList.swapItems(index1, index2);
 			.swap(_combiData[index1], _combiData[index2]);
+			_preview.move(index1, index2);
 		}
 		_tUp = basicToolItem(combiTools, c.text.menu.up, .cimg(c.image.up), {
 			auto indices = _combiList.p_selectionIndices.sort;
@@ -233,6 +271,8 @@ class CombinationDialog : DharlDialog {
 			indices[] -= 1;
 			_combiList.deselectAll();
 			_combiList.select(indices);
+			_combiList.showSelection();
+			_preview.showSelection();
 			enableApply();
 			updateEnabled();
 		});
@@ -246,6 +286,8 @@ class CombinationDialog : DharlDialog {
 			indices[] += 1;
 			_combiList.deselectAll();
 			_combiList.select(indices);
+			_combiList.showSelection();
+			_preview.showSelection();
 			enableApply();
 			updateEnabled();
 		});
@@ -321,9 +363,9 @@ class CombinationDialog : DharlDialog {
 		auto indices = _combiList.p_selectionIndices;
 		foreach (i; indices) {
 			_combiData[i].visible[index] = check;
+			_preview.item(i).combination = _combiData[i];
 		}
 		enableApply();
-		_preview.redraw();
 	}
 
 	/// Selection depth.
@@ -398,42 +440,5 @@ class CombinationDialog : DharlDialog {
 			return true;
 		}
 		return false;
-	}
-
-	/// Preview of combination.
-	private class Preview : Canvas {
-
-		/// The only constructor.
-		this (Composite parent, int style) {
-			super (parent, style);
-
-			auto d = this.p_display;
-			this.p_background = d.getSystemColor(SWT.COLOR_GRAY);
-			this.p_foreground = d.getSystemColor(SWT.COLOR_DARK_GRAY);
-
-			this.bindListeners();
-		}
-
-		private void onPaint(Event e) {
-			auto d = this.p_display;
-			auto ca = this.p_clientArea;
-			e.gc.drawShade(ca);
-
-			auto index = _combiList.p_selectionIndex;
-			if (-1 == index) return;
-
-			size_t[] ls;
-			int x = (ca.width - _image.width) / 2;
-			int y = (ca.height - _image.height) / 2;
-			auto selPalette = _image.palettes[_combiData[index].selectedPalette];
-			foreach_reverse (l, v; _combiData[index].visible) {
-				if (!v) continue;
-				auto clone = cast(ImageData) _image.layer(l).image.clone();
-				clone.palette = selPalette;
-				auto img = new Image(d, clone);
-				scope (exit) img.dispose();
-				e.gc.drawImage(img, x, y);
-			}
-		}
 	}
 }
