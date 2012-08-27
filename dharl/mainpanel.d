@@ -1282,7 +1282,8 @@ class MainPanel : Composite {
 
 		auto item = _imageList.item(_imageList.selectedIndex);
 		auto params = item.dataTo!PImageParams;
-		auto dlg = new CombinationDialog(_imageList.p_shell, _c, _um, item.image, params.name);
+		auto image = item.image.createMLImage();
+		auto dlg = new CombinationDialog(_imageList.p_shell, _c, _um, image, params.name);
 		dlg.appliedReceivers ~= {
 			modified(item);
 			statusChangedReceivers.raiseEvent();

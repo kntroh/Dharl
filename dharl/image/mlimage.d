@@ -647,6 +647,9 @@ class MLImage : Undoable {
 				}
 			}
 		}
+
+		cloneCombi(_combi, src._combi);
+
 		return changed;
 	}
 	/// Push palettes data.
@@ -749,6 +752,8 @@ class MLImage : Undoable {
 		foreach (i, d; data) {
 			r._layers ~= Layer(d, name[i], true);
 		}
+		r.pushPalette(this);
+		cloneCombi(r._combi, _combi);
 		return r;
 	}
 
