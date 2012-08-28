@@ -146,9 +146,8 @@ class Editor {
 	}
 
 	/// Starts edit.
-	void start(int editorX, int editorY, string text, void delegate(string) set) {
+	void start(int editorX, int editorY, string text, void delegate(string) set, void delegate(string) modify = null) {
 		.enforce(!_parent.p_layout);
-		.enforce(text !is null);
 		.enforce(set);
 		if (_text) {
 			cancel();
@@ -170,13 +169,18 @@ class Editor {
 		void submit() {
 			if (!_text) return;
 			auto t = _text.p_text;
-			_text.dispose();
-			_text = null;
 			if (t && (!_emptyIsCancel || t.length)) {
+				_text.dispose();
+				_text = null;
 				set(t);
+			} else {
+				cancel();
 			}
 		}
-		_text.listeners!(SWT.Modify) ~= &resize;
+		_text.listeners!(SWT.Modify) ~= (Event e) {
+			if (modify) modify(_text.p_text);
+			resize(e);
+		};
 		_text.listeners!(SWT.FocusOut) ~= &submit;
 		_text.listeners!(SWT.KeyDown) ~= (Event e) {
 			switch (e.keyCode) {
@@ -194,6 +198,7 @@ class Editor {
 		_text.listeners!(SWT.Dispose) ~= { info.remove(); };
 		auto pBounds = _parent.p_clientArea;
 		auto s = _text.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+		s.x += computeTextSize(_text, "##").x; // allow leeway
 		auto maxWidth = pBounds.width - editorX;
 		_text.p_bounds = CRect(editorX, editorY, .min(maxWidth, s.x), s.y);
 		_text.setFocus();
@@ -207,7 +212,8 @@ class Editor {
 
 		auto pBounds = _parent.p_clientArea;
 		auto s = _text.p_bounds;
-		auto ns = _text.computeSize(SWT.DEFAULT, s.height);
+		auto ns = _text.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+		ns.x += computeTextSize(_text, "##").x; // allow leeway
 		auto maxWidth = pBounds.width - s.x;
 		if (ns.x <= maxWidth) {
 			_text.p_size = ns;
@@ -233,19 +239,21 @@ Editor createEditor(Table table, bool emptyIsCancel, void delegate(int index, st
 	}
 	auto editor = new Editor(table, emptyIsCancel, &cancelCallback);
 	void edit(int index) {
-		// hide old text in during edit
 		itm = table.getItem(index);
 		lastText = itm.p_text;
-		itm.p_text = "";
+
 		auto bounds = itm.getTextBounds(0);
 		auto th = table.computeTextSize("#").y;
-		editor.start(bounds.x, bounds.y + (bounds.height - th) / 2, lastText, (string name) {
+		editor.start(bounds.x, bounds.y + (bounds.height - th) / 2, lastText, (string text) {
 			if (decision) {
 				itm.p_text = lastText;
-				decision(table.indexOf(itm), name);
+				decision(table.indexOf(itm), text);
 			} else {
-				itm.p_text = name;
+				itm.p_text = text;
 			}
+		}, (string text) {
+			// modify
+			itm.p_text = text;
 		});
 	}
 	table.listeners!(SWT.KeyDown) ~= (Event e) {

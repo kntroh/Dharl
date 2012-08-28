@@ -1345,6 +1345,59 @@ class PaintArea : Canvas, Undoable {
 		iSetPixels(ix, iy, pixels);
 	}
 
+	/// Increase or decrease brightness.
+	void changeBrightness(int upDown) {
+		checkWidget();
+		checkInit();
+		if (_image.empty) return;
+
+		auto colors = image.palette.colors;
+		auto rgbs = new CRGB[colors.length];
+		foreach (i, ref rgb; rgbs) {
+			rgb.r = cast(ubyte) colors[i].red;
+			rgb.g = cast(ubyte) colors[i].green;
+			rgb.b = cast(ubyte) colors[i].blue;
+		}
+		auto tree = new ColorTree(rgbs, false);
+		void chg(ref int[] ps) {
+			foreach (ref p; ps) {
+				auto rgb = rgbs[p];
+				ubyte r = roundCast!ubyte(rgb.r + upDown);
+				ubyte g = roundCast!ubyte(rgb.g + upDown);
+				ubyte b = roundCast!ubyte(rgb.b + upDown);
+				p = tree.searchLose(CRGB(r, g, b));
+			}
+		}
+		if (_pasteLayer) {
+			iFillRect((int ix, int iy) {
+				auto ps = iPGetPixels(ix, iy);
+				chg(ps);
+				iPSetPixels(ix, iy, ps);
+			}, 0, 0, _pasteLayer.width, _pasteLayer.height);
+			clearCache();
+			redrawCursorArea();
+		} else if (_iSelRange.p_empty) {
+			if (_um) _um.store(this);
+			clearCache();
+			iFillRect((int ix, int iy) {
+				auto ps = iGetPixels2(ix, iy);
+				chg(ps);
+				iSetPixels2(ix, iy, ps);
+			}, 0, 0, _image.width, _image.height);
+		} else {
+			if (_um) _um.store(this);
+			clearCache();
+			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
+			iFillRect((int ix, int iy) {
+				auto ps = iGetPixels2(ix, iy);
+				chg(ps);
+				iSetPixels2(ix, iy, ps);
+			}, ir.x, ir.y, ir.width, ir.height);
+		}
+		clearCache();
+		drawReceivers.raiseEvent();
+	}
+
 	/// Transforms image.
 	private void transform(void function
 			(int[] delegate(int x, int y) pget,
@@ -1368,7 +1421,6 @@ class PaintArea : Canvas, Undoable {
 			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
 			func(&iGetPixels2, &iSetPixels2, ir.x, ir.y, ir.width, ir.height);
 		}
-		clearCache();
 		drawReceivers.raiseEvent();
 	}
 

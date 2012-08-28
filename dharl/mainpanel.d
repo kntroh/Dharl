@@ -537,6 +537,8 @@ class MainPanel : Composite {
 		basicToolItem(trans, _c.text.menu.rotateDown, .cimg(_c.image.rotateDown), &paintArea.rotateDown);
 		basicToolItem(trans, _c.text.menu.rotateUp, .cimg(_c.image.rotateUp), &paintArea.rotateUp);
 		basicToolItem(trans, _c.text.menu.rotateRight, .cimg(_c.image.rotateRight), &paintArea.rotateRight);
+		basicToolItem(trans, _c.text.menu.increaseBrightness, .cimg(_c.image.increaseBrightness), &increaseBrightness);
+		basicToolItem(trans, _c.text.menu.decreaseBrightness, .cimg(_c.image.decreaseBrightness), &decreaseBrightness);
 		basicToolItem(trans, _c.text.menu.resize, .cimg(_c.image.resize), &resize);
 	}
 	/// Updates tones toolbar.
@@ -1205,6 +1207,15 @@ class MainPanel : Composite {
 		});
 		// pixel1 or pixel2 has been selected certainly,
 		// Update of ColorSlider is not need.
+	}
+
+	/// Increase or decrease brightness.
+	void increaseBrightness() {
+		_paintArea.changeBrightness(32);
+	}
+	/// ditto
+	void decreaseBrightness() {
+		_paintArea.changeBrightness(-32);
 	}
 
 	/// Is editing color mask?

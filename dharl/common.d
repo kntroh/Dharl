@@ -137,6 +137,8 @@ class DImages {
 	const DImage turn180 = importImage!("turn_180.png"); /// ditto
 	const DImage turn270 = importImage!("turn_270.png"); /// ditto
 	const DImage turn = importImage!("turn.png"); /// ditto
+	const DImage increaseBrightness = importImage!("increase_brightness.png"); /// ditto
+	const DImage decreaseBrightness = importImage!("decrease_brightness.png"); /// ditto
 
 	const DImage editCombination = importImage!("edit_combination.png"); /// ditto
 	const DImage addCombination = importImage!("add_combination.png"); /// ditto
@@ -308,6 +310,8 @@ struct DMenuText {
 	mixin MsgProp!("turn180", "&180 degree turn"); /// ditto
 	mixin MsgProp!("turn270", "&270 degree turn"); /// ditto
 	mixin MsgProp!("turn", "&Turn"); /// ditto
+	mixin MsgProp!("increaseBrightness", "Increase &brightness"); /// ditto
+	mixin MsgProp!("decreaseBrightness", "Decrease b&rightness"); /// ditto
 
 	mixin MsgProp!("addCombination", "Add combination"); /// ditto
 	mixin MsgProp!("removeCombination", "Remove combination"); /// ditto

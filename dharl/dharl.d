@@ -345,32 +345,19 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	separator(mTool);
 	basicMenuItem(mTool, c.text.menu.turn, cimg(c.image.turn), &mainPanel.turn);
 	separator(mTool);
-	basicMenuItem(mTool, c.text.menu.mirrorHorizontal, cimg(c.image.mirrorHorizontal), {
-		mainPanel.paintArea.mirrorHorizontal();
-	});
-	basicMenuItem(mTool, c.text.menu.mirrorVertical, cimg(c.image.mirrorVertical), {
-		mainPanel.paintArea.mirrorVertical();
-	});
+	basicMenuItem(mTool, c.text.menu.mirrorHorizontal, cimg(c.image.mirrorHorizontal), &mainPanel.paintArea.mirrorHorizontal);
+	basicMenuItem(mTool, c.text.menu.mirrorVertical, cimg(c.image.mirrorVertical), &mainPanel.paintArea.mirrorVertical);
 	separator(mTool);
-	basicMenuItem(mTool, c.text.menu.flipHorizontal, cimg(c.image.flipHorizontal), {
-		mainPanel.paintArea.flipHorizontal();
-	});
-	basicMenuItem(mTool, c.text.menu.flipVertical, cimg(c.image.flipVertical), {
-		mainPanel.paintArea.flipVertical();
-	});
+	basicMenuItem(mTool, c.text.menu.flipHorizontal, cimg(c.image.flipHorizontal), &mainPanel.paintArea.flipHorizontal);
+	basicMenuItem(mTool, c.text.menu.flipVertical, cimg(c.image.flipVertical), &mainPanel.paintArea.flipVertical);
 	separator(mTool);
-	basicMenuItem(mTool, c.text.menu.rotateLeft, cimg(c.image.rotateLeft), {
-		mainPanel.paintArea.rotateLeft();
-	});
-	basicMenuItem(mTool, c.text.menu.rotateDown, cimg(c.image.rotateDown), {
-		mainPanel.paintArea.rotateDown();
-	});
-	basicMenuItem(mTool, c.text.menu.rotateUp, cimg(c.image.rotateUp), {
-		mainPanel.paintArea.rotateUp();
-	});
-	basicMenuItem(mTool, c.text.menu.rotateRight, cimg(c.image.rotateRight), {
-		mainPanel.paintArea.rotateRight();
-	});
+	basicMenuItem(mTool, c.text.menu.rotateLeft, cimg(c.image.rotateLeft), &mainPanel.paintArea.rotateLeft);
+	basicMenuItem(mTool, c.text.menu.rotateDown, cimg(c.image.rotateDown), &mainPanel.paintArea.rotateDown);
+	basicMenuItem(mTool, c.text.menu.rotateUp, cimg(c.image.rotateUp), &mainPanel.paintArea.rotateUp);
+	basicMenuItem(mTool, c.text.menu.rotateRight, cimg(c.image.rotateRight), &mainPanel.paintArea.rotateRight);
+	separator(mTool);
+	basicMenuItem(mTool, c.text.menu.increaseBrightness, cimg(c.image.increaseBrightness), &mainPanel.increaseBrightness);
+	basicMenuItem(mTool, c.text.menu.decreaseBrightness, cimg(c.image.decreaseBrightness), &mainPanel.decreaseBrightness);
 
 	separator(mTool, toolBar);
 	auto mConf = basicMenuItem(mTool, toolBar, c.text.menu.configuration, cimg(c.image.configuration), {

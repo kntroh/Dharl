@@ -113,7 +113,9 @@ class CombinationDialog : DharlDialog {
 		_combiName = createEditor(_combiList, true, (int index, string name) {
 			_combiData[index].name = name;
 			_combiList.getItem(index).p_text = name;
-			_preview.item(index).combination = _combiData[index];
+			auto item = _preview.item(index);
+			item.p_text = name;
+			item.toolTip = name;
 		});
 
 		// Layer list.
