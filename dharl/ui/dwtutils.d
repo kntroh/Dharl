@@ -96,7 +96,7 @@ void refWindow(ref WindowParameter param, Shell shell) {
 	shell.p_maximized = param.maximized;
 	shell.p_minimized = param.minimized;
 
-	shell.listeners!(SWT.Dispose) ~= (Event e) {
+	shell.p_listeners!(SWT.Dispose) ~= (Event e) {
 		auto b = shell.p_bounds;
 		auto parent = shell.p_parent;
 		if (parent) {
@@ -120,10 +120,10 @@ void refWindow(ref WindowParameter param, Shell shell) {
 void refSize(ref PSize size, Spinner width, Spinner height) {
 	width.p_selection  = size.width;
 	height.p_selection = size.height;
-	width.listeners!(SWT.Dispose) ~= (Event e) {
+	width.p_listeners!(SWT.Dispose) ~= (Event e) {
 		size.width  = width.p_selection;
 	};
-	height.listeners!(SWT.Dispose) ~= (Event e) {
+	height.p_listeners!(SWT.Dispose) ~= (Event e) {
 		size.height = height.p_selection;
 	};
 }
@@ -132,7 +132,7 @@ void refSize(ref PSize size, Spinner width, Spinner height) {
 /// And save value when disposed control.
 void refSelection(C, V)(ref V value, C control) {
 	control.p_selection = value;
-	control.listeners!(SWT.Dispose) ~= (Event e) {
+	control.p_listeners!(SWT.Dispose) ~= (Event e) {
 		value = control.p_selection;
 	};
 }
@@ -145,7 +145,7 @@ void refRadioSelection(C, V)(ref V index, C[] radios) {
 	foreach (i, radio; radios) {
 		radio.p_selection = (i == index2);
 	}
-	radios[0].listeners!(SWT.Dispose) ~= (Event e) {
+	radios[0].p_listeners!(SWT.Dispose) ~= (Event e) {
 		foreach (i, radio; radios) {
 			if (radio.p_selection) {
 				index = i;
@@ -160,7 +160,7 @@ void refRadioSelection(C, V)(ref V index, C[] radios) {
 void refSelectionIndex(C, V)(ref V index, C control, bool canNoSelection = false) {
 	int min = canNoSelection ? -1 : 0;
 	control.select(index.roundCast(min, control.p_itemCount - 1));
-	control.listeners!(SWT.Dispose) ~= (Event e) {
+	control.p_listeners!(SWT.Dispose) ~= (Event e) {
 		index = control.p_selectionIndex;
 	};
 }
@@ -169,7 +169,7 @@ void refSelectionIndex(C, V)(ref V index, C control, bool canNoSelection = false
 /// And save text when disposed control.
 void refText(C, V)(ref V text, C control) {
 	control.p_text = text;
-	control.listeners!(SWT.Dispose) ~= (Event e) {
+	control.p_listeners!(SWT.Dispose) ~= (Event e) {
 		text = control.p_text;
 	};
 }

@@ -83,7 +83,7 @@ class CombinationDialog : DharlDialog {
 		_splitterV = basicVSplitter(area);
 		_preview = new PImageList(_splitterV, SWT.BORDER | SWT.DOUBLE_BUFFERED | SWT.READ_ONLY);
 		_splitterV.resizable = _preview;
-		_preview.listeners!(SWT.Selection) ~= {
+		_preview.p_listeners!(SWT.Selection) ~= {
 			_combiList.deselectAll();
 			_combiList.select(_preview.selectedIndex);
 			_combiList.showSelection();
@@ -109,7 +109,7 @@ class CombinationDialog : DharlDialog {
 			_preview.showSelection();
 			updateLayerList();
 		}
-		_combiList.listeners!(SWT.Selection) ~= &updateList;
+		_combiList.p_listeners!(SWT.Selection) ~= &updateList;
 		_combiName = createEditor(_combiList, true, (int index, string name) {
 			_combiData[index].name = name;
 			_combiList.getItem(index).p_text = name;
@@ -123,7 +123,7 @@ class CombinationDialog : DharlDialog {
 		layerGrp.p_layout = GL(1, true).spacing(GL.WINDOW_SPACING);
 		_layers = listTable(layerGrp, false, true);
 		_layers.p_layoutData = GD.fill(true, true);
-		_layers.listeners!(SWT.Selection) ~= (Event e) {
+		_layers.p_listeners!(SWT.Selection) ~= (Event e) {
 			if (SWT.CHECK != e.detail) return;
 			auto item = cast(TableItem) e.item;
 			checkLayer(_layers.indexOf(item), item.p_checked);
@@ -132,7 +132,7 @@ class CombinationDialog : DharlDialog {
 		_palette = basicCombo(layerGrp);
 		mod(_palette);
 		_palette.p_layoutData = GD.fill(true, false);
-		_palette.listeners!(SWT.Selection) ~= {
+		_palette.p_listeners!(SWT.Selection) ~= {
 			auto index = _palette.p_selectionIndex;
 			if (-1 == index) return;
 			auto indices = _combiList.p_selectionIndices;
@@ -156,7 +156,7 @@ class CombinationDialog : DharlDialog {
 				_preview.item(l).depth = selectedDepth;
 			}
 		}
-		_imageType.listeners!(SWT.Selection) ~= &updateImageType;
+		_imageType.p_listeners!(SWT.Selection) ~= &updateImageType;
 
 		// folder
 		basicLabel(output, c.text.targetFolder);

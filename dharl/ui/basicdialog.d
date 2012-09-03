@@ -197,9 +197,9 @@ abstract class BasicDialog {
 		}
 
 		static if (is(typeof(control.addModifyListener))) {
-			control.listeners!(SWT.Modify) ~= { pApply.p_enabled = true; };
+			control.p_listeners!(SWT.Modify) ~= { pApply.p_enabled = true; };
 		} else static if (is(typeof(control.addSelectionListener))) {
-			control.listeners!(SWT.Selection) ~= { pApply.p_enabled = true; };
+			control.p_listeners!(SWT.Selection) ~= { pApply.p_enabled = true; };
 		} else static assert (0);
 	}
 }

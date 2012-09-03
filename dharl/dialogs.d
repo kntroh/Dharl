@@ -245,14 +245,14 @@ class ResizeDialog : DharlDialog {
 		}
 
 		// modify size
-		_pxw.listeners!(SWT.Modify) ~= { refPxChg(_pxw, _pew, _width, _pxh, _peh, _height); };
-		_pxh.listeners!(SWT.Modify) ~= { refPxChg(_pxh, _peh, _height, _pxw, _pew, _width); };
-		_pew.listeners!(SWT.Modify) ~= { refPerChg(_pxw, _pew, _width, _pxh, _peh, _height); };
-		_peh.listeners!(SWT.Modify) ~= { refPerChg(_pxh, _peh, _height, _pxw, _pew, _width); };
+		_pxw.p_listeners!(SWT.Modify) ~= { refPxChg(_pxw, _pew, _width, _pxh, _peh, _height); };
+		_pxh.p_listeners!(SWT.Modify) ~= { refPxChg(_pxh, _peh, _height, _pxw, _pew, _width); };
+		_pew.p_listeners!(SWT.Modify) ~= { refPerChg(_pxw, _pew, _width, _pxh, _peh, _height); };
+		_peh.p_listeners!(SWT.Modify) ~= { refPerChg(_pxh, _peh, _height, _pxw, _pew, _width); };
 
 		// quit
-		_pxw.listeners!(SWT.Dispose) ~= { _width  = _pxw.p_selection; };
-		_pxh.listeners!(SWT.Dispose) ~= { _height = _pxh.p_selection; };
+		_pxw.p_listeners!(SWT.Dispose) ~= { _width  = _pxw.p_selection; };
+		_pxh.p_listeners!(SWT.Dispose) ~= { _height = _pxh.p_selection; };
 
 		// options
 		auto option = basicGroup(area, c.text.resizeOption);
@@ -344,7 +344,7 @@ class TurnDialog : DharlDialog {
 
 		_degree = basicSpinner(angleInner, 0, 360);
 		mod(_degree);
-		_degree.listeners!(SWT.Modify) ~= { _degreeValue  = _degree.p_selection; };
+		_degree.p_listeners!(SWT.Modify) ~= { _degreeValue  = _degree.p_selection; };
 
 		// support buttons
 		auto buttons = basicComposite(angleInner);
@@ -469,7 +469,7 @@ class PaletteOperationDialog : DharlDialog {
 		mod(_palettes);
 		_palettes.p_layoutData = GD.fill(true, true).hSpan(4);
 
-		_palettes.listeners!(SWT.Selection) ~= {
+		_palettes.p_listeners!(SWT.Selection) ~= {
 			_selectedPalette = _palettes.p_selectionIndex();
 			_paletteView.colors = _paletteData[_selectedPalette];
 			_copyFrom.select(_selectedPalette);
@@ -498,11 +498,11 @@ class PaletteOperationDialog : DharlDialog {
 		// copy operation
 		_copyFrom = basicCombo(palettesGrp);
 		_copyFrom.p_layoutData = GD.fill(true, false);
-		_copyFrom.listeners!(SWT.Selection) ~= &updateEnabled;
+		_copyFrom.p_listeners!(SWT.Selection) ~= &updateEnabled;
 		auto toLabel = basicLabel(palettesGrp, c.text.to);
 		_copyTo = basicCombo(palettesGrp);
 		_copyTo.p_layoutData = GD.fill(true, false);
-		_copyTo.listeners!(SWT.Selection) ~= &updateEnabled;
+		_copyTo.p_listeners!(SWT.Selection) ~= &updateEnabled;
 		_tCopy = basicButton(palettesGrp, c.text.menu.copyPalette, .cimg(c.image.copyPalette), {
 			auto from = _copyFrom.p_selectionIndex;
 			if (-1 == from) return;
@@ -630,8 +630,8 @@ class PaletteTransferDialog : DharlDialog {
 		mod(_to);
 		_to.p_layoutData = GD.fill(true, true);
 
-		_from.listeners!(SWT.Selection) ~= { _fromIndex = _from.p_selectionIndex(); };
-		_to.listeners!(SWT.Selection) ~= { _toIndices = _to.p_selectionIndices(); };
+		_from.p_listeners!(SWT.Selection) ~= { _fromIndex = _from.p_selectionIndex(); };
+		_to.p_listeners!(SWT.Selection) ~= { _toIndices = _to.p_selectionIndices(); };
 
 		// initializes controls
 		foreach (name; _paletteNames) {

@@ -189,17 +189,17 @@ Wraps Widget#addListener() and Display.addFilter().
 Example:
 ---
 auto shell = new Shell;
-shell.listeners!(SWT.Active) ~= {
+shell.p_listeners!(SWT.Active) ~= {
 	writeln("shell activated!");
 };
-auto info = shell.listeners!(SWT.Dispose) ~= (Event e) {
+auto info = shell.p_listeners!(SWT.Dispose) ~= (Event e) {
 	writeln("shell disposed.");
 };
 info.remove(); // remove the dispose listener.
 ---
 */
 @property
-auto listeners(int Type, W)(W widget) {
+auto p_listeners(int Type, W)(W widget) {
 	return new ListenerWrapper!(Type, W, false)(widget);
 }
 /// ditto
@@ -213,7 +213,7 @@ auto p_filters(int Type)(Display display) {
 
 /// Casts return value of widget#getData().
 @property
-D dataTo(D : Object)(Widget widget) {
+D dataTo(D)(Widget widget) {
 	return cast(D) widget.data;
 }
 

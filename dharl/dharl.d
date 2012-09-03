@@ -21,6 +21,7 @@ private import dharl.ui.dwtutils;
 
 private import std.algorithm;
 private import std.array;
+private import std.conv;
 private import std.file;
 private import std.path;
 private import std.string;
@@ -124,16 +125,14 @@ void main(string[] args) {
 		.erroroutf(msg);
 		throw new Exception(msg);
 	}
+	scope (exit) sendToPipe(PIPE_NAME, MSG_QUIT);
 
 	// Open window.
-	shell.open();
-	while (!shell.p_disposed) {
-		if (!display.readAndDispatch()) {
-			display.sleep();
-		}
-	}
-	display.dispose();
-	sendToPipe(PIPE_NAME, MSG_QUIT);
+	shell.startApplication((Exception e) {
+		.errorout(e);
+		showErrorDialog(shell, .text(e), c.text.fErrorDialog.value.format(c.text.appName));
+		return true;
+	});
 
 	// Save application configuration.
 	try {
@@ -236,7 +235,6 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	separator(mFile);
 	mFileHistFrom = mFile.getItemCount();
 	mFileHistTo   = mFileHistFrom;
-	auto exit = basicMenuItem(mFile, c.text.menu.exit, cimg(c.image.exit), &shell.close);
 
 	MenuItem[PaintMode] modeItems;
 	MenuItem tSel;
@@ -335,6 +333,10 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	});
 	separator(mTool, toolBar);
 	auto tResizeC = basicMenuItem(mTool, toolBar, c.text.menu.resizeCanvas, cimg(c.image.resizeCanvas), &mainPanel.resizeCanvas);
+	separator(toolBar);
+	auto tCloseImage = basicMenuItem(mFile, toolBar, c.text.menu.closeImage, cimg(c.image.closeImage), &mainPanel.closeImage);
+	separator(mFile);
+	auto exit = basicMenuItem(mFile, c.text.menu.exit, cimg(c.image.exit), &shell.close);
 
 	separator(mTool);
 	auto tResize = basicMenuItem(mTool, c.text.menu.resize, cimg(c.image.resize), &mainPanel.resize);
@@ -411,6 +413,8 @@ private MainPanel initialize(DCommon c, Shell shell) {
 			}
 		}
 
+		tCloseImage.p_enabled = -1 != selCanvas;
+
 		tCut.p_enabled = sel;
 		tCopy.p_enabled = sel;
 		tPaste.p_enabled = alive && cbHasImage;
@@ -429,11 +433,10 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		mBack.p_selection = mainPanel.paintArea.enabledBackColor;
 		mPTrans.p_enabled = 0 < mainPanel.imageCount;
 
-		int index = mainPanel.selectedIndex;
-		tSaveOverwrite.p_enabled = -1 != index && (mainPanel.isChanged(index) || !mainPanel.path(index).length);
-		tSaveWithName.p_enabled = -1 != index;
+		tSaveOverwrite.p_enabled = -1 != selCanvas && (mainPanel.isChanged(selCanvas) || !mainPanel.path(selCanvas).length);
+		tSaveWithName.p_enabled = -1 != selCanvas;
 		tSaveAll.p_enabled = mainPanel.isChanged(false);
-		tResizeC.p_enabled = -1 != index;
+		tResizeC.p_enabled = -1 != selCanvas;
 
 		tUpLayer.p_enabled = mainPanel.canUpLayer;
 		tDownLayer.p_enabled = mainPanel.canDownLayer;
@@ -442,7 +445,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	}
 	mainPanel.statusChangedReceivers ~= &refreshMenu;
 	mainPanel.selectedReceivers ~= &refreshMenu;
-	shell.listeners!(SWT.Activate) ~= &refreshMenu;
+	shell.p_listeners!(SWT.Activate) ~= &refreshMenu;
 
 	// Open last opened files.
 	foreach (file; c.conf.lastOpenedFiles.uniq()) {
@@ -471,7 +474,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	};
 
 	// Processing of termination.
-	shell.listeners!(SWT.Close) ~= (Event e) {
+	shell.p_listeners!(SWT.Close) ~= (Event e) {
 		if (!mainPanel.canClosePaintArea) {
 			e.doit = false;
 			return;

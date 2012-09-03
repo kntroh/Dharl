@@ -1366,10 +1366,12 @@ class MLImage : Undoable {
 			l.name = st.name[i];
 			l.visible = st.visible[i];
 		}
+		bool resize = (_iw != st.width) || (_ih != st.height);
 		_iw = st.width;
 		_ih = st.height;
 		cloneCombi(_combi, st.combi);
 		restoreReceivers.raiseEvent(mode);
+		if (resize) resizeReceivers.raiseEvent();
 	}
 	@property
 	override bool enabledUndo() {

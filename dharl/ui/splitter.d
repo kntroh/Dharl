@@ -58,7 +58,7 @@ class Splitter : Composite {
 		_sash = new Sash(this, SWT.VERTICAL == splitStyle ? SWT.HORIZONTAL : SWT.VERTICAL);
 
 		// Handle sash moved event.
-		_sash.listeners!(SWT.Selection) ~= (Event e) {
+		_sash.p_listeners!(SWT.Selection) ~= (Event e) {
 			checkWidget();
 
 			if (SWT.VERTICAL == splitStyle) {
@@ -78,7 +78,7 @@ class Splitter : Composite {
 
 		// Sash follows bottom or right line
 		// when maximized top or left control.
-		this.listeners!(SWT.Resize) ~= (Event e) {
+		this.p_listeners!(SWT.Resize) ~= (Event e) {
 			checkWidget();
 			auto children = this.p_children;
 			if (2 > children.length) return;

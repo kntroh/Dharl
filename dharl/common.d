@@ -90,6 +90,7 @@ class DImages {
 	const DImage saveOverwrite = importImage!("save_overwrite.png"); /// ditto
 	const DImage saveWithName = importImage!("save_with_name.png"); /// ditto
 	const DImage saveAll = importImage!("save_all.png"); /// ditto
+	const DImage closeImage = importImage!("close_image.png"); /// ditto
 	const DImage exit = importImage!("exit.png"); /// ditto
 
 	const DImage undo = importImage!("undo.png"); /// ditto
@@ -161,6 +162,7 @@ class DText {
 
 	mixin MsgProp!("fQuestionDialog", "Question - %s"); /// ditto
 	mixin MsgProp!("fWarningDialog", "Warning - %s"); /// ditto
+	mixin MsgProp!("fErrorDialog", "Error - %s"); /// ditto
 
 	mixin MsgProp!("ok", "&OK"); /// ditto
 	mixin MsgProp!("cancel", "&Cancel"); /// ditto
@@ -255,6 +257,7 @@ struct DMenuText {
 	mixin MsgProp!("saveOverwrite", "&Save overwrite\tCtrl+S"); /// ditto
 	mixin MsgProp!("saveWithName", "S&ave with name...\tCtrl+Shift+S"); /// ditto
 	mixin MsgProp!("saveAll", "Sa&ve all images"); /// ditto
+	mixin MsgProp!("closeImage", "&Close image"); /// ditto
 	mixin MsgProp!("exit", "E&xit\tAlt+F4"); /// ditto
 
 	mixin MsgProp!("view", "&View"); /// ditto

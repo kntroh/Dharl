@@ -122,7 +122,7 @@ MenuItem basicMenuItem(Menu parent, string text, Image image, void delegate(Even
 	menuItem.p_accelerator = acceleratorKey(text);
 	menuItem.p_selection = selection;
 	if (listener) {
-		menuItem.listeners!(SWT.Selection) ~= listener;
+		menuItem.p_listeners!(SWT.Selection) ~= listener;
 	}
 	return menuItem;
 }
@@ -156,7 +156,7 @@ ToolItem basicToolItem(ToolBar parent, string text, Image image, void delegate(E
 	initToolItem(toolItem, text, image);
 	toolItem.p_selection = selection;
 	if (listener) {
-		toolItem.listeners!(SWT.Selection) ~= listener;
+		toolItem.p_listeners!(SWT.Selection) ~= listener;
 	}
 	return toolItem;
 }
@@ -204,7 +204,7 @@ Tuple!(ToolItem, "toolItem", Menu, "menu") dropDownToolItem(ToolBar parent, stri
 	}
 	initToolItem(toolItem, text, image);
 	auto menu = new Menu(parent.p_shell);
-	toolItem.listeners!(SWT.Selection) ~= (Event e) {
+	toolItem.p_listeners!(SWT.Selection) ~= (Event e) {
 		if (!buttonListener || SWT.ARROW == e.detail) {
 			auto b = toolItem.p_bounds;
 			menu.p_location = parent.toDisplay(b.x, b.y + b.height);
@@ -244,8 +244,8 @@ MTItem basicMenuItem(Menu menu, ToolBar tool, string text, Image image, void del
 	result.toolItem = basicToolItem(tool, text, image, nl, style, selection, toolIndex);
 	bindMenu(result.menuItem, result.toolItem);
 	if (listener) {
-		result.menuItem.listeners!(SWT.Selection) ~= listener;
-		result.toolItem.listeners!(SWT.Selection) ~= listener;
+		result.menuItem.p_listeners!(SWT.Selection) ~= listener;
+		result.toolItem.p_listeners!(SWT.Selection) ~= listener;
 	}
 	return result;
 }
@@ -282,7 +282,7 @@ Text basicText(Composite parent, void delegate(Event) modify, string text = "", 
 	auto tx = new Text(parent, style);
 	tx.p_text = text;
 	if (modify) {
-		tx.listeners!(SWT.Modify) ~= modify;
+		tx.p_listeners!(SWT.Modify) ~= modify;
 	}
 	return tx;
 }
@@ -311,7 +311,7 @@ Button basicButton(Composite parent, string text, Image image, void delegate(Eve
 	bt.p_image = image;
 	bt.p_text = text;
 	if (selection) {
-		bt.listeners!(SWT.Selection) ~= selection;
+		bt.p_listeners!(SWT.Selection) ~= selection;
 	}
 	return bt;
 }
@@ -349,14 +349,14 @@ Text basicNumber(Composite parent, int min, int max, int style = SWT.BORDER | SW
 	// When inputting invalid value, old restores it.
 	string old = tx.p_text;
 
-	tx.listeners!(SWT.FocusOut) ~= (Event e) {
+	tx.p_listeners!(SWT.FocusOut) ~= (Event e) {
 		tx.p_text = old;
 	};
-	tx.listeners!(SWT.FocusIn) ~= (Event e) {
+	tx.p_listeners!(SWT.FocusIn) ~= (Event e) {
 		old = tx.p_text;
 	};
 
-	tx.listeners!(SWT.Modify) ~= (Event e) {
+	tx.p_listeners!(SWT.Modify) ~= (Event e) {
 		string text = tx.p_text;
 		if (text.length && old != text) {
 			auto t = strip(text);
@@ -374,7 +374,7 @@ Text basicNumber(Composite parent, int min, int max, int style = SWT.BORDER | SW
 		e.text = old;
 	};
 
-	tx.listeners!(SWT.Verify) ~= (Event e) {
+	tx.p_listeners!(SWT.Verify) ~= (Event e) {
 		if (!e.text.length) return;
 		// Checks a input character.
 		auto buf = new char[e.text.length];
@@ -467,7 +467,7 @@ Table listTable(Composite parent, bool multi, bool check = false) {
 
 	// The only column.
 	auto column = basicTableColumn(table, "");
-	table.listeners!(SWT.Resize) ~= {
+	table.p_listeners!(SWT.Resize) ~= {
 		column.p_width = table.p_clientArea.width;
 	};
 	return table;

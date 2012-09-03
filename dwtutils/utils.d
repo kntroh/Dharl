@@ -18,6 +18,35 @@ private import std.typecons;
 
 private import org.eclipse.swt.all;
 
+/// Starts event loop of the application.
+/// If caught exception, it calls catchException.
+/// If it returns false, quit the application.
+/// If catchException is null,
+/// quit the application is when someone thrown exception.
+void startApplication(Shell mainShell, bool delegate(Exception e) catchException = null) {
+	.enforce(mainShell);
+	auto display = mainShell.p_display;
+	scope (exit) display.dispose();
+
+	mainShell.open();
+	while (!mainShell.p_disposed) {
+		try {
+			if (!display.readAndDispatch()) {
+				display.sleep();
+			}
+		} catch (Exception e) {
+			if (catchException) {
+				if (!catchException(e)) {
+					throw e;
+				}
+			} else {
+				throw e;
+			}
+			display.sleep();
+		}
+	}
+}
+
 /// Adds simple table item to table.
 void add(Table table, string text, Image image = null) {
 	basicTableItem(table, text, image);
@@ -159,12 +188,12 @@ class Editor {
 		auto vBar = _parent.p_verticalBar;
 		auto hBar = _parent.p_horizontalBar;
 		if (vBar) {
-			auto info = vBar.listeners!(SWT.Selection) ~= { cancel(); };
-			_text.listeners!(SWT.Dispose) ~= { info.remove(); };
+			auto info = vBar.p_listeners!(SWT.Selection) ~= { cancel(); };
+			_text.p_listeners!(SWT.Dispose) ~= { info.remove(); };
 		}
 		if (hBar) {
-			auto info = hBar.listeners!(SWT.Selection) ~= { cancel(); };
-			_text.listeners!(SWT.Dispose) ~= { info.remove(); };
+			auto info = hBar.p_listeners!(SWT.Selection) ~= { cancel(); };
+			_text.p_listeners!(SWT.Dispose) ~= { info.remove(); };
 		}
 		void submit() {
 			if (!_text) return;
@@ -177,12 +206,12 @@ class Editor {
 				cancel();
 			}
 		}
-		_text.listeners!(SWT.Modify) ~= (Event e) {
+		_text.p_listeners!(SWT.Modify) ~= (Event e) {
 			if (modify) modify(_text.p_text);
 			resize(e);
 		};
-		_text.listeners!(SWT.FocusOut) ~= &submit;
-		_text.listeners!(SWT.KeyDown) ~= (Event e) {
+		_text.p_listeners!(SWT.FocusOut) ~= &submit;
+		_text.p_listeners!(SWT.KeyDown) ~= (Event e) {
 			switch (e.keyCode) {
 			case SWT.CR:
 				submit();
@@ -194,8 +223,8 @@ class Editor {
 				break;
 			}
 		};
-		auto info = _parent.listeners!(SWT.Resize) ~= &resize;
-		_text.listeners!(SWT.Dispose) ~= { info.remove(); };
+		auto info = _parent.p_listeners!(SWT.Resize) ~= &resize;
+		_text.p_listeners!(SWT.Dispose) ~= { info.remove(); };
 		auto pBounds = _parent.p_clientArea;
 		auto s = _text.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		s.x += computeTextSize(_text, "##").x; // allow leeway
@@ -256,7 +285,7 @@ Editor createEditor(Table table, bool emptyIsCancel, void delegate(int index, st
 			itm.p_text = text;
 		});
 	}
-	table.listeners!(SWT.KeyDown) ~= (Event e) {
+	table.p_listeners!(SWT.KeyDown) ~= (Event e) {
 		if (SWT.F2 != e.keyCode) return;
 		int index = table.p_selectionIndex;
 		if (-1 == index) return;
@@ -297,10 +326,10 @@ struct MTItem {
 
 /// Binds menu and tool.
 void bindMenu(MenuItem menu, ToolItem tool) {
-	menu.listeners!(SWT.Selection) ~= {
+	menu.p_listeners!(SWT.Selection) ~= {
 		tool.p_selection = menu.p_selection;
 	};
-	tool.listeners!(SWT.Selection) ~= {
+	tool.p_listeners!(SWT.Selection) ~= {
 		menu.p_selection = tool.p_selection;
 	};
 }

@@ -167,10 +167,10 @@ class PaintArea : Canvas, Undoable {
 
 		auto hs = this.p_horizontalBar;
 		assert (hs);
-		hs.listeners!(SWT.Selection) ~= &redraw;
+		hs.p_listeners!(SWT.Selection) ~= &redraw;
 		auto vs = this.p_verticalBar;
 		assert (vs);
-		vs.listeners!(SWT.Selection) ~= &redraw;
+		vs.p_listeners!(SWT.Selection) ~= &redraw;
 
 		this.bindListeners();
 	}
@@ -246,6 +246,9 @@ class PaintArea : Canvas, Undoable {
 		cancelPaste();
 		calcScrollParams();
 		redraw();
+		int iw = _image.width;
+		int ih = _image.height;
+		resizeReceivers.raiseEvent(iw, ih);
 		statusChangedReceivers.raiseEvent();
 	}
 
@@ -2999,7 +3002,7 @@ class LayerList : Canvas {
 
 		auto vs = this.p_verticalBar;
 		assert (vs);
-		vs.listeners!(SWT.Selection) ~= &redraw;
+		vs.p_listeners!(SWT.Selection) ~= &redraw;
 
 		this.bindListeners();
 	}

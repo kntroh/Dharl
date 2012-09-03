@@ -93,11 +93,11 @@ class ColorSlider : Canvas {
 			auto sps = sp.computeSize(ts.x, ts.y);
 
 			// synchronization
-			sl.listeners!(SWT.Selection) ~= (Event e) {
+			sl.p_listeners!(SWT.Selection) ~= (Event e) {
 				sp.p_text = to!string(sltosp(sl.p_selection, sl.p_maximum));
 				editedColor(e);
 			};
-			sp.listeners!(SWT.Modify) ~= (Event e) {
+			sp.p_listeners!(SWT.Modify) ~= (Event e) {
 				// Using e.text. See description of basicNumber().
 				sl.p_selection = sptosl(to!(int)(e.text), sl.p_maximum);
 				if (!_setting) {

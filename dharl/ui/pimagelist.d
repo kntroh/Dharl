@@ -67,10 +67,10 @@ class PImageList : Canvas {
 
 		auto hs = this.p_horizontalBar;
 		assert (hs);
-		hs.listeners!(SWT.Selection) ~= &redraw;
+		hs.p_listeners!(SWT.Selection) ~= &redraw;
 		auto vs = this.p_verticalBar;
 		assert (vs);
-		vs.listeners!(SWT.Selection) ~= &redraw;
+		vs.p_listeners!(SWT.Selection) ~= &redraw;
 
 		this.bindListeners();
 	}

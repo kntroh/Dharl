@@ -113,7 +113,7 @@ class MainPanel : Composite {
 		constructImageList(splitter, _um);
 		_c.conf.sashPosWork_List.value.refSelection(splitter);
 
-		_paletteView.listeners!(SWT.Selection) ~= {
+		_paletteView.p_listeners!(SWT.Selection) ~= {
 			_um.resetRetryWord();
 			_paintArea.pixel = _paletteView.pixel1;
 			_paintArea.backgroundPixel = _paletteView.pixel2;
@@ -130,12 +130,12 @@ class MainPanel : Composite {
 			_um.resetRetryWord();
 			_paletteView.reverseMask(pixel);
 		};
-		_paintArea.listeners!(SWT.Selection) ~= {
+		_paintArea.p_listeners!(SWT.Selection) ~= {
 			_um.resetRetryWord();
 			_paletteView.pixel1 = _paintArea.pixel;
 			_colorSlider.color = _paletteView.color(_paletteView.pixel1);
 		};
-		_layerList.listeners!(SWT.Selection) ~= {
+		_layerList.p_listeners!(SWT.Selection) ~= {
 			int tPixel = -1;
 			auto layers = _paintArea.selectedLayers;
 			if (layers.length) {
@@ -150,7 +150,7 @@ class MainPanel : Composite {
 			}
 			_paletteView.transparentPixel = tPixel;
 		};
-		_layerList.listeners!(SWT.MouseMove) ~= (Event e) {
+		_layerList.p_listeners!(SWT.MouseMove) ~= (Event e) {
 			string toolTip = "";
 			if (!toolTip.length) {
 				foreach (b; _layerList.nameBounds) {
@@ -178,7 +178,7 @@ class MainPanel : Composite {
 			}
 			_layerList.p_toolTipText = toolTip;
 		};
-		_colorSlider.listeners!(SWT.Selection) ~= {
+		_colorSlider.p_listeners!(SWT.Selection) ~= {
 			auto pixel = _paletteView.pixel1;
 			auto rgb = _colorSlider.color;
 			if (rgb == _paletteView.color(pixel)) return;
@@ -192,10 +192,10 @@ class MainPanel : Composite {
 			_paintPreview.redraw();
 		};
 
-		_imageList.listeners!(SWT.Selection) ~= {
+		_imageList.p_listeners!(SWT.Selection) ~= {
 			selectImage(_imageList.selectedIndex);
 		};
-		_imageList.listeners!(SWT.MouseDown) ~= (Event e) {
+		_imageList.p_listeners!(SWT.MouseDown) ~= (Event e) {
 			if (e.button != 1 && e.button != 3) return;
 			int sel = _imageList.indexOf(e.x, e.y);
 			if (-1 == sel) return;
@@ -332,7 +332,7 @@ class MainPanel : Composite {
 		_layerList = new LayerList(comp, SWT.BORDER | SWT.DOUBLE_BUFFERED);
 		_layerList.p_layoutData = GD(GridData.FILL_BOTH).vSpan(3);
 		_layerList.undoManager = um;
-		_layerList.listeners!(SWT.Selection) ~= {
+		_layerList.p_listeners!(SWT.Selection) ~= {
 			tUpLayer.p_enabled = canUpLayer;
 			tDownLayer.p_enabled = canDownLayer;
 			statusChangedReceivers.raiseEvent();
@@ -364,7 +364,7 @@ class MainPanel : Composite {
 		auto pToolBar2 = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
 		pToolBar2.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_CENTER);
 		auto tPOp = dropDownToolItem(pToolBar2, _c.text.menu.paletteOperation, .cimg(_c.image.paletteOperation), &paletteOperation);
-		tPOp.menu.listeners!(SWT.Show) ~= {
+		tPOp.menu.p_listeners!(SWT.Show) ~= {
 			foreach (item; tPOp.menu.p_items) {
 				item.dispose();
 			}
@@ -491,7 +491,7 @@ class MainPanel : Composite {
 			_paintArea.tone = null;
 			_c.conf.tone = 0;
 		}, SWT.RADIO, 0 == _c.conf.tone);
-		_tones.listeners!(SWT.Dispose) ~= &clearTonesToolBar;
+		_tones.p_listeners!(SWT.Dispose) ~= &clearTonesToolBar;
 
 		auto toneIndex = cast(int) _c.conf.tone - 1;
 		if (0 <= toneIndex && toneIndex < _c.conf.tones.length) {
@@ -505,13 +505,13 @@ class MainPanel : Composite {
 		createLabel(_c.text.zoom);
 		auto zoom = basicSpinner(comp, 1, PaintArea.ZOOM_MAX);
 		_c.conf.zoom.value.refSelection(zoom);
-		zoom.listeners!(SWT.Selection) ~= {
+		zoom.p_listeners!(SWT.Selection) ~= {
 			_paintArea.zoom = zoom.p_selection;
 		};
 		createLabel(_c.text.lineWidth);
 		auto lineWidth = basicSpinner(comp, 1, 16);
 		_c.conf.lineWidth.refSelection(lineWidth);
-		lineWidth.listeners!(SWT.Selection) ~= {
+		lineWidth.p_listeners!(SWT.Selection) ~= {
 			_paintArea.cursorSize = lineWidth.p_selection;
 		};
 		void refreshZoomAndLineWidth() {
@@ -828,7 +828,7 @@ class MainPanel : Composite {
 		params.modCountS = 0;
 		pi.p_data = params;
 
-		pi.listeners!(SWT.Dispose) ~= {
+		pi.p_listeners!(SWT.Dispose) ~= {
 			img.dispose();
 		};
 		size_t index = _imageList.imageCount - 1;
@@ -847,12 +847,11 @@ class MainPanel : Composite {
 				params.modCount++;
 				break;
 			}
-			auto item = _imageList.item(index);
 			string fChanged = _c.text.fChanged;
 			if (params.modify) {
-				item.p_text = fChanged.format(params.name);
+				pi.p_text = fChanged.format(params.name);
 			} else {
-				item.p_text = params.name;
+				pi.p_text = params.name;
 			}
 		};
 
@@ -1097,6 +1096,24 @@ class MainPanel : Composite {
 		}
 		assert (SWT.NO == r);
 		return true;
+	}
+
+	/// Close canvas.
+	void closeImage() {
+		checkWidget();
+		checkInit();
+		auto sel = _imageList.selectedIndex;
+		if (-1 == sel) return;
+		closeImage(sel);
+	}
+	/// ditto
+	void closeImage(size_t index) {
+		checkWidget();
+		checkInit();
+		if (canCloseImage(index)) {
+			auto item = _imageList.item(index);
+			item.dispose();
+		}
 	}
 
 	/// Resizes character (paint area).
