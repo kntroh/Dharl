@@ -174,9 +174,9 @@ class DText {
 	mixin MsgProp!("fAskFilesOverwrite", "%s files already exists,\noverwrite it?"); /// ditto
 	mixin MsgProp!("newFilename", "NewImage");
 
-	mixin MsgProp!("noName", "(No name)"); /// ditto
+	mixin MsgProp!("noName", "(No Name)"); /// ditto
 	mixin MsgProp!("fChanged", "*%s"); /// ditto
-	mixin MsgProp!("newLayer", "(New layer)"); /// ditto
+	mixin MsgProp!("newLayer", "(New Layer)"); /// ditto
 	mixin MsgProp!("layerName", "Name"); /// ditto
 	mixin MsgProp!("layerVisible", "Visible"); /// ditto
 	mixin MsgProp!("descLayerVisibility", "Click to toggle the visibility."); /// ditto
@@ -190,27 +190,27 @@ class DText {
 	mixin MsgProp!("fCanvasChanged", "%s has been changed.\nDo you want to save it?"); /// ditto
 	mixin MsgProp!("warningDisappearsData", "If you didn't save with *.dhr, data such as layers disappears.\nDo you want to save it?"); /// ditto
 
-	mixin MsgProp!("fLoadImageType", "Image file (%s)"); /// ditto
-	mixin MsgProp!("fSaveImageTypeDharl", "Dharl image (*.dhr)"); /// ditto
-	mixin MsgProp!("fSaveImageTypeBitmap", "%d-bit (%d colors) bitmap image (*.bmp)"); /// ditto
-	mixin MsgProp!("fSaveImageTypePNG", "%d-bit (%d colors) PNG image (*.png)"); /// ditto
+	mixin MsgProp!("fLoadImageType", "Image File (%s)"); /// ditto
+	mixin MsgProp!("fSaveImageTypeDharl", "Dharl Image (*.dhr)"); /// ditto
+	mixin MsgProp!("fSaveImageTypeBitmap", "%d-bit (%d colors) Bitmap Image (*.bmp)"); /// ditto
+	mixin MsgProp!("fSaveImageTypePNG", "%d-bit (%d colors) PNG Image (*.png)"); /// ditto
 
-	mixin MsgProp!("noTone", "(No tone)"); /// ditto
+	mixin MsgProp!("noTone", "(No Tone)"); /// ditto
 
 	mixin MsgProp!("zoom", "Zoom"); /// ditto
-	mixin MsgProp!("lineWidth", "Line width"); /// ditto
+	mixin MsgProp!("lineWidth", "Line Width"); /// ditto
 
-	mixin MsgProp!("fPaletteOperation", "Palette operation - %s"); /// ditto
+	mixin MsgProp!("fPaletteOperation", "Palette Operation - %s"); /// ditto
 	mixin MsgProp!("palettes", "Palettes"); /// ditto
 	mixin MsgProp!("palettePreview", "Preview"); /// ditto
 	mixin MsgProp!("to", "to"); /// ditto
 
-	mixin MsgProp!("fPaletteTransfer", "Palette transfer - %s"); /// ditto
-	mixin MsgProp!("paletteTransferSource", "Transfer source"); /// ditto
-	mixin MsgProp!("paletteTransferDestination", "Transfer destination"); /// ditto
+	mixin MsgProp!("fPaletteTransfer", "Palette Transfer - %s"); /// ditto
+	mixin MsgProp!("paletteTransferSource", "Transfer Source"); /// ditto
+	mixin MsgProp!("paletteTransferDestination", "Transfer Destination"); /// ditto
 
-	mixin MsgProp!("fResize", "Resize character - %s"); /// ditto
-	mixin MsgProp!("fResizeCanvas", "Resize canvas - %s"); /// ditto
+	mixin MsgProp!("fResize", "Resize Character - %s"); /// ditto
+	mixin MsgProp!("fResizeCanvas", "Resize Canvas - %s"); /// ditto
 	mixin MsgProp!("width", "Width"); /// ditto
 	mixin MsgProp!("height", "Height"); /// ditto
 	mixin MsgProp!("resizeTo", "Size"); /// ditto
@@ -221,14 +221,14 @@ class DText {
 	mixin MsgProp!("scaling", "Perform image scaling"); /// ditto
 
 	mixin MsgProp!("fTurn", "Turn - %s"); /// ditto
-	mixin MsgProp!("angle", "Angle of turn"); /// ditto
+	mixin MsgProp!("angle", "Angle of Turn"); /// ditto
 	mixin MsgProp!("angleDegree", "Angle (degree)"); /// ditto
 
 	mixin MsgProp!("fEditCombinationDialog", "Combination - %s"); /// ditto
 	mixin MsgProp!("fConfigDialog", "Configuration - %s"); /// ditto
-	mixin MsgProp!("characterSize", "Character size"); /// ditto
-	mixin MsgProp!("characterWidth", "Character width"); /// ditto
-	mixin MsgProp!("characterHeight", "Character height"); /// ditto
+	mixin MsgProp!("characterSize", "Character Size"); /// ditto
+	mixin MsgProp!("characterWidth", "Character Width"); /// ditto
+	mixin MsgProp!("characterHeight", "Character Height"); /// ditto
 
 	mixin MsgProp!("fStatusTextXY", "%s, %s"); /// ditto
 	mixin MsgProp!("fStatusTextRange", "%s, %s to %s, %s (%s x %s)"); /// ditto
@@ -239,7 +239,7 @@ class DText {
 	mixin MsgProp!("fPaletteName", "Palette %s"); /// ditto
 	mixin MsgProp!("targetFolder", "Target Folder:"); /// ditto
 	mixin MsgProp!("saveCombination", "&Save"); /// ditto
-	mixin MsgProp!("selectFolderDialogTitle", "Select folder"); /// ditto
+	mixin MsgProp!("selectFolderDialogTitle", "Select Folder"); /// ditto
 	mixin MsgProp!("selectCombinationOutputFolder", "Please select layer combinations output folder."); /// ditto
 
 	mixin MsgProp!("fAbout", "About - %s"); /// ditto
@@ -252,17 +252,17 @@ class DText {
 struct DMenuText {
 	/// Menu texts.
 	mixin MsgProp!("file", "&File");
-	mixin MsgProp!("createNewImage", "Create &new image\tCtrl+N"); /// ditto
-	mixin MsgProp!("openImage", "&Open image...\tCtrl+O"); /// ditto
-	mixin MsgProp!("saveOverwrite", "&Save overwrite\tCtrl+S"); /// ditto
-	mixin MsgProp!("saveWithName", "S&ave with name...\tCtrl+Shift+S"); /// ditto
-	mixin MsgProp!("saveAll", "Sa&ve all images"); /// ditto
-	mixin MsgProp!("closeImage", "&Close image"); /// ditto
+	mixin MsgProp!("createNewImage", "&New Image\tCtrl+N"); /// ditto
+	mixin MsgProp!("openImage", "&Open Image...\tCtrl+O"); /// ditto
+	mixin MsgProp!("saveOverwrite", "&Save Overwrite\tCtrl+S"); /// ditto
+	mixin MsgProp!("saveWithName", "Save &As...\tCtrl+Shift+S"); /// ditto
+	mixin MsgProp!("saveAll", "Sa&ve All Images"); /// ditto
+	mixin MsgProp!("closeImage", "&Close Image"); /// ditto
 	mixin MsgProp!("exit", "E&xit\tAlt+F4"); /// ditto
 
 	mixin MsgProp!("view", "&View"); /// ditto
-	mixin MsgProp!("mainGrid", "&Main grid"); /// ditto
-	mixin MsgProp!("subGrid", "&Sub grid"); /// ditto
+	mixin MsgProp!("mainGrid", "&Main Grid"); /// ditto
+	mixin MsgProp!("subGrid", "&Sub Grid"); /// ditto
 
 	mixin MsgProp!("edit", "&Edit"); /// ditto
 	mixin MsgProp!("undo", "&Undo\tCtrl+Z"); /// ditto
@@ -278,46 +278,46 @@ struct DMenuText {
 	mixin MsgProp!("removeLayer", "Remove La&yer"); /// ditto
 
 	mixin MsgProp!("mode", "&Mode"); /// ditto
-	mixin MsgProp!("enabledBackColor", "Background color is &transparent\tCtrl+P"); /// ditto
+	mixin MsgProp!("enabledBackColor", "Background Color is &Transparent\tCtrl+P"); /// ditto
 	mixin MsgProp!("selection", "&Selection\tCtrl+1"); /// ditto
-	mixin MsgProp!("freePath", "&Free path\tCtrl+2"); /// ditto
+	mixin MsgProp!("freePath", "&Free Path\tCtrl+2"); /// ditto
 	mixin MsgProp!("straight", "&Straight\tCtrl+3"); /// ditto
 	mixin MsgProp!("ovalLine", "&Oval\tCtrl+4"); /// ditto
 	mixin MsgProp!("rectLine", "&Rectangle\tCtrl+5"); /// ditto
-	mixin MsgProp!("ovalFill", "O&val (fill)\tCtrl+6"); /// ditto
-	mixin MsgProp!("rectFill", "R&ectangle (fill)\tCtrl+7"); /// ditto
-	mixin MsgProp!("fillArea", "F&ill area\tCtrl+8"); /// ditto
+	mixin MsgProp!("ovalFill", "O&val (Fill)\tCtrl+6"); /// ditto
+	mixin MsgProp!("rectFill", "R&ectangle (Fill)\tCtrl+7"); /// ditto
+	mixin MsgProp!("fillArea", "F&ill Area\tCtrl+8"); /// ditto
 
 	mixin MsgProp!("palette", "&Palette"); /// ditto
-	mixin MsgProp!("createGradation", "Create &gradation"); /// ditto
-	mixin MsgProp!("maskMode", "Edit &mask"); /// ditto
-	mixin MsgProp!("paletteOperation", "Pale&tte operation"); /// ditto
-	mixin MsgProp!("addPalette", "&Add palette"); /// ditto
-	mixin MsgProp!("removePalette", "&Remove palette"); /// ditto
+	mixin MsgProp!("createGradation", "Create &Gradation"); /// ditto
+	mixin MsgProp!("maskMode", "Edit &Mask"); /// ditto
+	mixin MsgProp!("paletteOperation", "Pale&tte Operation"); /// ditto
+	mixin MsgProp!("addPalette", "&Add Palette"); /// ditto
+	mixin MsgProp!("removePalette", "&Remove Palette"); /// ditto
 	mixin MsgProp!("copyPalette", "&Copy"); /// ditto
-	mixin MsgProp!("paletteTransfer", "Pale&tte transfer..."); /// ditto
+	mixin MsgProp!("paletteTransfer", "Palette &Transfer..."); /// ditto
 
 	mixin MsgProp!("tool", "&Tool"); /// ditto
-	mixin MsgProp!("editCombination", "Edit c&ombination..."); /// ditto
-	mixin MsgProp!("resize", "&Resize character..."); /// ditto
-	mixin MsgProp!("resizeCanvas", "R&esize canvas..."); /// ditto
-	mixin MsgProp!("mirrorHorizontal", "&Mirror horizontal"); /// ditto
-	mixin MsgProp!("mirrorVertical", "M&irror vertical"); /// ditto
-	mixin MsgProp!("flipHorizontal", "&Flip horizontal"); /// ditto
-	mixin MsgProp!("flipVertical", "Fli&p vertical"); /// ditto
-	mixin MsgProp!("rotateRight", "Rotate &right\tCtrl+Arrow_Right"); /// ditto
-	mixin MsgProp!("rotateLeft", "Rotate &left\tCtrl+Arrow_Left"); /// ditto
-	mixin MsgProp!("rotateUp", "Rotate &up\tCtrl+Arrow_Up"); /// ditto
-	mixin MsgProp!("rotateDown", "Rotate &down\tCtrl+Arrow_Down"); /// ditto
-	mixin MsgProp!("turn90", "&90 degree turn"); /// ditto
-	mixin MsgProp!("turn180", "&180 degree turn"); /// ditto
-	mixin MsgProp!("turn270", "&270 degree turn"); /// ditto
+	mixin MsgProp!("editCombination", "Edit C&ombination..."); /// ditto
+	mixin MsgProp!("resize", "&Resize Character..."); /// ditto
+	mixin MsgProp!("resizeCanvas", "R&esize Canvas..."); /// ditto
+	mixin MsgProp!("mirrorHorizontal", "&Mirror Horizontal"); /// ditto
+	mixin MsgProp!("mirrorVertical", "M&irror Vertical"); /// ditto
+	mixin MsgProp!("flipHorizontal", "&Flip Horizontal"); /// ditto
+	mixin MsgProp!("flipVertical", "Fli&p Vertical"); /// ditto
+	mixin MsgProp!("rotateRight", "Rotate &Right\tCtrl+Arrow_Right"); /// ditto
+	mixin MsgProp!("rotateLeft", "Rotate &Left\tCtrl+Arrow_Left"); /// ditto
+	mixin MsgProp!("rotateUp", "Rotate &Up\tCtrl+Arrow_Up"); /// ditto
+	mixin MsgProp!("rotateDown", "Rotate &Down\tCtrl+Arrow_Down"); /// ditto
+	mixin MsgProp!("turn90", "&90 degree Turn"); /// ditto
+	mixin MsgProp!("turn180", "&180 degree Turn"); /// ditto
+	mixin MsgProp!("turn270", "&270 degree Turn"); /// ditto
 	mixin MsgProp!("turn", "&Turn"); /// ditto
-	mixin MsgProp!("increaseBrightness", "Increase &brightness"); /// ditto
-	mixin MsgProp!("decreaseBrightness", "Decrease b&rightness"); /// ditto
+	mixin MsgProp!("increaseBrightness", "Increase &Brightness"); /// ditto
+	mixin MsgProp!("decreaseBrightness", "Decrease B&rightness"); /// ditto
 
-	mixin MsgProp!("addCombination", "Add combination"); /// ditto
-	mixin MsgProp!("removeCombination", "Remove combination"); /// ditto
+	mixin MsgProp!("addCombination", "Add Combination"); /// ditto
+	mixin MsgProp!("removeCombination", "Remove Combination"); /// ditto
 
 	mixin MsgProp!("configuration", "&Configuration..."); /// ditto
 
