@@ -1669,11 +1669,12 @@ class PaintArea : Canvas, Undoable {
 				return iInImageRect(ix, iy, iw, ih);
 			}
 		} else {
-			if (0 == _iCurSize) {
+			int iCurSize = mode is PaintMode.Fill ? 1 : _iCurSize;
+			if (0 == iCurSize) {
 				return CRect(0, 0, 0, 0);
 			}
 			int ix, iy, iw, ih;
-			int ics = _rangeSel ? 0 : _iCurSize - 1;
+			int ics = _rangeSel ? 0 : iCurSize - 1;
 			if (_iCurFrom.x != _iCurTo.x || _iCurFrom.y != _iCurTo.y) {
 				ix = min(_iCurFrom.x, _iCurTo.x) - ics;
 				iy = min(_iCurFrom.y, _iCurTo.y) - ics;
