@@ -392,6 +392,7 @@ class MLImage : Undoable {
 		}
 		int ow = _iw, oh = _ih;
 		auto layer = .colorReduction(image, false);
+		assert (layer.depth == 8);
 		assert (layer.palette.colors.length == 256);
 		_layers.length = 1;
 		_layers[0].image = layer;

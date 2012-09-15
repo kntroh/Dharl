@@ -79,6 +79,7 @@ mixin GetSetWrapper!("Height"); /// ditto
 mixin GetSetWrapper!("HorizontalBar"); /// ditto
 mixin GetSetWrapper!("Image"); /// ditto
 mixin GetSetWrapper!("ImageIndent"); /// ditto
+mixin GetSetWrapper!("Increment"); /// ditto
 mixin GetSetWrapper!("ItemCount"); /// ditto
 mixin GetSetWrapper!("Items"); /// ditto
 mixin GetSetWrapper!("Layout"); /// ditto

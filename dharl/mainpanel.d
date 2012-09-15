@@ -791,7 +791,8 @@ class MainPanel : Composite {
 		foreach (i, img; imgs) {
 			if (!img.layerCount) continue;
 			auto data = img.layer(0).image;
-			ubyte depth = cast(ubyte) .min(data.depth, 8);
+			assert (data.depth <= 8);
+			ubyte depth = cast(ubyte) data.depth;
 			auto pDepth = img in depths;
 			if (pDepth) depth = *pDepth;
 			bool saved = !data.palette.isDirect && depth <= 8;
@@ -804,7 +805,7 @@ class MainPanel : Composite {
 			if (1 < imgs.length) {
 				name ~= " (%s)".format(i + 1);
 			}
-			loadImage(img, name, file, depth, saved);
+			loadImage(img, name, file, cast(ubyte) .min(depth, 8), saved);
 		}
 	}
 	private void loadImage(MLImage img, string name, string path, ubyte depth, bool saved) {

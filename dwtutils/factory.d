@@ -408,11 +408,28 @@ Combo basicCombo(Composite parent, bool readOnly = true, string[] items = null) 
 }
 
 /// Creates basic style Spinner.
-Spinner basicSpinner(Composite parent, int min, int max) {
+Spinner basicSpinner(Composite parent, int min, int max, bool wheelUpDown = true) {
 	enforce(min <= max);
 	auto spn = new Spinner(parent, SWT.BORDER);
 	spn.p_minimum = min;
 	spn.p_maximum = max;
+	if (wheelUpDown) {
+		spn.p_listeners!(SWT.MouseWheel) ~= (Event e) {
+			if (0 == e.count) return;
+			if (e.count < 0) {
+				spn.p_selection = spn.p_selection - spn.p_increment;
+			} else {
+				assert (0 < e.count);
+				spn.p_selection = spn.p_selection + spn.p_increment;
+			}
+			auto se = new Event;
+			se.time = e.time;
+			se.stateMask = e.stateMask;
+			se.doit = e.doit;
+			spn.notifyListeners(SWT.Selection, se);
+			e.doit = se.doit;
+		};
+	}
 	return spn;
 }
 
