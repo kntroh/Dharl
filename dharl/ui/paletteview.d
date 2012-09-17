@@ -310,7 +310,7 @@ class PaletteView : Canvas, Undoable {
 		int mg = rgb2.green - rgb1.green;
 		int mb = rgb2.blue  - rgb1.blue;
 
-		size_t i = 0;
+		size_t i = 1;
 		foreach (pi; pi1 + 1 .. pi2) {
 			auto rgb = _colors[pi];
 			real rt = cast(real) i / piLen; // Ratio from pi1 to pi2.
