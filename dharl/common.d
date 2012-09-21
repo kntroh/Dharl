@@ -183,9 +183,6 @@ class DText {
 	mixin MsgProp!("descLayerTransparentPixel", "Transparent pixel.\nIt switches by Shift+Rightclick on the palette."); /// ditto
 	mixin MsgProp!("descLayerName", "Click to edit the layer name."); /// ditto
 
-	mixin MsgProp!("fQuestion", "Question - %s"); /// ditto
-	mixin MsgProp!("fWarning", "Warning - %s"); /// ditto
-
 	mixin MsgProp!("paintAreaChanged", "The paint area has been changed.\nAre you sure you want to quit?"); /// ditto
 	mixin MsgProp!("fCanvasChanged", "%s has been changed.\nDo you want to save it?"); /// ditto
 	mixin MsgProp!("warningDisappearsData", "If you didn't save with *.dhr, data such as layers disappears.\nDo you want to save it?"); /// ditto
@@ -271,7 +268,7 @@ struct DMenuText {
 	mixin MsgProp!("copy", "&Copy\tCtrl+C"); /// ditto
 	mixin MsgProp!("paste", "&Paste\tCtrl+V"); /// ditto
 	mixin MsgProp!("del", "&Delete\tDelete"); /// ditto
-	mixin MsgProp!("selectAll", "Select&All\tCtrl+A"); /// ditto
+	mixin MsgProp!("selectAll", "Select &All\tCtrl+A"); /// ditto
 	mixin MsgProp!("up", "Up"); /// ditto
 	mixin MsgProp!("down", "Down"); /// ditto
 	mixin MsgProp!("addLayer", "Add &Layer"); /// ditto
@@ -291,7 +288,7 @@ struct DMenuText {
 	mixin MsgProp!("palette", "&Palette"); /// ditto
 	mixin MsgProp!("createGradation", "Create &Gradation"); /// ditto
 	mixin MsgProp!("maskMode", "Edit &Mask"); /// ditto
-	mixin MsgProp!("paletteOperation", "Pale&tte Operation"); /// ditto
+	mixin MsgProp!("paletteOperation", "Pale&tte Operation..."); /// ditto
 	mixin MsgProp!("addPalette", "&Add Palette"); /// ditto
 	mixin MsgProp!("removePalette", "&Remove Palette"); /// ditto
 	mixin MsgProp!("copyPalette", "&Copy"); /// ditto
@@ -303,7 +300,7 @@ struct DMenuText {
 	mixin MsgProp!("resizeCanvas", "R&esize Canvas..."); /// ditto
 	mixin MsgProp!("mirrorHorizontal", "&Mirror Horizontal"); /// ditto
 	mixin MsgProp!("mirrorVertical", "M&irror Vertical"); /// ditto
-	mixin MsgProp!("flipHorizontal", "&Flip Horizontal"); /// ditto
+	mixin MsgProp!("flipHorizontal", "&Flip Horizontal\tCtrl+R"); /// ditto
 	mixin MsgProp!("flipVertical", "Fli&p Vertical"); /// ditto
 	mixin MsgProp!("rotateRight", "Rotate &Right\tCtrl+Arrow_Right"); /// ditto
 	mixin MsgProp!("rotateLeft", "Rotate &Left\tCtrl+Arrow_Left"); /// ditto
@@ -312,7 +309,7 @@ struct DMenuText {
 	mixin MsgProp!("turn90", "&90 degree Turn"); /// ditto
 	mixin MsgProp!("turn180", "&180 degree Turn"); /// ditto
 	mixin MsgProp!("turn270", "&270 degree Turn"); /// ditto
-	mixin MsgProp!("turn", "&Turn"); /// ditto
+	mixin MsgProp!("turn", "&Turn..."); /// ditto
 	mixin MsgProp!("increaseBrightness", "Increase &Brightness"); /// ditto
 	mixin MsgProp!("decreaseBrightness", "Decrease B&rightness"); /// ditto
 

@@ -29,6 +29,7 @@ private import std.string;
 private import org.eclipse.swt.all;
 
 private import java.lang.all : ArrayWrapperString2;
+private import java.nonstandard.Locale;
 
 /// Entry point of program.
 void main(string[] args) {
@@ -78,6 +79,15 @@ void main(string[] args) {
 			c.conf.readXMLFile(appData);
 		} catch (Exception e) {
 			.erroroutf("Read failure: %s", appData);
+		}
+	}
+	// Reads language file.
+	auto lang = c.moduleFileName.dirName().buildPath("lang").buildPath(.caltureName().setExtension(".xml"));
+	if (lang.exists()) {
+		try {
+			c.text.readXMLFile(lang);
+		} catch (Exception e) {
+			.erroroutf("Read failure: %s", lang);
 		}
 	}
 

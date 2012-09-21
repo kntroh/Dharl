@@ -1018,7 +1018,7 @@ class MainPanel : Composite {
 			item.image.write(file);
 		} else {
 			if (1 < item.image.layerCount || item.image.combinations.length) {
-				auto title = _c.text.fQuestion.value.format(_c.text.appName);
+				auto title = _c.text.fQuestionDialog.value.format(_c.text.appName);
 				int yesNo = showYesNoDialog(this.p_shell, _c.text.warningDisappearsData, title);
 				if (SWT.YES != yesNo) return;
 			}
@@ -1043,7 +1043,7 @@ class MainPanel : Composite {
 		params.depth = depth;
 		params.modCountS = params.modCount;
 		item.p_text = params.name;
-		item.toolTip = params.name;
+		item.toolTip = params.path;
 
 		statusChangedReceivers.raiseEvent();
 		loadedReceivers.raiseEvent(file.absolutePath().buildNormalizedPath());
@@ -1075,7 +1075,7 @@ class MainPanel : Composite {
 		checkWidget();
 		checkInit();
 		if (!isPaintAreaChanged) return true;
-		auto title = _c.text.fQuestion.value.format(_c.text.appName);
+		auto title = _c.text.fQuestionDialog.value.format(_c.text.appName);
 		return SWT.CANCEL != showOkCancelDialog(this.p_shell, _c.text.paintAreaChanged, title);
 	}
 	/// ditto
@@ -1088,7 +1088,7 @@ class MainPanel : Composite {
 
 		static const DLG_STYLE = SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION;
 		string cChanged = _c.text.fCanvasChanged;
-		auto title = _c.text.fQuestion.value.format(_c.text.appName);
+		auto title = _c.text.fQuestionDialog.value.format(_c.text.appName);
 		int r = showYesNoCancelDialog(this.p_shell, cChanged.format(params.name), title);
 		if (SWT.YES == r) {
 			return saveImageOverwrite(index);

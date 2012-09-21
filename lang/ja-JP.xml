@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<i18n>
+ <menu>
+  <file>ファイル(&amp;F)</file>
+  <createNewImage>新規作成(&amp;N)	Ctrl+N</createNewImage>
+  <openImage>開く(&amp;O)...	Ctrl+O</openImage>
+  <saveOverwrite>上書き保存(&amp;S)	Ctrl+S</saveOverwrite>
+  <saveWithName>名前を付けて保存(&amp;A)...	Ctrl+Shift+S</saveWithName>
+  <saveAll>すべて保存(&amp;V)</saveAll>
+  <closeImage>画像を閉じる(&amp;C)</closeImage>
+  <exit>終了(&amp;X)	Alt+F4</exit>
+  <view>表示(&amp;V)</view>
+  <mainGrid>グリッド(&amp;M)</mainGrid>
+  <subGrid>詳細グリッド(&amp;S)</subGrid>
+  <edit>編集(&amp;E)</edit>
+  <undo>元に戻す(&amp;U)	Ctrl+Z</undo>
+  <redo>やり直し(&amp;R)	Ctrl+Y</redo>
+  <cut>切り取り(&amp;T)	Ctrl+X</cut>
+  <copy>コピー(&amp;C)	Ctrl+C</copy>
+  <paste>貼り付け(&amp;P)	Ctrl+V</paste>
+  <del>削除(&amp;D)	Delete</del>
+  <selectAll>すべて選択(&amp;A)	Ctrl+A</selectAll>
+  <up>上へ</up>
+  <down>下へ</down>
+  <addLayer>レイヤの追加(&amp;L)</addLayer>
+  <removeLayer>レイヤの削除(&amp;Y)</removeLayer>
+  <mode>描画(&amp;M)</mode>
+  <enabledBackColor>移動などで背景色を無視する(&amp;T)	Ctrl+P</enabledBackColor>
+  <selection>選択モード(&amp;S)	Ctrl+1</selection>
+  <freePath>自由線(&amp;F)	Ctrl+2</freePath>
+  <straight>直線(&amp;S)	Ctrl+3</straight>
+  <ovalLine>楕円(&amp;O)	Ctrl+4</ovalLine>
+  <rectLine>矩形(&amp;R)	Ctrl+5</rectLine>
+  <ovalFill>中詰め楕円(&amp;V)	Ctrl+6</ovalFill>
+  <rectFill>中詰め矩形(&amp;E)	Ctrl+7</rectFill>
+  <fillArea>塗り潰し(&amp;I)	Ctrl+8</fillArea>
+  <palette>パレット(&amp;P)</palette>
+  <createGradation>グラデーションの作成(&amp;G)</createGradation>
+  <maskMode>マスク色の編集(&amp;M)</maskMode>
+  <paletteOperation>パレット選択(&amp;T)...</paletteOperation>
+  <addPalette>パレットの追加(&amp;A)</addPalette>
+  <removePalette>パレットの削除(&amp;R)</removePalette>
+  <copyPalette>コピー(&amp;C)</copyPalette>
+  <paletteTransfer>パレットの転送(&amp;T)...</paletteTransfer>
+  <tool>ツール(&amp;T)</tool>
+  <editCombination>組み合わせの編集(&amp;O)...</editCombination>
+  <resize>リサイズ(&amp;R)...</resize>
+  <resizeCanvas>キャンバスのリサイズ(&amp;E)...</resizeCanvas>
+  <mirrorHorizontal>水平ミラー(&amp;M)</mirrorHorizontal>
+  <mirrorVertical>垂直ミラー(&amp;I)</mirrorVertical>
+  <flipHorizontal>水平反転(&amp;F)	Ctrl+R</flipHorizontal>
+  <flipVertical>垂直反転(&amp;P)</flipVertical>
+  <rotateRight>右移動(&amp;R)	Ctrl+Arrow_Right</rotateRight>
+  <rotateLeft>左移動(&amp;L)	Ctrl+Arrow_Left</rotateLeft>
+  <rotateUp>上移動(&amp;U)	Ctrl+Arrow_Up</rotateUp>
+  <rotateDown>下移動(&amp;D)	Ctrl+Arrow_Down</rotateDown>
+  <turn90>90度回転(&amp;9)</turn90>
+  <turn180>180度回転(&amp;1)</turn180>
+  <turn270>270度回転(&amp;2)</turn270>
+  <turn>任意角度回転(&amp;T)</turn>
+  <increaseBrightness>明るくする(&amp;B)</increaseBrightness>
+  <decreaseBrightness>暗くする(&amp;R)</decreaseBrightness>
+  <addCombination>組み合わせの追加</addCombination>
+  <removeCombination>組み合わせの削除</removeCombination>
+  <configuration>設定(&amp;C)...</configuration>
+  <help>ヘルプ(&amp;H)</help>
+  <about>バージョン情報(&amp;A)</about>
+ </menu>
+ <appName>Dharl</appName>
+ <fAppNameWithImage>%s - %s</fAppNameWithImage>
+ <fAppNameWithImageChanged>*%s - %s</fAppNameWithImageChanged>
+ <fQuestionDialog>確認 - %s</fQuestionDialog>
+ <fWarningDialog>警告 - %s</fWarningDialog>
+ <fErrorDialog>エラー - %s</fErrorDialog>
+ <ok>&amp;OK</ok>
+ <cancel>キャンセル(&amp;C)</cancel>
+ <yes>はい(&amp;Y)</yes>
+ <no>いいえ(&amp;N)</no>
+ <apply>適用(&amp;A)</apply>
+ <selectFile>...</selectFile>
+ <fAskFilesOverwrite>%s件のファイルがすでに存在します。
+上書きしますか？</fAskFilesOverwrite>
+ <newFilename>新規イメージ</newFilename>
+ <noName>(新規イメージ)</noName>
+ <fChanged>*%s</fChanged>
+ <newLayer>(新規レイヤ)</newLayer>
+ <layerName>名前</layerName>
+ <layerVisible>表示</layerVisible>
+ <descLayerVisibility>クリックで表示・非表示を切替</descLayerVisibility>
+ <descLayerTransparentPixel>パレット上のシフト+右クリックで透過色を切替</descLayerTransparentPixel>
+ <descLayerName>クリックでレイヤ名を変更</descLayerName>
+ <paintAreaChanged>描画領域が変更されています。
+終了してよろしいですか？</paintAreaChanged>
+ <fCanvasChanged>%sは変更されています。
+保存しますか？</fCanvasChanged>
+ <warningDisappearsData>*.dhrで保存しないと一部データが失われる可能性があります。
+このまま保存してよろしいですか？</warningDisappearsData>
+ <fLoadImageType>イメージファイル (%s)</fLoadImageType>
+ <fSaveImageTypeDharl>Dharlイメージ (*.dhr)</fSaveImageTypeDharl>
+ <fSaveImageTypeBitmap>%dビット(%d色) ビットマップイメージ (*.bmp)</fSaveImageTypeBitmap>
+ <fSaveImageTypePNG>%dビット(%d色) PNGイメージ (*.png)</fSaveImageTypePNG>
+ <noTone>(トーン無し)</noTone>
+ <zoom>拡大率</zoom>
+ <lineWidth>線の太さ</lineWidth>
+ <fPaletteOperation>パレット切替 - %s</fPaletteOperation>
+ <palettes>パレット</palettes>
+ <palettePreview>プレビュー</palettePreview>
+ <to>から</to>
+ <fPaletteTransfer>パレット転送 - %s</fPaletteTransfer>
+ <paletteTransferSource>転送元</paletteTransferSource>
+ <paletteTransferDestination>転送先</paletteTransferDestination>
+ <fResize>リサイズ - %s</fResize>
+ <fResizeCanvas>キャンバスのリサイズ - %s</fResizeCanvas>
+ <width>幅</width>
+ <height>高さ</height>
+ <resizeTo>変更後のサイズ</resizeTo>
+ <resizeWithPixelCount>大きさを指定</resizeWithPixelCount>
+ <resizeWithPercentage>比率を指定</resizeWithPercentage>
+ <resizeOption>オプション</resizeOption>
+ <maintainAspectRatio>縦横比を固定</maintainAspectRatio>
+ <scaling>イメージの拡大・縮小</scaling>
+ <fTurn>任意角度回転 - %s</fTurn>
+ <angle>回転角度</angle>
+ <angleDegree>角度(℃)</angleDegree>
+ <fEditCombinationDialog>組み合わせ - %s</fEditCombinationDialog>
+ <fConfigDialog>設定 - %s</fConfigDialog>
+ <characterSize>描画領域のサイズ</characterSize>
+ <characterWidth>幅</characterWidth>
+ <characterHeight>高さ</characterHeight>
+ <fStatusTextXY>%s, %s</fStatusTextXY>
+ <fStatusTextRange>%s, %s ～ %s, %s (%s x %s)</fStatusTextRange>
+ <combinations>組み合わせ</combinations>
+ <combinationVisibility>表示レイヤ</combinationVisibility>
+ <combinationOutput>出力</combinationOutput>
+ <fPaletteName>パレット %s</fPaletteName>
+ <targetFolder>出力先:</targetFolder>
+ <saveCombination>出力(&amp;S)</saveCombination>
+ <selectFolderDialogTitle>フォルダの選択</selectFolderDialogTitle>
+ <selectCombinationOutputFolder>組み合わせの出力先のフォルダを選択してください。</selectCombinationOutputFolder>
+ <fAbout>バージョン情報 - %s</fAbout>
+ <aboutMessage1>ドットエディタ Dharl</aboutMessage1>
+ <aboutMessage2>DharlはDWTのサンプルアプリケーションです。</aboutMessage2>
+</i18n>
