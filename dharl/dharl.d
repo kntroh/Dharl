@@ -171,7 +171,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 	// Menus.
 	auto mFile = basicDropDownMenu(shell, c.text.menu.file);
-	int mFileHistFrom, mFileHistTo;
+	int mFileHistFrom;
 	auto mEdit = basicDropDownMenu(shell, c.text.menu.edit);
 	auto mMode = basicDropDownMenu(shell, c.text.menu.mode);
 	auto mPalette = basicDropDownMenu(shell, c.text.menu.palette);
@@ -197,11 +197,12 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 	// Puts history of opened to mFile.
 	void refreshFileMenu() {
-		foreach_reverse (i; mFileHistFrom .. mFileHistTo) {
+		foreach_reverse (i; mFileHistFrom .. mFile.p_itemCount) {
 			mFile.getItem(i).dispose();
 		}
 
 		if (c.conf.fileHistory.length) {
+			separator(mFile, mFileHistFrom);
 			void createItem(int index, string file) {
 				basicMenuItem(mFile, file.omitPath(c.conf.fileHistoryOmitLength), .cimg(c.image.imageFile), {
 					try {
@@ -212,12 +213,8 @@ private MainPanel initialize(DCommon c, Shell shell) {
 				}, SWT.PUSH, false, mFileHistFrom + index);
 			}
 			foreach (i, file; c.conf.fileHistory) {
-				createItem(i, file);
+				createItem(i + 1, file);
 			}
-			separator(mFile, mFileHistFrom + c.conf.fileHistory.length);
-			mFileHistTo = mFileHistFrom + c.conf.fileHistory.length + 1;
-		} else {
-			mFileHistTo = mFileHistFrom;
 		}
 	}
 
@@ -242,9 +239,6 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tSaveAll = basicMenuItem(mFile, toolBar, c.text.menu.saveAll, cimg(c.image.saveAll), {
 		mainPanel.saveAll();
 	});
-	separator(mFile);
-	mFileHistFrom = mFile.getItemCount();
-	mFileHistTo   = mFileHistFrom;
 
 	MenuItem[PaintMode] modeItems;
 	MenuItem tSel;
@@ -347,6 +341,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tCloseImage = basicMenuItem(mFile, toolBar, c.text.menu.closeImage, cimg(c.image.closeImage), &mainPanel.closeImage);
 	separator(mFile);
 	auto exit = basicMenuItem(mFile, c.text.menu.exit, cimg(c.image.exit), &shell.close);
+	mFileHistFrom = mFile.getItemCount();
 
 	separator(mTool);
 	auto tResize = basicMenuItem(mTool, c.text.menu.resize, cimg(c.image.resize), &mainPanel.resize);
