@@ -229,7 +229,7 @@ class PaintArea : Canvas, Undoable {
 		_image.resizeReceivers.removeReceiver(&resizeReceiver);
 		scope (exit) _image.resizeReceivers ~= &resizeReceiver;
 		_image.init(image, layerName);
-		clearCache();
+		clearCache(false);
 	}
 	/// ditto
 	void init(uint w, uint h, PaletteData palette) {
@@ -239,7 +239,7 @@ class PaintArea : Canvas, Undoable {
 		_image.resizeReceivers.removeReceiver(&resizeReceiver);
 		scope (exit) _image.resizeReceivers ~= &resizeReceiver;
 		_image.init(w, h, palette);
-		clearCache();
+		clearCache(false);
 	}
 
 	private void resizeReceiver() {
@@ -296,7 +296,7 @@ class PaintArea : Canvas, Undoable {
 		if (!layers.length) layers ~= _image.layerCount - 1;
 		_layers = layers;
 
-		clearCache();
+		clearCache(false);
 		redraw();
 
 		drawReceivers.raiseEvent();
@@ -329,7 +329,7 @@ class PaintArea : Canvas, Undoable {
 		_image.addLayer(index, layerName);
 		_layers.length = 1;
 		_layers[0] = index;
-		clearCache();
+		clearCache(false);
 		changedLayerReceivers.raiseEvent();
 		statusChangedReceivers.raiseEvent();
 	}
@@ -347,7 +347,7 @@ class PaintArea : Canvas, Undoable {
 			iFillRect((int ix, int iy) {
 				iSetPixels(ix, iy, _backPixel);
 			}, ib);
-			clearCache();
+			clearCache(false);
 			drawReceivers.raiseEvent();
 			return;
 		}
@@ -358,7 +358,7 @@ class PaintArea : Canvas, Undoable {
 			if (_image.layerCount <= index) index--;
 			_layers[0] = index;
 		}
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 		changedLayerReceivers.raiseEvent();
@@ -385,7 +385,7 @@ class PaintArea : Canvas, Undoable {
 				iSetPixel(ix, iy, _backPixel, 0, true);
 			}, ib);
 			if (from == to) {
-				clearCache();
+				clearCache(false);
 				drawReceivers.raiseEvent();
 				return;
 			}
@@ -406,7 +406,7 @@ class PaintArea : Canvas, Undoable {
 			}
 			_layers[0] = index;
 		}
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 		changedLayerReceivers.raiseEvent();
@@ -435,7 +435,7 @@ class PaintArea : Canvas, Undoable {
 			selectedLayers = _layers.remove!(SwapStrategy.stable)(sel2) ~ index1;
 		}
 
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 		changedLayerReceivers.raiseEvent();
@@ -461,7 +461,7 @@ class PaintArea : Canvas, Undoable {
 
 		fixPaste();
 		_layers = ls;
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 		drawReceivers.raiseEvent();
 	}
@@ -527,7 +527,7 @@ class PaintArea : Canvas, Undoable {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		_pixel = v;
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 		drawReceivers.raiseEvent();
 	}
@@ -546,7 +546,7 @@ class PaintArea : Canvas, Undoable {
 		}
 		_backPixel = v;
 		if (_pasteLayer) {
-			clearCache();
+			clearCache(false);
 			redrawCursorArea();
 			drawReceivers.raiseEvent();
 		}
@@ -563,7 +563,7 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		_enabledBackColor = v;
 		if (_pasteLayer) {
-			clearCache();
+			clearCache(false);
 			redrawCursorArea();
 			drawReceivers.raiseEvent();
 		}
@@ -586,7 +586,7 @@ class PaintArea : Canvas, Undoable {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		_image.layer(layer).image.transparentPixel = v;
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 	}
@@ -606,7 +606,7 @@ class PaintArea : Canvas, Undoable {
 		}
 		checkWidget();
 		_mask[] = v[0 .. _mask.length];
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 		drawReceivers.raiseEvent();
 	}
@@ -638,7 +638,7 @@ class PaintArea : Canvas, Undoable {
 		foreach (i, ref ln; _tone) {
 			ln = v[i].dup;
 		}
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 		drawReceivers.raiseEvent();
 	}
@@ -715,7 +715,7 @@ class PaintArea : Canvas, Undoable {
 		if (_pasteLayer) {
 			_pasteLayer.color(index, r, g, b);
 		}
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 	}
@@ -727,7 +727,7 @@ class PaintArea : Canvas, Undoable {
 		if (_pasteLayer) {
 			_pasteLayer.color(index, rgb);
 		}
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 	}
@@ -740,7 +740,7 @@ class PaintArea : Canvas, Undoable {
 		if (_pasteLayer) {
 			_pasteLayer.colors = rgbs;
 		}
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 	}
@@ -751,7 +751,7 @@ class PaintArea : Canvas, Undoable {
 
 		_image.swapColor(pixel1, pixel2);
 
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 	}
@@ -787,7 +787,7 @@ class PaintArea : Canvas, Undoable {
 		if (_pasteLayer) {
 			_pasteLayer.colors = this.palette.colors;
 		}
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 	}
@@ -808,7 +808,7 @@ class PaintArea : Canvas, Undoable {
 		_zoom = v;
 		calcScrollParams();
 
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 	}
@@ -832,7 +832,7 @@ class PaintArea : Canvas, Undoable {
 		_mouseDown = -1;
 		resetSelectedRange();
 
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 		drawReceivers.raiseEvent();
 		statusChangedReceivers.raiseEvent();
@@ -858,7 +858,7 @@ class PaintArea : Canvas, Undoable {
 		_mouseDown = -1;
 		resetSelectedRange();
 
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 		drawReceivers.raiseEvent();
 		statusChangedReceivers.raiseEvent();
@@ -881,7 +881,7 @@ class PaintArea : Canvas, Undoable {
 		redrawCursorArea();
 		_iCurSize = v;
 
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 		drawReceivers.raiseEvent();
 		statusChangedReceivers.raiseEvent();
@@ -1139,7 +1139,7 @@ class PaintArea : Canvas, Undoable {
 		redrawCursorArea();
 		raiseSelectChangedEvent();
 
-		clearCache();
+		clearCache(false);
 		drawReceivers.raiseEvent();
 	}
 	/// ditto
@@ -1170,7 +1170,7 @@ class PaintArea : Canvas, Undoable {
 		iFillRect((int ix, int iy) {
 			iSetPixels(ix, iy, _backPixel);
 		}, ia);
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 	}
 
@@ -1223,7 +1223,7 @@ class PaintArea : Canvas, Undoable {
 		_iMoveRange.height = 0;
 		resetSelectedRange();
 		_pasteLayer = null;
-		clearCache();
+		clearCache(false);
 		raiseSelectChangedEvent();
 		drawReceivers.raiseEvent();
 	}
@@ -1240,7 +1240,7 @@ class PaintArea : Canvas, Undoable {
 		_iSelRange.y = 0;
 		_iSelRange.width = _image.width;
 		_iSelRange.height = _image.height;
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 		raiseSelectChangedEvent();
 	}
@@ -1377,11 +1377,11 @@ class PaintArea : Canvas, Undoable {
 				chg(ps);
 				iPSetPixels(ix, iy, ps);
 			}, 0, 0, _pasteLayer.width, _pasteLayer.height);
-			clearCache();
+			clearCache(false);
 			redrawCursorArea();
 		} else if (_iSelRange.p_empty) {
 			if (_um) _um.store(this);
-			clearCache();
+			clearCache(false);
 			iFillRect((int ix, int iy) {
 				auto ps = iGetPixels2(ix, iy);
 				chg(ps);
@@ -1389,7 +1389,7 @@ class PaintArea : Canvas, Undoable {
 			}, 0, 0, _image.width, _image.height);
 		} else {
 			if (_um) _um.store(this);
-			clearCache();
+			clearCache(false);
 			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
 			iFillRect((int ix, int iy) {
 				auto ps = iGetPixels2(ix, iy);
@@ -1397,7 +1397,7 @@ class PaintArea : Canvas, Undoable {
 				iSetPixels2(ix, iy, ps);
 			}, ir.x, ir.y, ir.width, ir.height);
 		}
-		clearCache();
+		clearCache(false);
 		drawReceivers.raiseEvent();
 	}
 
@@ -1411,16 +1411,16 @@ class PaintArea : Canvas, Undoable {
 		if (_image.empty) return;
 		if (_pasteLayer) {
 			func(&iPGetPixels, &iPSetPixels, 0, 0, _pasteLayer.width, _pasteLayer.height);
-			clearCache();
+			clearCache(false);
 			redrawCursorArea();
 		} else if (_iSelRange.p_empty) {
 			if (_um) _um.store(this);
-			clearCache();
+			clearCache(false);
 			func(&iGetPixels2, &iSetPixels2,
 				0, 0, _image.width, _image.height);
 		} else {
 			if (_um) _um.store(this);
-			clearCache();
+			clearCache(false);
 			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
 			func(&iGetPixels2, &iSetPixels2, ir.x, ir.y, ir.width, ir.height);
 		}
@@ -1470,25 +1470,25 @@ class PaintArea : Canvas, Undoable {
 			back[] = backgroundPixel;
 			.turn(deg, &iPGetPixels, &iPSetPixels, 0, 0,
 				_pasteLayer.width, _pasteLayer.height, back);
-			clearCache();
+			clearCache(false);
 			redrawCursorArea();
 		} else if (_iSelRange.p_empty) {
 			if (_um) _um.store(this);
-			clearCache();
+			clearCache(false);
 			auto back = new int[_layers.length];
 			back[] = backgroundPixel;
 			.turn(deg, &iGetPixels2, &iSetPixels2,
 				0, 0, _image.width, _image.height, back);
 		} else {
 			if (_um) _um.store(this);
-			clearCache();
+			clearCache(false);
 			auto back = new int[_layers.length];
 			back[] = backgroundPixel;
 			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
 			.turn(deg, &iGetPixels2, &iSetPixels2,
 				ir.x, ir.y, ir.width, ir.height, back);
 		}
-		clearCache();
+		clearCache(false);
 		drawReceivers.raiseEvent();
 	}
 
@@ -1597,7 +1597,7 @@ class PaintArea : Canvas, Undoable {
 				return;
 			}
 		}
-		clearCache();
+		clearCache(false);
 		drawReceivers.raiseEvent();
 	}
 
@@ -1606,7 +1606,7 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		_mouseEnter = true;
 		updateStatusText();
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 	}
 	private void onMouseExit(Event e) {
@@ -1614,7 +1614,7 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		_mouseEnter = false;
 		updateStatusText();
-		clearCache();
+		clearCache(false);
 		redrawCursorArea();
 	}
 
@@ -1715,7 +1715,7 @@ class PaintArea : Canvas, Undoable {
 		_iSelRange.width = 0;
 		_iSelRange.height = 0;
 		resetCatchParams();
-		clearCache();
+		clearCache(false);
 		raiseSelectChangedEvent();
 	}
 	/// Reset caught frame parameters.
@@ -1923,7 +1923,7 @@ class PaintArea : Canvas, Undoable {
 			if (!iCanDraw(ix, iy, l)) continue;
 			_image.layer(l).image.setPixel(ix, iy, pixel);
 		}
-		clearCache();
+		clearCache(false);
 		redraw(ixtocx(ix), iytocy(iy), itoc(1), itoc(1), false);
 	}
 	/// ditto
@@ -1938,7 +1938,7 @@ class PaintArea : Canvas, Undoable {
 			if (-1 == pixels[i]) continue;
 			_image.layer(l).image.setPixel(ix, iy, pixels[i]);
 		}
-		clearCache();
+		clearCache(false);
 		redraw(ixtocx(ix), iytocy(iy), itoc(1), itoc(1), false);
 	}
 	/// ditto
@@ -1949,7 +1949,7 @@ class PaintArea : Canvas, Undoable {
 		if (!iInImage(ix, iy)) return;
 		if (!force && !iCanDraw(ix, iy, layer)) return;
 		_image.layer(layer).image.setPixel(ix, iy, pixel);
-		clearCache();
+		clearCache(false);
 		redraw(ixtocx(ix), iytocy(iy), itoc(1), itoc(1), false);
 	}
 	/// Gets pixel of current layer.
@@ -2030,11 +2030,20 @@ class PaintArea : Canvas, Undoable {
 	}
 
 	/// Clears cache for showingIamge().
-	private void clearCache() {
-		foreach (ref c; _cache) {
-			if (c) {
-				c.dispose();
-				c = null;
+	private void clearCache(bool selectionOnly) {
+		if (selectionOnly) {
+			foreach (l; _layers) {
+				if (l < _cache.length && _cache[l]) {
+					_cache[l].dispose();
+					_cache[l] = null;
+				}
+			}
+		} else {
+			foreach (i, ref c; _cache) {
+				if (c) {
+					c.dispose();
+					c = null;
+				}
 			}
 		}
 		_cache.length = _image.layerCount;
@@ -2126,7 +2135,7 @@ class PaintArea : Canvas, Undoable {
 	}
 
 	private void onDispose(Event e) {
-		clearCache();
+		clearCache(false);
 		if (_shadeCache) _shadeCache.dispose();
 	}
 
@@ -2334,7 +2343,7 @@ class PaintArea : Canvas, Undoable {
 					redrawCursorArea();
 					_iSelRange.x = isx;
 					_iSelRange.y = isy;
-					clearCache();
+					clearCache(true);
 					redrawCursorArea();
 					raiseSelectChangedEvent();
 					drawReceivers.raiseEvent();
@@ -2345,7 +2354,7 @@ class PaintArea : Canvas, Undoable {
 				return;
 			}
 			scope (exit) this.p_cursor = cursor;
-			clearCache();
+			clearCache(false);
 			redrawCursorArea();
 			int iOldX = _iCurTo.x;
 			int iOldY = _iCurTo.y;
@@ -2741,7 +2750,7 @@ class PaintArea : Canvas, Undoable {
 			_iMoveRange.height = st.iMoveH;
 			fixPasteImpl(st.enabledBackColor, st.backPixel);
 		}
-		clearCache();
+		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
 		restoreReceivers.raiseEvent(mode);
