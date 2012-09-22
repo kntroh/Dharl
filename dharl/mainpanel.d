@@ -1400,6 +1400,8 @@ class MainPanel : Composite {
 				items ~= item;
 				storeData ~= item.image;
 			}
+			if (!storeData.length) return;
+
 			_um.store(storeData);
 			foreach (item; items) {
 				item.setPalettes(source.palettes, source.selectedPalette);
