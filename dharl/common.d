@@ -267,10 +267,10 @@ struct DMenuText {
 	mixin MsgProp!("cut", "Cu&t\tCtrl+X"); /// ditto
 	mixin MsgProp!("copy", "&Copy\tCtrl+C"); /// ditto
 	mixin MsgProp!("paste", "&Paste\tCtrl+V"); /// ditto
-	mixin MsgProp!("del", "&Delete\tDelete"); /// ditto
+	mixin MsgProp!("del", "Delete\tDelete"); /// ditto
 	mixin MsgProp!("selectAll", "Select &All\tCtrl+A"); /// ditto
-	mixin MsgProp!("up", "Up"); /// ditto
-	mixin MsgProp!("down", "Down"); /// ditto
+	mixin MsgProp!("up", "&Up"); /// ditto
+	mixin MsgProp!("down", "&Down"); /// ditto
 	mixin MsgProp!("addLayer", "Add &Layer"); /// ditto
 	mixin MsgProp!("removeLayer", "Remove La&yer"); /// ditto
 

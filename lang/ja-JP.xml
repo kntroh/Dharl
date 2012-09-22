@@ -18,10 +18,10 @@
   <cut>切り取り(&amp;T)	Ctrl+X</cut>
   <copy>コピー(&amp;C)	Ctrl+C</copy>
   <paste>貼り付け(&amp;P)	Ctrl+V</paste>
-  <del>削除(&amp;D)	Delete</del>
+  <del>削除	Delete</del>
   <selectAll>すべて選択(&amp;A)	Ctrl+A</selectAll>
-  <up>上へ</up>
-  <down>下へ</down>
+  <up>上へ(&amp;U)</up>
+  <down>下へ(&amp;D)</down>
   <addLayer>レイヤの追加(&amp;L)</addLayer>
   <removeLayer>レイヤの削除(&amp;Y)</removeLayer>
   <mode>描画(&amp;M)</mode>

@@ -278,6 +278,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tRemoveLayer = basicMenuItem(mEdit, c.text.menu.removeLayer, cimg(c.image.removeLayer), {
 		mainPanel.removeLayer();
 	});
+	separator(mEdit);
 	auto tUpLayer = basicMenuItem(mEdit, c.text.menu.up, cimg(c.image.up), {
 		mainPanel.upLayer();
 	});
