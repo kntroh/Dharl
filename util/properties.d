@@ -38,9 +38,12 @@ mixin template MsgProp(string Name, string Value) {
 }
 /// ditto
 mixin template PropIO(string RootName) {
+	private import util.utils;
+
 	/// Reads all properties from file.
 	void readXMLFile(string file) {
 		char[] s = cast(char[]) std.file.readText(file);
+		s = normalizeLineEndings(s);
 		readXML(std.exception.assumeUnique(s));
 	}
 	/// Reads all properties from xml.

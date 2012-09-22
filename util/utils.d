@@ -6,6 +6,7 @@
 module util.utils;
 
 private import std.algorithm;
+private import std.array;
 private import std.conv;
 private import std.functional;
 private import std.math;
@@ -223,7 +224,7 @@ version (Windows) {
 }
 ---
 */
-string omitPath(string path, size_t length, string omitString = "...") {
+C[] omitPath(C)(C[] path, size_t length, string omitString = "...") {
 	auto dpath = path.to!dstring();
 	auto domit = omitString.to!dstring();
 	if (length < dpath.length) {
@@ -232,7 +233,7 @@ string omitPath(string path, size_t length, string omitString = "...") {
 		int flen = dpath.baseName().length + 1;
 		int plen = length - flen - rlen;
 		if (plen < rlen) plen = rlen;
-		return (dpath[0 .. plen] ~ domit ~ dpath[$ - flen .. $]).to!string();
+		return (dpath[0 .. plen] ~ domit ~ dpath[$ - flen .. $]).to!(C[])();
 	} else {
 		return path;
 	}
@@ -248,4 +249,9 @@ string omitPath(string path, size_t length, string omitString = "...") {
 		assert (omitPath(`/short/pat`, 10) == `/short/pat`);
 		assert (omitPath(`/short/path`, 5) == `/.../path`);
 	}
+}
+
+/// Replaces all line endings in text to "\n".
+C[] normalizeLineEndings(C)(C[] text) {
+	return text.replace("\r\n", "\n").replace("\r", "\n");
 }
