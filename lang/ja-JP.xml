@@ -128,7 +128,7 @@
  <characterWidth>幅</characterWidth>
  <characterHeight>高さ</characterHeight>
  <fStatusTextXY>%s, %s</fStatusTextXY>
- <fStatusTextRange>%s, %s ～ %s, %s (%s x %s)</fStatusTextRange>
+ <fStatusTextRange>%s, %s ～ %s, %s (%s×%s)</fStatusTextRange>
  <combinations>組み合わせ</combinations>
  <combinationVisibility>表示レイヤ</combinationVisibility>
  <combinationOutput>出力</combinationOutput>
