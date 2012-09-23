@@ -173,6 +173,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto mFile = basicDropDownMenu(shell, c.text.menu.file);
 	int mFileHistFrom;
 	auto mEdit = basicDropDownMenu(shell, c.text.menu.edit);
+	auto mView = basicDropDownMenu(shell, c.text.menu.view);
 	auto mMode = basicDropDownMenu(shell, c.text.menu.mode);
 	auto mPalette = basicDropDownMenu(shell, c.text.menu.palette);
 	auto mTool = basicDropDownMenu(shell, c.text.menu.tool);
@@ -285,6 +286,18 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tDownLayer = basicMenuItem(mEdit, c.text.menu.down, cimg(c.image.down), {
 		mainPanel.downLayer();
 	});
+
+
+	/* ---- View menu -------------------------------------------------- */
+
+	MenuItem mMainGrid;
+	mMainGrid = basicMenuItem(mView, c.text.menu.mainGrid, cimg(c.image.mainGrid), {
+		mainPanel.paintArea.grid1 = mMainGrid.p_selection;
+	}, SWT.CHECK);
+	MenuItem mSubGrid;
+	mSubGrid = basicMenuItem(mView, c.text.menu.subGrid, cimg(c.image.subGrid), {
+		mainPanel.paintArea.grid2 = mSubGrid.p_selection;
+	}, SWT.CHECK);
 
 
 	/* ---- Mode menu -------------------------------------------------- */
@@ -429,6 +442,9 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 		tUndo.p_enabled = mainPanel.undoManager.canUndo;
 		tRedo.p_enabled = mainPanel.undoManager.canRedo;
+
+		mMainGrid.p_selection = mainPanel.paintArea.grid1;
+		mSubGrid.p_selection = mainPanel.paintArea.grid2;
 
 		bool range = mainPanel.paintArea.rangeSelection;
 		tSel.p_selection = range;

@@ -104,6 +104,9 @@ class DImages {
 	const DImage removeLayer = importImage!("remove_layer.png"); /// ditto
 	const DImage resizeCanvas = importImage!("resize_canvas.png"); /// ditto
 
+	const DImage mainGrid = importImage!("main_grid.png"); /// ditto
+	const DImage subGrid = importImage!("sub_grid.png"); /// ditto
+
 	const DImage createGradation = importImage!("create_gradation.png"); /// ditto
 	const DImage enabledBackColor = importImage!("enabled_back_color.png"); /// ditto
 	const DImage maskMode = importImage!("mask_mode.png"); /// ditto
@@ -367,6 +370,10 @@ class DConfig {
 	mixin Prop!("fileHistoryOmitLength", uint, 50, true); /// ditto
 
 	mixin Prop!("lastOpenedFiles", PArray!("path", string), PArray!("path", string).init); /// ditto
+
+	/// Grids.
+	mixin Prop!("mainGrid", bool, false);
+	mixin Prop!("subGrid", bool, false);
 
 	/// Selected drawing tool. 0 is range select mode.
 	mixin Prop!("tool", uint, 1);

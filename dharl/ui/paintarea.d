@@ -651,6 +651,7 @@ class PaintArea : Canvas, Undoable {
 		if (_grid1 == v) return;
 		_grid1 = v;
 		redraw();
+		statusChangedReceivers.raiseEvent();
 	}
 	/// ditto
 	@property
@@ -667,6 +668,7 @@ class PaintArea : Canvas, Undoable {
 		if (_grid2 == v) return;
 		_grid2 = v;
 		redraw();
+		statusChangedReceivers.raiseEvent();
 	}
 	/// ditto
 	@property
@@ -2227,21 +2229,47 @@ class PaintArea : Canvas, Undoable {
 
 		// Draws grid.
 		if (_grid1 && 4 <= _zoom) {
-			e.gc.p_lineStyle = SWT.LINE_DOT;
-			scope (exit) e.gc.p_lineStyle = SWT.LINE_SOLID;
+			auto oldForeground = e.gc.p_foreground;
+			scope (exit) e.gc.p_foreground = oldForeground;
+
+			e.gc.p_foreground = d.getSystemColor(SWT.COLOR_BLACK);
 			foreach (ix; iPaint.x .. iPaint.x + iPaint.width) {
 				e.gc.drawLine(ixtocx(ix), iytocy(0), ixtocx(ix), iytocy(ib.height));
 			}
 			foreach (iy; iPaint.y .. iPaint.y + iPaint.height) {
 				e.gc.drawLine(ixtocx(0), iytocy(iy), ixtocx(ib.width), iytocy(iy));
 			}
+			e.gc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
+			foreach (ix; iPaint.x .. iPaint.x + iPaint.width) {
+				foreach (iy; iPaint.y .. iPaint.y + iPaint.height) {
+					e.gc.drawPoint(ixtocx(ix), iytocy(iy));
+				}
+			}
 		}
 		if (_grid2) {
-			static const GRID_2_INTERVAL = 25;
-			for (int ix = iPaint.x; ix < iPaint.x + iPaint.width; ix += GRID_2_INTERVAL) {
+			static const GRID_2_INTERVAL = 16;
+			auto oldForeground = e.gc.p_foreground;
+			scope (exit) e.gc.p_foreground = oldForeground;
+			int iStartX = GRID_2_INTERVAL * (iPaint.x / GRID_2_INTERVAL);
+			int iStartY = GRID_2_INTERVAL * (iPaint.y / GRID_2_INTERVAL);
+
+			e.gc.p_foreground = d.getSystemColor(SWT.COLOR_BLACK);
+			e.gc.p_lineStyle = SWT.LINE_SOLID;
+			for (int ix = iStartX; ix < iPaint.x + iPaint.width; ix += GRID_2_INTERVAL) {
 				e.gc.drawLine(ixtocx(ix), iytocy(0), ixtocx(ix), iytocy(ib.height));
 			}
-			for (int iy = iPaint.y; iy < iPaint.y + iPaint.height; iy += GRID_2_INTERVAL) {
+			for (int iy = iStartY; iy < iPaint.y + iPaint.height; iy += GRID_2_INTERVAL) {
+				e.gc.drawLine(ixtocx(0), iytocy(iy), ixtocx(ib.width), iytocy(iy));
+			}
+
+			e.gc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
+			e.gc.p_lineStyle = SWT.LINE_CUSTOM;
+			e.gc.p_lineDash = [1, iytocy(1) / 2 - 1];
+			scope (exit) e.gc.p_lineDash = null;
+			for (int ix = iStartX; ix < iPaint.x + iPaint.width; ix += GRID_2_INTERVAL) {
+				e.gc.drawLine(ixtocx(ix), iytocy(0), ixtocx(ix), iytocy(ib.height));
+			}
+			for (int iy = iStartY; iy < iPaint.y + iPaint.height; iy += GRID_2_INTERVAL) {
 				e.gc.drawLine(ixtocx(0), iytocy(iy), ixtocx(ib.width), iytocy(iy));
 			}
 		}

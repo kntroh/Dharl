@@ -540,6 +540,29 @@ class MainPanel : Composite {
 		basicToolItem(trans, _c.text.menu.increaseBrightness, .cimg(_c.image.increaseBrightness), &increaseBrightness);
 		basicToolItem(trans, _c.text.menu.decreaseBrightness, .cimg(_c.image.decreaseBrightness), &decreaseBrightness);
 		basicToolItem(trans, _c.text.menu.resize, .cimg(_c.image.resize), &resize);
+
+		createSeparator();
+
+		// Toolbar of grid switches.
+		auto grids = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
+		grids.p_layoutData = GD(GridData.FILL_HORIZONTAL).wHint(0).hSpan(2);
+		ToolItem tMainGrid;
+		tMainGrid = basicToolItem(grids, _c.text.menu.mainGrid, .cimg(_c.image.mainGrid), {
+			paintArea.grid1 = tMainGrid.p_selection;
+		}, SWT.CHECK);
+		paintArea.grid1 = _c.conf.mainGrid;
+		_c.conf.mainGrid.value.refSelection(tMainGrid);
+		ToolItem tSubGrid;
+		tSubGrid = basicToolItem(grids, _c.text.menu.subGrid, .cimg(_c.image.subGrid), {
+			paintArea.grid2 = tSubGrid.p_selection;
+		}, SWT.CHECK);
+		paintArea.grid2 = _c.conf.subGrid;
+		_c.conf.subGrid.value.refSelection(tSubGrid);
+		void updateGrid() {
+			tMainGrid.p_selection = paintArea.grid1;
+			tSubGrid.p_selection = paintArea.grid2;
+		}
+		statusChangedReceivers ~= &updateGrid;
 	}
 	/// Updates tones toolbar.
 	private void refreshTonesToolBar() {

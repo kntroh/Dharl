@@ -10,8 +10,8 @@
   <closeImage>画像を閉じる(&amp;C)</closeImage>
   <exit>終了(&amp;X)	Alt+F4</exit>
   <view>表示(&amp;V)</view>
-  <mainGrid>グリッド(&amp;M)</mainGrid>
-  <subGrid>詳細グリッド(&amp;S)</subGrid>
+  <mainGrid>メイングリッド(&amp;M)</mainGrid>
+  <subGrid>サブグリッド(&amp;S)</subGrid>
   <edit>編集(&amp;E)</edit>
   <undo>元に戻す(&amp;U)	Ctrl+Z</undo>
   <redo>やり直し(&amp;R)	Ctrl+Y</redo>
