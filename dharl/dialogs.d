@@ -381,13 +381,9 @@ class AboutDialog : DharlDialog {
 	protected override void setup(Composite area) {
 		area.p_layout = GL(2, false);
 
-		auto img = basicImageBox(area, .cimg(c.image.dharlLogo));
-		img.p_layoutData = GD.center(true, true).vSpan(2);
+		basicImageBox(area, .cimg(c.image.dharlLogo));
 
-		auto msg1 = basicLabel(area, c.text.aboutMessage1);
-		msg1.p_layoutData = GD().alignment(SWT.BEGINNING, SWT.END).grabExcessSpace(true, true);
-		auto msg2 = basicLabel(area, c.text.aboutMessage2);
-		msg2.p_layoutData = GD().alignment(SWT.BEGINNING, SWT.BEGINNING).grabExcessSpace(true, true);
+		basicLabel(area, c.text.aboutMessage.value.format(import("@version.txt").chomp()));
 	}
 
 	protected override bool apply() {

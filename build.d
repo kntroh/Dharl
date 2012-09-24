@@ -6,7 +6,11 @@ module build;
 immutable NAME = "dharl";
 immutable string[] CRITICAL = [
 ];
+immutable string[] EXCLUDE = [
+	"pack.d",
+];
 immutable string[] RES_DIR = [
+	".",
 	"res",
 ];
 
@@ -157,9 +161,10 @@ bool equalsFilename(string a, string b) {
 }
 /// Puts compile target information.
 string[] put(string file, ref string[string] objs, in string[] qual) {
+	string[] array;
+	if (!EXCLUDE.find!equalsFilename(file).empty) return array;
 	string obj = "objs".buildPath(file).setExtension(O);
 	objs[file] = obj;
-	string[] array;
 	if (qual.length) {
 		if (!qual.find!equalsFilename(file.baseName()).empty) {
 			array ~= file;

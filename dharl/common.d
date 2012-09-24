@@ -243,8 +243,7 @@ class DText {
 	mixin MsgProp!("selectCombinationOutputFolder", "Please select layer combinations output folder."); /// ditto
 
 	mixin MsgProp!("fAbout", "About - %s"); /// ditto
-	mixin MsgProp!("aboutMessage1", "Dharl - The Pixelation Editor."); /// ditto
-	mixin MsgProp!("aboutMessage2", "The Dharl is an example of DWT application."); /// ditto
+	mixin MsgProp!("aboutMessage", "Dharl - The Pixelation Editor\nVersion.%s\nThe Dharl is a free software."); /// ditto
 
 	mixin PropIO!("i18n");
 }

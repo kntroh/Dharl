@@ -3,8 +3,8 @@
 
 + What's this? +
 
-The Dharl is small feature pixelation editor. It is an example of DWT application.
-The Dharl designed based on the design of the `キャラクタレイザー1999` that once existed on Japan.
+The Dharl is small feature pixelation editor. It is a free software.
+The Dharl designed based on the design of the `繧ｭ繝｣繝ｩ繧ｯ繧ｿ繝ｬ繧､繧ｶ繝ｼ1999` that once existed on Japan.
 
 + Usage +
 

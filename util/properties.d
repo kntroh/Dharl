@@ -83,7 +83,7 @@ mixin template PropIO(string RootName) {
 	const
 	string writeXML() {
 		auto doc = toElement(RootName);
-		return doc.prolog ~ "\n" ~ std.string.join(doc.pretty(1), "\n");
+		return doc.prolog ~ .newline ~ std.string.join(doc.pretty(1), .newline);
 	}
 	/// Creates XML element include all properties data.
 	const
