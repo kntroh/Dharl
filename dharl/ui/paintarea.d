@@ -2252,25 +2252,25 @@ class PaintArea : Canvas, Undoable {
 			scope (exit) e.gc.p_foreground = oldForeground;
 			int iStartX = GRID_2_INTERVAL * (iPaint.x / GRID_2_INTERVAL);
 			int iStartY = GRID_2_INTERVAL * (iPaint.y / GRID_2_INTERVAL);
+			int ch = itoc(1) / 2;
 
-			e.gc.p_foreground = d.getSystemColor(SWT.COLOR_BLACK);
-			e.gc.p_lineStyle = SWT.LINE_SOLID;
 			for (int ix = iStartX; ix < iPaint.x + iPaint.width; ix += GRID_2_INTERVAL) {
+				e.gc.p_foreground = d.getSystemColor(SWT.COLOR_BLACK);
 				e.gc.drawLine(ixtocx(ix), iytocy(0), ixtocx(ix), iytocy(ib.height));
+				e.gc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
+				for (int iy = iPaint.y; iy < iPaint.y + iPaint.height; iy++) {
+					e.gc.drawPoint(ixtocx(ix), iytocy(iy));
+					if (4 <= _zoom) e.gc.drawPoint(ixtocx(ix), iytocy(iy) + ch);
+				}
 			}
 			for (int iy = iStartY; iy < iPaint.y + iPaint.height; iy += GRID_2_INTERVAL) {
+				e.gc.p_foreground = d.getSystemColor(SWT.COLOR_BLACK);
 				e.gc.drawLine(ixtocx(0), iytocy(iy), ixtocx(ib.width), iytocy(iy));
-			}
-
-			e.gc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
-			e.gc.p_lineStyle = SWT.LINE_CUSTOM;
-			e.gc.p_lineDash = [1, iytocy(1) / 2 - 1];
-			scope (exit) e.gc.p_lineDash = null;
-			for (int ix = iStartX; ix < iPaint.x + iPaint.width; ix += GRID_2_INTERVAL) {
-				e.gc.drawLine(ixtocx(ix), iytocy(0), ixtocx(ix), iytocy(ib.height));
-			}
-			for (int iy = iStartY; iy < iPaint.y + iPaint.height; iy += GRID_2_INTERVAL) {
-				e.gc.drawLine(ixtocx(0), iytocy(iy), ixtocx(ib.width), iytocy(iy));
+				e.gc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
+				for (int ix = iPaint.x; ix < iPaint.x + iPaint.width; ix++) {
+					e.gc.drawPoint(ixtocx(ix), iytocy(iy));
+					if (4 <= _zoom) e.gc.drawPoint(ixtocx(ix) + ch, iytocy(iy));
+				}
 			}
 		}
 		if (0 != _iCanvasW && 0 != _iCanvasH) {
