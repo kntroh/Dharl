@@ -138,7 +138,7 @@
  <selectFolderDialogTitle>フォルダの選択</selectFolderDialogTitle>
  <selectCombinationOutputFolder>組み合わせの出力先のフォルダを選択してください。</selectCombinationOutputFolder>
  <fAbout>バージョン情報 - %s</fAbout>
- <aboutMessage>ドットエディタ Dharl
+ <aboutMessage>ドット絵エディタ Dharl
 バージョン %s
 Dharlはフリーソフトウェアです。</aboutMessage>
 </i18n>

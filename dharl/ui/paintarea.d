@@ -64,8 +64,6 @@ class PaintArea : Canvas, Undoable {
 
 	/// Index of color temporary for iGetPixels().
 	private int[] _pixelsTemp;
-	/// Index of color temporary for iPGetPixels().
-	private int[] _pastePixelsTemp;
 
 	/// Is enabled background color?
 	private bool _enabledBackColor = false;
@@ -1325,13 +1323,11 @@ class PaintArea : Canvas, Undoable {
 	/// Utility methods for transform.
 	private int[] iPGetPixels(int ix, int iy) {
 		enforce (_pasteLayer);
-		if (_pastePixelsTemp.length != _pasteLayer.layerCount) {
-			_pastePixelsTemp.length = _pasteLayer.layerCount;
-		}
-		foreach (i, ref p; _pastePixelsTemp) {
+		auto ps = new int[_pasteLayer.layerCount];
+		foreach (i, ref p; ps) {
 			p = _pasteLayer.layer(i).image.getPixel(ix, iy);
 		}
-		return _pastePixelsTemp;
+		return ps;
 	}
 	/// ditto
 	private void iPSetPixels(int ix, int iy, int[] pixels) {

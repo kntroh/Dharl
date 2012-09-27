@@ -1,9 +1,9 @@
 
-+++ Dharl - The Pixelation Editor +++
++++ Dharl - The Pixel Art Editor +++
 
 + What's this? +
 
-The Dharl is small feature pixelation editor. It is a free software.
+The Dharl is a low feature pixel art editor. It is a free software.
 The Dharl designed based on the design of the `キャラクタレイザー1999` that once existed on Japan.
 
 + Usage +
