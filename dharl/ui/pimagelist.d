@@ -29,7 +29,7 @@ class PImageList : Canvas {
 	void delegate(size_t fromIndex, size_t toIndex)[] movedReceivers;
 
 	/// Image spacing.
-	private const SPACING = 5;
+	private immutable SPACING = 5;
 
 	/// Size of a selectable piece.
 	private Point _pieceSize = null;
@@ -172,10 +172,10 @@ class PImageList : Canvas {
 
 		auto rect = CRect(0, 0, 0, 0);
 		foreach (i, img; _images) {
-			rect.x = img._bounds.x + img._tBounds.x;
-			rect.y = img._bounds.y + img._tBounds.y;
-			rect.width = img._tBounds.width;
-			rect.height = img._tBounds.height;
+			rect.x = img._bounds.x + img._dragBounds.x;
+			rect.y = img._bounds.y + img._dragBounds.y;
+			rect.width = img._dragBounds.width;
+			rect.height = img._dragBounds.height;
 			if (rect.contains(x, y)) {
 				return i;
 			}
@@ -486,10 +486,10 @@ class PImageList : Canvas {
 			if (!(this.p_style & SWT.READ_ONLY)) {
 				if (1 == e.button) {
 					// close
-					rect.x = img._bounds.x + img._cBounds.x;
-					rect.y = img._bounds.y + img._cBounds.y;
-					rect.width = img._cBounds.width;
-					rect.height = img._cBounds.height;
+					rect.x = img._bounds.x + img._cBounds2.x;
+					rect.y = img._bounds.y + img._cBounds2.y;
+					rect.width = img._cBounds2.width;
+					rect.height = img._cBounds2.height;
 					if (rect.contains(e.x, e.y)) {
 						bool doit = removeReceivers.raiseEvent(index);
 						if (doit) {
@@ -504,10 +504,10 @@ class PImageList : Canvas {
 					}
 
 					// drag start
-					rect.x = img._bounds.x + img._tBounds.x;
-					rect.y = img._bounds.y + img._tBounds.y;
-					rect.width = img._tBounds.width;
-					rect.height = img._tBounds.height;
+					rect.x = img._bounds.x + img._dragBounds.x;
+					rect.y = img._bounds.y + img._dragBounds.y;
+					rect.width = img._dragBounds.width;
+					rect.height = img._dragBounds.height;
 					if (rect.contains(e.x, e.y)) {
 						selectedIndex = index;
 						_drag = index;
@@ -609,14 +609,13 @@ class PImageList : Canvas {
 					set(-1, -1);
 				}
 			}
-			initRect(img, img._tBounds);
+			initRect(img, img._dragBounds);
 			if (iRect.contains(e.x, e.y)) {
 				toolTip = img.toolTip;
 			}
 			if (!(this.p_style & SWT.READ_ONLY)) {
-				initRect(img, img._cBounds);
+				initRect(img, img._cBounds2);
 				if (iRect.contains(e.x, e.y) || iRect.contains(_oldX, _oldY)) {
-					toolTip = img.toolTip;
 					img.redrawCloseButton();
 				}
 			}
@@ -676,7 +675,9 @@ private class PImageItem : Item {
 	private Rectangle _bounds; /// Bounds of this image (including name).
 	private Rectangle _iBounds; /// Bounds of this image (excluding name).
 	private Rectangle _tBounds; /// Bounds of name area.
+	private Rectangle _dragBounds; /// Bounds of draggable area.
 	private Rectangle _cBounds; /// Bounds of close button.
+	private Rectangle _cBounds2; /// Bounds of close button (clickable).
 	private Rectangle _selectedPiece; /// Range of selected piece.
 
 	/// Creates PImageItem.
@@ -694,7 +695,9 @@ private class PImageItem : Item {
 		super (parent, style);
 		_parent = parent;
 		_cBounds = CRectangle(0, 0, 0, 0);
+		_cBounds2 = CRectangle(0, 0, 0, 0);
 		_tBounds = CRectangle(0, 0, 0, 0);
+		_dragBounds = CRectangle(0, 0, 0, 0);
 		_iBounds = CRectangle(0, 0, 0, 0);
 		_bounds = CRectangle(0, 0, 0, 0);
 		_selectedPiece = CRectangle(-1, -1, parent._pieceSize.x - 1, parent._pieceSize.y - 1);
@@ -720,6 +723,7 @@ private class PImageItem : Item {
 		scope (exit) gc.dispose();
 		auto ds = gc.textExtent("#");
 		int tsq = 2 * 2 + ds.y;
+		int cPad = ds.y / 5;
 
 		_cBounds.x = .max(0, cast(int) image.width - tsq);
 		if (parent.p_style & SWT.READ_ONLY) {
@@ -728,13 +732,23 @@ private class PImageItem : Item {
 			_cBounds.width = .min(tsq, cast(int) image.width);
 		}
 		_cBounds.height = tsq;
-		_tBounds.width = .max(0, cast(int) image.width - _cBounds.width);
+		_tBounds.width = cast(int) image.width - _cBounds.width;
 		_tBounds.height = tsq;
+		_dragBounds.width = image.width;
+		_dragBounds.height = tsq;
 		_iBounds.y = _tBounds.height;
 		_iBounds.width = image.width;
 		_iBounds.height = image.height;
 		_bounds.width = image.width;
 		_bounds.height = _iBounds.height + _tBounds.height;
+		if (!(parent.p_style & SWT.READ_ONLY) && cPad * 2 < _cBounds.width && cPad * 2 < _cBounds.height) {
+			_cBounds2.x = _cBounds.x + cPad;
+			_cBounds2.y = _cBounds.y + cPad;
+			_cBounds2.width = _cBounds.width - (cPad * 2);
+			_cBounds2.height = _cBounds.height - (cPad * 2);
+		} else {
+			_cBounds2.width = 0;
+		}
 
 		_parent.calcScrollParams();
 		_parent.redraw();
@@ -1081,7 +1095,7 @@ private class PImageItem : Item {
 		// Draws close button.
 		if (!(parent.p_style & SWT.READ_ONLY)) {
 			gc.fillRectangle(_cBounds.x, _cBounds.y, _cBounds.width, _cBounds.height);
-			auto cRect = CRect(_bounds.x + _cBounds.x, _bounds.y + _cBounds.y, _cBounds.width, _cBounds.height);
+			auto cRect = CRect(_bounds.x + _cBounds2.x, _bounds.y + _cBounds2.y, _cBounds2.width, _cBounds2.height);
 			int cs = 5;
 			if (cRect.contains(_parent._oldX, _parent._oldY)) {
 				cs = 4;
