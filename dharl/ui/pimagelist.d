@@ -27,6 +27,8 @@ class PImageList : Canvas {
 	void delegate()[] removedReceivers;
 	/// Receivers of moved event.
 	void delegate(size_t fromIndex, size_t toIndex)[] movedReceivers;
+	/// Receivers of item resized event.
+	void delegate(PImageItem item)[] itemResizedReceivers;
 
 	/// Image spacing.
 	private immutable SPACING = 5;
@@ -752,6 +754,7 @@ private class PImageItem : Item {
 
 		_parent.calcScrollParams();
 		_parent.redraw();
+		_parent.itemResizedReceivers.raiseEvent(this);
 	}
 	/// Calls calcBounds().
 	private void calcBoundsU(UndoMode mode) { calcBounds(); }

@@ -263,6 +263,9 @@ class MainPanel : Composite {
 			}
 			statusChangedReceivers.raiseEvent();
 		};
+		_imageList.itemResizedReceivers ~= (PImageItem item) {
+			_paintArea.setCanvasSize(item.image.width, item.image.height);
+		};
 		_paletteView.restoreReceivers ~= (UndoMode mode) {
 			_paintArea.colors = _paletteView.colors;
 			_colorSlider.color = _paletteView.color(_paletteView.pixel1);
