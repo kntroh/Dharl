@@ -80,7 +80,7 @@ class CombinationDialog : DharlDialog {
 		area.p_layout = new FillLayout;
 
 		/* ----- Preview ----------------------------------------------- */
-		_splitterV = basicVSplitter(area);
+		_splitterV = basicVSplitter(area, false);
 		_preview = new PImageList(_splitterV, SWT.BORDER | SWT.DOUBLE_BUFFERED | SWT.READ_ONLY);
 		_splitterV.resizable = _preview;
 		_preview.p_listeners!(SWT.Selection) ~= {
@@ -94,7 +94,7 @@ class CombinationDialog : DharlDialog {
 		auto controls = basicComposite(_splitterV);
 		controls.p_layout = GL.window(1);
 
-		_splitterH = basicHSplitter(controls);
+		_splitterH = basicHSplitter(controls, false);
 		_splitterH.p_layoutData = GD.fill(true, true);
 
 		// Combination list.

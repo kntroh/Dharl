@@ -12,17 +12,18 @@ private import std.algorithm;
 private import org.eclipse.swt.all;
 
 /// Creates basic style splitter.
-Splitter basicSplitter(Composite parent, int style = SWT.HORIZONTAL) {
+Splitter basicSplitter(Composite parent, bool maximizable, int style = SWT.HORIZONTAL) {
+	if (maximizable) style |= SWT.MAX;
 	auto splitter = new Splitter(parent, style);
 	return splitter;
 }
 /// ditto
-Splitter basicHSplitter(Composite parent) {
-	return basicSplitter(parent, SWT.HORIZONTAL);
+Splitter basicHSplitter(Composite parent, bool maximizable) {
+	return basicSplitter(parent, maximizable, SWT.HORIZONTAL);
 }
 /// ditto
-Splitter basicVSplitter(Composite parent) {
-	return basicSplitter(parent, SWT.VERTICAL);
+Splitter basicVSplitter(Composite parent, bool maximizable) {
+	return basicSplitter(parent, maximizable, SWT.VERTICAL);
 }
 
 /// This control is show two child controls, and show sash between there.
@@ -52,7 +53,7 @@ class Splitter : Composite {
 	/// The default splitting style is SWT.HORIZONTAL.
 	this (Composite parent, int style) {
 		_splitStyle = (style & SWT.VERTICAL) ? SWT.VERTICAL : SWT.HORIZONTAL;
-		super (parent, style & !SWT.HORIZONTAL & !SWT.VERTICAL);
+		super (parent, style & ~(SWT.HORIZONTAL | SWT.VERTICAL));
 
 		super.setLayout(new SplitterLayout);
 		_sash = new Sash(this, SWT.VERTICAL == splitStyle ? SWT.HORIZONTAL : SWT.VERTICAL);
@@ -110,15 +111,8 @@ class Splitter : Composite {
 				// Resizes top or left control.
 				this.p_selection = this.p_selection + (newSize - oldSize);
 			} else {
-				// Only if B is minimized.
-				if (b.p_visible) return;
-
-				auto bw = this.p_borderWidth;
-				if (SWT.VERTICAL == splitStyle) {
-					this.p_selection = ca.height - bw;
-				} else {
-					this.p_selection = ca.width - bw;
-				}
+				// Adjust sash position.
+				this.p_selection = this.p_selection;
 			}
 		};
 	}
@@ -188,7 +182,6 @@ class Splitter : Composite {
 
 		if (0 == ca.width || 0 == ca.height) return;
 
-		// maximize when space is small
 		auto children = this.p_children;
 		if (2 > children.length) return;
 
@@ -202,17 +195,40 @@ class Splitter : Composite {
 			rightOrBottom = ca.width;
 		}
 		auto bw = this.p_borderWidth;
-		if (_selection - bw < dragMinimum) {
-			_selection = bw;
-			a.p_visible = false;
+
+		if (SWT.MAX & this.p_style) {
+			// maximize when space is small
+			if (_selection - bw < dragMinimum) {
+				_selection = bw;
+				a.p_visible = false;
+			} else {
+				a.p_visible = true;
+			}
+			if (rightOrBottom - bw - _selection < dragMinimum) {
+				_selection = rightOrBottom - bw;
+				b.p_visible = false;
+			} else {
+				b.p_visible = true;
+			}
 		} else {
-			a.p_visible = true;
-		}
-		if (rightOrBottom - bw - _selection < dragMinimum) {
-			_selection = rightOrBottom - bw;
-			b.p_visible = false;
-		} else {
-			b.p_visible = true;
+			// ensure minimal space
+			void left() {
+				if (_selection - bw < dragMinimum) {
+					_selection = bw + dragMinimum;
+				}
+			}
+			void right() {
+				if (rightOrBottom - bw - _selection < dragMinimum) {
+					_selection = rightOrBottom - bw - dragMinimum;
+				}
+			}
+			if (_resizable is a) {
+				right();
+				left();
+			} else {
+				left();
+				right();
+			}
 		}
 
 		layout(true);

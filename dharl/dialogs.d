@@ -611,7 +611,7 @@ class PaletteTransferDialog : DharlDialog {
 	protected override void setup(Composite area) {
 		area.p_layout = GL.window(1, true);
 
-		_splitter = basicHSplitter(area);
+		_splitter = basicHSplitter(area, false);
 		_splitter.p_layoutData = GD.fill(true, true);
 
 		auto fromGrp = basicGroup(_splitter, c.text.paletteTransferSource);

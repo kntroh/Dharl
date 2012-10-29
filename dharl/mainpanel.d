@@ -108,7 +108,7 @@ class MainPanel : Composite {
 		_um = new UndoManager(_c.conf.undoMax);
 
 		/// Splits PImageList and other controls.
-		auto splitter = basicSplitter(this, SWT.HORIZONTAL);
+		auto splitter = basicHSplitter(this, false);
 		constructPaintArea(splitter, _um);
 		constructImageList(splitter, _um);
 		_c.conf.sashPosWork_List.value.refSelection(splitter);
@@ -288,16 +288,16 @@ class MainPanel : Composite {
 		auto d = parent.p_display;
 
 		// Splitter of paint area and palette.
-		auto ppSplitter = basicSplitter(parent, SWT.VERTICAL);
+		auto ppSplitter = basicVSplitter(parent, false);
 		_c.conf.sashPosPaint_Palette.value.refSelection(ppSplitter);
 
 		// Splitter of paintArea and tools.
-		auto paintSplitter = basicSplitter(ppSplitter, SWT.HORIZONTAL);
+		auto paintSplitter = basicHSplitter(ppSplitter, false);
 		_c.conf.sashPosPaint_Preview.value.refSelection(paintSplitter);
 		ppSplitter.resizable = paintSplitter;
 
 		// Splitter of preview and toolbar.
-		auto ptSplitter = basicSplitter(paintSplitter, SWT.VERTICAL);
+		auto ptSplitter = basicVSplitter(paintSplitter, false);
 		_c.conf.sashPosPreview_Tools.value.refSelection(ptSplitter);
 
 		// Preview of image in drawing.
