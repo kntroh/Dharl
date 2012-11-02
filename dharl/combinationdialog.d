@@ -444,9 +444,6 @@ class CombinationDialog : DharlDialog {
 	}
 
 	protected override bool apply() {
-		if (_image.combinations != _combiData) {
-			return true;
-		}
-		return false;
+		return true;
 	}
 }
