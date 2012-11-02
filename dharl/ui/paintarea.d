@@ -1189,6 +1189,7 @@ class PaintArea : Canvas, Undoable {
 			iSetPixels(ix, iy, backPixel);
 		}, _iMoveRange);
 		foreach (l; _layers) {
+			if (!_image.layer(l).visible) continue;
 			auto pll = _pasteLayer.layer(l % _pasteLayer.layerCount).image;
 			foreach (ix; 0 .. _pasteLayer.width) {
 				foreach (iy; 0 .. _pasteLayer.height) {
@@ -1919,7 +1920,9 @@ class PaintArea : Canvas, Undoable {
 		if (-1 == pixel) return;
 		foreach (l; _layers) {
 			if (!iCanDraw(ix, iy, l)) continue;
-			_image.layer(l).image.setPixel(ix, iy, pixel);
+			auto il = _image.layer(l);
+			if (!il.visible) continue;
+			il.image.setPixel(ix, iy, pixel);
 		}
 		clearCache(false);
 		redraw(ixtocx(ix), iytocy(iy), itoc(1), itoc(1), false);
@@ -1932,6 +1935,7 @@ class PaintArea : Canvas, Undoable {
 		if (_image.empty) return;
 		if (!iInImage(ix, iy)) return;
 		foreach (i, l; _layers) {
+			if (!_image.layer(l).visible) continue;
 			if (!iCanDraw(ix, iy, l)) continue;
 			if (-1 == pixels[i]) continue;
 			_image.layer(l).image.setPixel(ix, iy, pixels[i]);
@@ -1946,7 +1950,9 @@ class PaintArea : Canvas, Undoable {
 		if (_image.empty) return;
 		if (!iInImage(ix, iy)) return;
 		if (!force && !iCanDraw(ix, iy, layer)) return;
-		_image.layer(layer).image.setPixel(ix, iy, pixel);
+		auto l = _image.layer(layer);
+		if (!l.visible) return;
+		l.image.setPixel(ix, iy, pixel);
 		clearCache(false);
 		redraw(ixtocx(ix), iytocy(iy), itoc(1), itoc(1), false);
 	}
@@ -2556,6 +2562,7 @@ class PaintArea : Canvas, Undoable {
 				} else if (_mode is PaintMode.Fill && iInImage(ifx, ify)) {
 					// Fills area.
 					foreach (l; _layers) {
+						if (!_image.layer(l).visible) continue;
 						int pixel = iGetPixel(_iCurFrom.x, _iCurFrom.y, l);
 						if (pixel != _pixel) {
 							bool first = true;

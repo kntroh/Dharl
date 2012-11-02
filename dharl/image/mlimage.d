@@ -43,6 +43,11 @@ struct Combination {
 	bool[] visible; /// Visibility of layers.
 	size_t selectedPalette = 0; /// Index of selection palette.
 
+	const
+	bool opEquals(ref const(Combination) s) {
+		return name == s.name && visible == s.visible && selectedPalette == s.selectedPalette;
+	}
+
 	/// Clone combination.
 	@property
 	const
@@ -845,7 +850,7 @@ class MLImage : Undoable {
 			foreach (x; 0 .. iw) {
 				foreach (y; 0 .. ih) {
 					int pixel = layer.getPixel(x + ix, y + iy);
-					if (pixel < colors/+ && (ls.length - 1 == i || pixel != layer.transparentPixel)+/) {
+					if (pixel < colors && (ls.length - 1 == i || pixel != layer.transparentPixel)) {
 						data.setPixel(x, y, pixel);
 					}
 				}

@@ -123,6 +123,7 @@ class CombinationDialog : DharlDialog {
 			auto item = _preview.item(index);
 			item.p_text = name;
 			item.toolTip = name;
+			enableApply();
 		});
 
 		// Layer list.
