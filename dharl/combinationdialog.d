@@ -76,6 +76,13 @@ class CombinationDialog : DharlDialog {
 		super (c, parent, title, .cimg(c.image.editCombination), true, true, false, buttons);
 	}
 
+	/// Combination data.
+	@property
+	const
+	const(Combination)[] combinations() {
+		return _combiData;
+	}
+
 	protected override void setup(Composite area) {
 		area.p_layout = new FillLayout;
 
@@ -437,8 +444,6 @@ class CombinationDialog : DharlDialog {
 
 	protected override bool apply() {
 		if (_image.combinations != _combiData) {
-			if (_um) _um.store(_image);
-			_image.combinations = _combiData;
 			return true;
 		}
 		return false;

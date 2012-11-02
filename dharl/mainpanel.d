@@ -1340,6 +1340,8 @@ class MainPanel : Composite {
 		auto image = item.image.createMLImage();
 		auto dlg = new CombinationDialog(_imageList.p_shell, _c, _um, image, params.name);
 		dlg.appliedReceivers ~= {
+			_um.store(item.image);
+			item.image.combinations = dlg.combinations;
 			modified(item);
 			statusChangedReceivers.raiseEvent();
 		};

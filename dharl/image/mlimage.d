@@ -732,6 +732,7 @@ class MLImage : Undoable {
 			foreach (i, ref d; data) {
 				auto l = _layers[ls ? ls[i] : i];
 				d = new ImageData(_iw, _ih, 8, palette);
+				d.transparentPixel = l.image.transparentPixel;
 				d.data = l.image.data.dup;
 				name[i] = l.name;
 			}
@@ -739,6 +740,7 @@ class MLImage : Undoable {
 			foreach (i, ref d; data) {
 				d = new ImageData(iw, ih, 8, palette);
 				auto l = _layers[ls ? ls[i] : i];
+				d.transparentPixel = l.image.transparentPixel;
 				foreach (x; 0 .. iw) {
 					foreach (y; 0 .. ih) {
 						int pixel = l.image.getPixel(x + ix, y + iy);
@@ -832,6 +834,7 @@ class MLImage : Undoable {
 			/// Only base layer.
 			auto data = new ImageData(_iw, _ih, 8, palette);
 			data.data = _layers[0].image.data.dup;
+			data.transparentPixel = _layers[0].image.transparentPixel;
 			return data;
 		}
 
@@ -842,7 +845,7 @@ class MLImage : Undoable {
 			foreach (x; 0 .. iw) {
 				foreach (y; 0 .. ih) {
 					int pixel = layer.getPixel(x + ix, y + iy);
-					if (pixel < colors && (ls.length - 1 == i || pixel != layer.transparentPixel)) {
+					if (pixel < colors/+ && (ls.length - 1 == i || pixel != layer.transparentPixel)+/) {
 						data.setPixel(x, y, pixel);
 					}
 				}
