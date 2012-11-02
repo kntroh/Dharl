@@ -1189,7 +1189,7 @@ class PaintArea : Canvas, Undoable {
 			iSetPixels(ix, iy, backPixel);
 		}, _iMoveRange);
 		foreach (l; _layers) {
-			auto pll = _pasteLayer.layer(l).image;
+			auto pll = _pasteLayer.layer(l % _pasteLayer.layerCount).image;
 			foreach (ix; 0 .. _pasteLayer.width) {
 				foreach (iy; 0 .. _pasteLayer.height) {
 					int pixel = pll.getPixel(ix, iy);
