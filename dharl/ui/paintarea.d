@@ -3161,6 +3161,43 @@ class LayerList : Canvas {
 	const
 	const(PBounds)[] transparentPixelBoxBounds() { return _transparentPixelBounds; }
 
+	/// Scrolls to showing selection item.
+	void showSelection() {
+		if (!_paintArea || _paintArea.image.empty) {
+			return;
+		}
+		checkWidget();
+		auto ca = this.p_clientArea;
+		auto vs = this.p_verticalBar;
+		assert (vs);
+
+		int lh = LAYER_H + 2;
+
+		int vFrom = vs.p_selection;
+		int vTo = vFrom + ca.height;
+
+		auto selLayer = _paintArea.selectedInfo;
+		int up = int.max, down = int.max; // Scroll distance (minimum value).
+		foreach (l; 0 .. _paintArea.image.layerCount) {
+			if (!selLayer[l]) continue;
+			int lFrom = lh * l;
+			int lTo = lFrom + lh;
+			if (vFrom <= lFrom && lTo <= vTo) {
+				// l is being shown.
+				return;
+			}
+			if (lFrom < vFrom) up = .min(vFrom - lFrom, up);
+			if (vTo < lTo) down = .min(lTo - vTo, down);
+		}
+		if (int.max == up && int.max == down) return;
+		_editor.cancel();
+		if (up <= down) {
+			vs.p_selection = vs.p_selection - up;
+		} else {
+			vs.p_selection = vs.p_selection + down;
+		}
+	}
+
 	/// Calls redraw().
 	private void redrawU(UndoMode mode) { redraw(); }
 
@@ -3458,6 +3495,7 @@ class LayerList : Canvas {
 			layers = [layers[$ - 1] + 1];
 		}
 		_paintArea.selectedLayers = layers;
+		showSelection();
 		raiseSelectionEvent(e);
 	}
 
