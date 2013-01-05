@@ -470,7 +470,8 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	shell.p_listeners!(SWT.Activate) ~= &refreshMenu;
 
 	// Open last opened files.
-	foreach (file; c.conf.lastOpenedFiles.uniq()) {
+	const string[] lastOpenedFiles = c.conf.lastOpenedFiles;
+	foreach (file; lastOpenedFiles.uniq()) {
 		try {
 			mainPanel.loadImage(file);
 		} catch (Exception e) {
@@ -482,15 +483,17 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	mainPanel.loadedReceivers ~= (string file) {
 		file = file.absolutePath().buildNormalizedPath();
 
-		auto index = c.conf.fileHistory.countUntil(file);
+		string[] fileHistory = c.conf.fileHistory;
+		auto index = fileHistory.countUntil(file);
 		if (-1 == index) {
 			if (c.conf.fileHistoryMax <= c.conf.fileHistory.length) {
-				c.conf.fileHistory.popBack();
+				fileHistory.popBack();
 			}
 		} else {
-			c.conf.fileHistory = c.conf.fileHistory.remove(index);
+			fileHistory = fileHistory.remove(index);
 		}
-		c.conf.fileHistory.insertInPlace(0, file);
+		fileHistory.insertInPlace(0, file);
+		c.conf.fileHistory = fileHistory;
 
 		refreshFileMenu();
 	};

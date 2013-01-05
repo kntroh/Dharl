@@ -16,6 +16,23 @@ private import org.eclipse.swt.all;
 
 private import java.lang.all : Runnable;
 
+/// Converts from std.string.newline to "\n".
+string systemReturnCodeToN(string text) {
+	static if (.newline == "\n") {
+		return text;
+	} else {
+		return text.replace(.newline, "\n");
+	}
+}
+/// Converts from "\n" to std.string.newline.
+string nToSystemReturnCode(string text) {
+	static if (.newline == "\n") {
+		return text;
+	} else {
+		return text.replace("\n", .newline);
+	}
+}
+
 /**
 Wraps a getter and a setter.
 
@@ -233,23 +250,6 @@ void asyncExecWith(T...)(Display display, void delegate(T args) dlg, T args) {
 			dlg(args);
 		}
 	});
-}
-
-/// Converts from std.string.newline to "\n".
-string systemReturnCodeToN(string text) {
-	static if (.newline == "\n") {
-		return text;
-	} else {
-		return text.replace(.newline, "\n");
-	}
-}
-/// Converts from "\n" to std.string.newline.
-string nToSystemReturnCode(string text) {
-	static if (.newline == "\n") {
-		return text;
-	} else {
-		return text.replace("\n", .newline);
-	}
 }
 
 /// A information of added listeners.

@@ -662,7 +662,7 @@ class PImageList : Canvas {
 }
 
 /// One image.
-private class PImageItem : Item {
+class PImageItem : Item {
 	private PImageList _parent; /// Parent of this item.
 
 	private string _name; /// Name of this image.

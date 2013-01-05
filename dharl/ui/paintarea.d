@@ -2111,23 +2111,25 @@ class PaintArea : Canvas, Undoable {
 				}
 			}
 		}
-		if (selLayer[layer] && _pasteLayer) {
-			size_t pLayerIndex = 0;
-			foreach (i; 0 .. layer) {
-				if (selLayer[i]) pLayerIndex++;
-			}
-			pushPasteLayer(data, pLayerIndex, layer);
-		} else if (!_rangeSel && 1 == _mouseDown) {
-			/// Draws cursor in drawing.
-			if (_mode is PaintMode.FreePath) {
-				// Unnecessary. After painted.
-			} else {
-				// Draws path.
-				iPath((int ix, int iy) {
-					if (iInImage(ix, iy) && iCanDraw(ix, iy, layer)) {
-						data.setPixel(ix, iy, _pixel);
-					}
-				});
+		if (selLayer[layer]) {
+			if (_pasteLayer) {
+				size_t pLayerIndex = 0;
+				foreach (i; 0 .. layer) {
+					if (selLayer[i]) pLayerIndex++;
+				}
+				pushPasteLayer(data, pLayerIndex, layer);
+			} else if (!_rangeSel && 1 == _mouseDown) {
+				/// Draws cursor in drawing.
+				if (_mode is PaintMode.FreePath) {
+					// Unnecessary. After painted.
+				} else {
+					// Draws path.
+					iPath((int ix, int iy) {
+						if (iInImage(ix, iy) && iCanDraw(ix, iy, layer)) {
+							data.setPixel(ix, iy, _pixel);
+						}
+					});
+				}
 			}
 		}
 
@@ -2302,27 +2304,30 @@ class PaintArea : Canvas, Undoable {
 				if (!ia.p_empty) {
 					int ix1 = ia.x, ix2 = ia.x + ia.width - 1;
 					int iy1 = ia.y, iy2 = ia.y + ia.height - 1;
-					auto color = new Color(d, _image.palette.colors[_pixel]);
+					int piDraw = _pixel;
+					auto color = new Color(d, _image.palette.colors[piDraw]);
 					scope (exit) color.dispose();
 					e.gc.p_background = color;
 					int ccs = itoc(1);
 					pointsOfPath((int ix, int iy) {
 						if (!iInImage(ix, iy)) return;
+						int cx = ixtocx(ix);
+						int cy = iytocy(iy);
 						if (ccs <= 4) {
-							e.gc.fillRectangle(ixtocx(ix), iytocy(iy), ccs, ccs);
+							e.gc.fillRectangle(cx, cy, ccs, ccs);
 						} else {
 							// Draws cursor square.
 							if (ix == ix1) {
-								e.gc.fillRectangle(ixtocx(ix), iytocy(iy), 2, ccs);
+								e.gc.fillRectangle(cx, cy, 2, ccs);
 							}
 							if (ix == ix2) {
-								e.gc.fillRectangle(ixtocx(ix) + ccs - 2, iytocy(iy), 2, ccs);
+								e.gc.fillRectangle(cx + ccs - 2, cy, 2, ccs);
 							}
 							if (iy == iy1) {
-								e.gc.fillRectangle(ixtocx(ix), iytocy(iy), ccs, 2);
+								e.gc.fillRectangle(cx, cy, ccs, 2);
 							}
 							if (iy == iy2) {
-								e.gc.fillRectangle(ixtocx(ix), iytocy(iy) + ccs - 2, ccs, 2);
+								e.gc.fillRectangle(cx, cy + ccs - 2, ccs, 2);
 							}
 						}
 					}, PaintMode.RectLine, ix1, iy1, ix2, iy2, ib.width, ib.height, 1);

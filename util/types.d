@@ -73,13 +73,13 @@ struct CRGB {
 
 	/// Returns true if this equals o.
 	const
-	bool opEquals(ref const(CRGB) o) {
+	bool opEquals(const(CRGB) o) {
 		return r == o.r && g == o.g && b == o.b;
 	}
 
 	/// This compare to o.
 	const
-	int opCmp(ref const(CRGB) o) {
+	int opCmp(const(CRGB) o) {
 		foreach (i; 0 .. ubyte.sizeof) {
 			auto s = 0x80 >> i;
 			if ((r & s) < (o.r & s)) return -1;
@@ -161,13 +161,13 @@ struct CHSV {
 
 	/// Returns true if this equals o.
 	const
-	bool opEquals(ref const(CHSV) o) {
+	bool opEquals(const(CHSV) o) {
 		return h == o.h && s == o.s && v == o.v;
 	}
 
 	/// This compare to o.
 	const
-	int opCmp(ref const(CHSV) o) {
+	int opCmp(const(CHSV) o) {
 		if (h < o.h) return -1;
 		if (h > o.h) return 1;
 		if (s < o.s) return -1;

@@ -28,7 +28,7 @@ private immutable MAX_PATH = 0x8000;
 pure
 nothrow
 bool isFilenameChar(dchar c) {
-	return c.isGraphical() && -1 == INVALID_FILENAME.countUntil(c);
+	return c.isGraphical() && -1 == std.string.indexOf(INVALID_FILENAME, c);
 } unittest {
 	version (Windows) {
 		assert (!'/'.isFilenameChar);

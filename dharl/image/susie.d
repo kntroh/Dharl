@@ -294,18 +294,23 @@ version (Windows) {
 					static immutable RGBQUAD_SIZE = 4;
 					size_t headerSize = info.bmiHeader.biSize.littleEndian;
 					auto bitCount = info.bmiHeader.biBitCount.littleEndian;
-					switch (bitCount) {
-					case 1:
-						headerSize += RGBQUAD_SIZE * (0x01 << 1);
-						break;
-					case 4:
-						headerSize += RGBQUAD_SIZE * (0x01 << 4);
-						break;
-					case 8:
-						headerSize += RGBQUAD_SIZE * (0x01 << 8);
-						break;
-					default:
-						break;
+					auto clrUsed = info.bmiHeader.biClrUsed.littleEndian;
+					if (0 == clrUsed) {
+						switch (bitCount) {
+						case 1:
+							headerSize += RGBQUAD_SIZE * (0x01 << 1);
+							break;
+						case 4:
+							headerSize += RGBQUAD_SIZE * (0x01 << 4);
+							break;
+						case 8:
+							headerSize += RGBQUAD_SIZE * (0x01 << 8);
+							break;
+						default:
+							break;
+						}
+					} else {
+						headerSize += RGBQUAD_SIZE * clrUsed;
 					}
 					auto size = info.bmiHeader.biSizeImage;
 					if (!size) {

@@ -599,7 +599,7 @@ class ColorTree {
 	}
 
 	/// Calculates index of _node.
-	private size_t nodeIndex(ref const(CRGB) color)
+	private size_t nodeIndex(const(CRGB) color)
 	out (result) {
 		assert (result < 8);
 	} body {
@@ -613,7 +613,7 @@ class ColorTree {
 	}
 
 	/// Adds node of color.
-	private bool add(ref const(CRGB) color, size_t index) {
+	private bool add(const(CRGB) color, size_t index) {
 		if (0 != _level && _color == color) {
 			return false;
 		}
@@ -657,7 +657,7 @@ class ColorTree {
 	}
 	/// Finds and returns index of color.
 	/// If not found, returns index of closest matching color.
-	size_t searchLose(ref const(CRGB) color) {
+	size_t searchLose(const(CRGB) color) {
 		if (0 != _level && _color == color) {
 			return _index;
 		}
