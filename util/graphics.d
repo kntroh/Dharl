@@ -151,10 +151,12 @@ void pointsOfPath(void delegate(int x, int y, int w, int h) dlg, PaintMode mode,
 		}
 		break;
 	case PaintMode.OvalLine:
+		int xshift = (mxx - mnx) & 0x1;
+		int yshift = (mxy - mny) & 0x1;
 		oval((int cx, int cy, int x, int y) {
-			around(cx + x, cy + y, 1, 1);
-			around(cx + x, cy - y, 1, 1);
-			around(cx - x, cy + y, 1, 1);
+			around(cx + x + xshift, cy + y + yshift, 1, 1);
+			around(cx + x + xshift, cy - y, 1, 1);
+			around(cx - x, cy + y + yshift, 1, 1);
 			around(cx - x, cy - y, 1, 1);
 		});
 		break;
@@ -171,16 +173,18 @@ void pointsOfPath(void delegate(int x, int y, int w, int h) dlg, PaintMode mode,
 		around(mxx, mny + s * 2, 1, mxy + 1 - mny - s * 4);
 		break;
 	case PaintMode.OvalFill:
+		int xshift = (mxx - mnx) & 0x1;
+		int yshift = (mxy - mny) & 0x1;
 		int i = 0;
 		oval((int cx, int cy, int x, int y) {
 			int ix1 = cx - x;
-			int ix2 = cx + x;
+			int ix2 = cx + x + xshift;
 			if (ix2 < 0 || cast(int) w <= ix1) return;
 			int x1 = max(cast(int) (size - 1), ix1);
 			int x2 = min(cast(int) (w - (size - 1)), ix2);
 
 			// Draws line from top left to top right.
-			int ya = cy + y;
+			int ya = cy + y + yshift;
 			if (0 <= ya && ya < h) {
 				pointsOfPath(dlg, PaintMode.Straight, x1, ya, x2, ya, w, h, size);
 			}
