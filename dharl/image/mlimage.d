@@ -898,12 +898,12 @@ class MLImage : Undoable {
 		if (index < layerCount) {
 			_layers.insertInPlace(index, layer);
 			foreach (ref combi; _combi) {
-				combi.visible.insertInPlace(index, layer.visible);
+				combi.visible.insertInPlace(index, false);
 			}
 		} else {
 			_layers ~= layer;
 			foreach (ref combi; _combi) {
-				combi.visible ~= layer.visible;
+				combi.visible ~= false;
 			}
 		}
 	}
@@ -945,13 +945,13 @@ class MLImage : Undoable {
 			data.transparentPixel = 0;
 			_layers.insertInPlace(index, Layer(data, name, true));
 			foreach (ref combi; _combi) {
-				combi.visible.insertInPlace(index, true);
+				combi.visible.insertInPlace(index, false);
 			}
 		} else {
 			data.transparentPixel = -1;
 			_layers ~= Layer(data, name, true);
 			foreach (ref combi; _combi) {
-				combi.visible ~= true;
+				combi.visible ~= false;
 			}
 		}
 	}
