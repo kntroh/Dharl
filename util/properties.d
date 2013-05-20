@@ -7,6 +7,7 @@ module util.properties;
 
 private import util.types;
 
+private import std.ascii;
 private import std.conv;
 private import std.exception;
 private import std.file;
@@ -83,7 +84,7 @@ mixin template PropIO(string RootName) {
 	const
 	string writeXML() {
 		auto doc = toElement(RootName);
-		return doc.prolog ~ .newline ~ std.string.join(doc.pretty(1), .newline);
+		return doc.prolog ~ std.ascii.newline ~ std.string.join(doc.pretty(1), std.ascii.newline);
 	}
 	/// Creates XML element include all properties data.
 	const
