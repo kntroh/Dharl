@@ -87,7 +87,9 @@ class MainPanel : Composite {
 
 	private UndoManager _um = null;
 
-	// Pushed image before draws.
+	/// Name of the current editing item.
+	private string _currentName = "";
+	/// Pushed image before draws.
 	private Object _pushBase = null;
 
 	/// The only constructor.
@@ -102,6 +104,8 @@ class MainPanel : Composite {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
 		}
 		_c = c;
+
+		_currentName = _c.text.newFilename;
 
 		this.p_layout = new FillLayout;
 
@@ -207,6 +211,7 @@ class MainPanel : Composite {
 					_paintArea.fixPaste();
 					if (item.pushImage(_paintArea.image)) {
 						_pushBase = _paintArea.image.storeData;
+						_currentName = item.p_text;
 						modified(item);
 						return true;
 					}
@@ -225,6 +230,7 @@ class MainPanel : Composite {
 				_paintPreview.redraw();
 				_layerList.redraw();
 				_pushBase = _paintArea.image.storeData;
+				_currentName = item.p_text;
 				break;
 			default: assert (0);
 			}
@@ -1335,15 +1341,12 @@ class MainPanel : Composite {
 		checkInit();
 		if (!canEditCombination()) return;
 
-		auto item = _imageList.item(_imageList.selectedIndex);
-		auto params = item.dataTo!PImageParams;
-		auto image = item.image.createMLImage();
-		auto dlg = new CombinationDialog(_imageList.p_shell, _c, _um, image, params.name);
+		auto image = _paintArea.image.createMLImage();
+		auto dlg = new CombinationDialog(_imageList.p_shell, _c, _um, image, _currentName);
 		dlg.appliedReceivers ~= {
-			if (item.image.combinations == dlg.combinations) return;
-			_um.store(item.image);
-			item.image.combinations = dlg.combinations;
-			modified(item);
+			if (_paintArea.image.combinations == dlg.combinations) return;
+			_um.store(_paintArea.image);
+			_paintArea.image.combinations = dlg.combinations;
 			statusChangedReceivers.raiseEvent();
 		};
 		dlg.open();
@@ -1353,7 +1356,7 @@ class MainPanel : Composite {
 	const
 	bool canEditCombination() {
 		checkInit();
-		return -1 != _imageList.selectedIndex;
+		return true;
 	}
 
 	/// Open palette operation dialog.
