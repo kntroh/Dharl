@@ -658,7 +658,9 @@ class PaletteView : Canvas, Undoable {
 			}
 			if (!(e.stateMask & (SWT.SHIFT | SWT.CTRL))) return;
 			int piBtn = _pixel1;
-			if (_colors[_piTo] == _colors[piBtn]) return;
+			if (_colors[_piTo] == _colors[piBtn] && !(e.stateMask & SWT.SHIFT)) {
+				return;
+			}
 			if (_um) _um.store(this);
 
 			if (e.stateMask & SWT.SHIFT) {
