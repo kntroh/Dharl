@@ -253,8 +253,8 @@ class CombinationDialog : DharlDialog {
 			int[] indices = _combiList.p_selectionIndices;
 			if (!indices.length) return;
 			_combiList.remove(indices);
-			foreach_reverse (i; indices) {
-				_combiData.remove(i);
+			foreach_reverse (i; indices.sort) {
+				_combiData = _combiData.remove(i);
 				_preview.item(i).dispose();
 			}
 			_preview.selectedIndex = -1;
