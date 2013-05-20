@@ -38,7 +38,7 @@ struct CRGB {
 			h = 60 * ((rr - rg) / (mx - mn)) + 240;
 		}
 		if (h < 0) h += 360;
-		hsv.h = cast(ushort) h;
+		hsv.h = cast(ushort)h;
 		hsv.s = (mx - mn) / mx;
 		hsv.v = mx;
 		return hsv;
@@ -112,15 +112,15 @@ struct CHSV {
 		if (s == 0) {
 			return CRGB(255, 255, 255);
 		}
-		int hi = cast(int) floor(h / 60.0);
+		int hi = cast(int)floor(h / 60.0);
 		real f = h / 60.0 - hi;
 		real p = v * (1 - s);
 		real q = v * (1 - f * s);
 		real t = v * (1 - (1 - f) * s);
-		ubyte v255 = cast(ubyte) (v * 255);
-		ubyte t255 = cast(ubyte) (t * 255);
-		ubyte p255 = cast(ubyte) (p * 255);
-		ubyte q255 = cast(ubyte) (q * 255);
+		ubyte v255 = cast(ubyte)(v * 255);
+		ubyte t255 = cast(ubyte)(t * 255);
+		ubyte p255 = cast(ubyte)(p * 255);
+		ubyte q255 = cast(ubyte)(q * 255);
 		switch (hi) {
 		case 0: return CRGB(v255, t255, p255);
 		case 1: return CRGB(q255, v255, p255);

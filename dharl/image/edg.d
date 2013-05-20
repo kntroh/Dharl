@@ -51,7 +51,7 @@ MLImage loadEDG(InputStream s) {
 	foreach (li; 0 .. lCount) {
 		// Layer name.
 		auto nameBuf = new char[80];
-		s.read(cast(ubyte[]) nameBuf);
+		s.read(cast(ubyte[])nameBuf);
 		auto name = .text(nameBuf.ptr);
 		// Visibility.
 		auto visible = s.readL!ubyte();

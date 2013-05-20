@@ -63,7 +63,7 @@ T reverseBytes(T)(T value) {
 	}
 	return result;
 } unittest {
-	assert (.reverseBytes(cast(short) 0xFDCB) == cast(short) 0xCBFD);
+	assert (.reverseBytes(cast(short)0xFDCB) == cast(short)0xCBFD);
 }
 
 /// Reads bytes from stream and reverses it.
@@ -99,7 +99,7 @@ T readNormal(T)(InputStream stream) {
 /// Reverses bytes and writes it to stream.
 void writeReverse(T)(OutputStream stream, T value) {
 	for (size_t shift = 0; shift < T.sizeof * 8; shift += 8) {
-		stream.write(cast(ubyte) ((value >>> shift) & 0xFF));
+		stream.write(cast(ubyte)((value >>> shift) & 0xFF));
 	}
 }
 /// Writes bytes to stream.
@@ -108,7 +108,7 @@ void writeNormal(T)(OutputStream stream, T value) {
 		stream.write(value);
 	} else {
 		for (intptr_t shift = T.sizeof * 8 - 8; shift >= 0; shift -= 8) {
-			stream.write(cast(ubyte) ((value >>> shift) & 0xFF));
+			stream.write(cast(ubyte)((value >>> shift) & 0xFF));
 		}
 	}
 }

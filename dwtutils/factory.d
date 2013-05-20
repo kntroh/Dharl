@@ -294,7 +294,7 @@ Text basicText(Composite parent, void delegate() modify, string text = "", int s
 }
 /// ditto
 Text basicText(Composite parent, string text = "", int style = SWT.BORDER) {
-	return basicText(parent, cast(void delegate(Event)) null, text, style);
+	return basicText(parent, cast(void delegate(Event))null, text, style);
 }
 
 /// Creates basic style button.

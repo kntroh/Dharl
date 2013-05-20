@@ -108,7 +108,7 @@ int pointToPixel(real point, int dpi) {
 }
 /// Converts from pixel to point size based on dpi.
 real pixelToPoint(int pixel, int dpi) {
-	return cast(real) pixel / dpi * 72.0;
+	return cast(real)pixel / dpi * 72.0;
 }
 unittest {
 	assert (pointToPixel(7, 96) == 9);
@@ -379,7 +379,7 @@ int acceleratorKey(string text) {
 		case "F11"         : accelerator += SWT.F11;         break;
 		case "F12"         : accelerator += SWT.F12;         break;
 		default:
-			accelerator += key.length ? cast(int) std.ascii.toUpper(key[0]) : 0;
+			accelerator += key.length ? cast(int)std.ascii.toUpper(key[0]) : 0;
 			break;
 		}
 	}

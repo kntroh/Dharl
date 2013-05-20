@@ -33,7 +33,7 @@ void initMouseWheel(Shell shell) {
 
 		auto c = d.p_cursorControl();
 		if (!c) return; // no cursor control
-		auto w = cast(Control) e.widget;
+		auto w = cast(Control)e.widget;
 		if (!w) return; // sender isn't control
 		if (w is c) return; // focus control is cursor control
 
@@ -228,8 +228,8 @@ Tuple!(Text, "text", Composite, "pane") folderField(Composite parent, string dia
 Font pixelTextFont(Display d, Font base, int boxWidth, int boxHeight) {
 	auto fontName = base ? base.p_fontData[0].p_name : "";
 	auto dpi = d.p_dpi;
-	auto fontWidth  = cast(int) pixelToPoint(boxWidth  - 2 * 2, dpi.x);
-	auto fontHeight = cast(int) pixelToPoint(boxHeight - 2 * 2, dpi.y);
+	auto fontWidth  = cast(int)pixelToPoint(boxWidth  - 2 * 2, dpi.x);
+	auto fontHeight = cast(int)pixelToPoint(boxHeight - 2 * 2, dpi.y);
 	return new Font(d, fontName, .min(fontWidth, fontHeight), SWT.NONE);
 }
 /// Selects system color for pixel number text in box.

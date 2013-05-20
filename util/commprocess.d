@@ -168,7 +168,7 @@ version (Windows) {
 		sockaddr_un raddr;
 		raddr.sun_familiy = AF_INET;
 		.strcpy(&(raddr.sun_path[1]), name.toStringz());
-		if (-1 == connect(p, cast(sockaddr*) &raddr, raddr.sizeof)) {
+		if (-1 == connect(p, cast(sockaddr*)&raddr, raddr.sizeof)) {
 			.closePile(pipe, name);
 			return INVALID_PIPE;
 		}
@@ -212,7 +212,7 @@ version (Windows) {
 		laddr.sun_family = AF_UNIX;
 		.strcpy(laddr.sun_path.ptr, name.toStringz());
 
-		if (0 != .bind(pipe, cast(sockaddr*) &laddr, laddr.sun_family.sizeof + .strlen(laddr.sun_path.ptr))) {
+		if (0 != .bind(pipe, cast(sockaddr*)&laddr, laddr.sun_family.sizeof + .strlen(laddr.sun_path.ptr))) {
 			return false;
 		}
 		if (0 != .listen(pipe, 1)) {
@@ -242,7 +242,7 @@ version (Windows) {
 				if (-1 == selret) break;
 				if (0 == selret) continue;
 				if (!FD_ISSET(pipe, &fdr)) continue;
-				rsock = .accept(pipe, cast(sockaddr*) &raddr, &rsocklen);
+				rsock = .accept(pipe, cast(sockaddr*)&raddr, &rsocklen);
 				if (-1 == rsock) break;
 				scope (exit) .close(rsock);
 

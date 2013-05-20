@@ -111,7 +111,7 @@ class CSlider : Canvas {
 			}
 			redraw();
 			auto se = new Event;
-			se.time = cast(int) System.currentTimeMillis();
+			se.time = cast(int)System.currentTimeMillis();
 			se.stateMask = 0;
 			se.doit = true;
 			notifyListeners(SWT.Selection, se);
@@ -246,8 +246,8 @@ class CSlider : Canvas {
 		}
 		c -= _cWBtn; // Subtracts width of left button.
 		int sRange = _sMax - _sMin; // A range of slider value.
-		real cr = cast(real) sRange / cLen; // ratio
-		return cast(int) (c * cr);
+		real cr = cast(real)sRange / cLen; // ratio
+		return cast(int)(c * cr);
 	}
 
 	/// Converts a slider value to control coordinate (X or Y).
@@ -262,8 +262,8 @@ class CSlider : Canvas {
 		}
 		cLen -= _cWBtn * 2;
 		int sRange = _sMax - _sMin; // A range of slider value.
-		real sr = cast(real) cLen / sRange; // ratio
-		int c = cast(int) (s * sr) + _cWBtn;
+		real sr = cast(real)cLen / sRange; // ratio
+		int c = cast(int)(s * sr) + _cWBtn;
 
 		// Adjustment of externals.
 		if (_sMin < _sValue && c <= _cWBtn) {

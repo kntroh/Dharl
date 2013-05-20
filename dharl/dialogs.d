@@ -225,7 +225,7 @@ class ResizeDialog : DharlDialog {
 			inEvt = true;
 			scope (exit) inEvt = false;
 
-			fromPer.p_selection = .roundTo!int(cast(real) fromPx.p_selection / fromBase * 100.0);
+			fromPer.p_selection = .roundTo!int(cast(real)fromPx.p_selection / fromBase * 100.0);
 			if (_mRatio.p_selection) {
 				toPer.p_selection = fromPer.p_selection;
 				toPx.p_selection = .roundTo!int(toPer.p_selection / 100.0 * toBase);

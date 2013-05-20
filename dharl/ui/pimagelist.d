@@ -575,7 +575,7 @@ class PImageList : Canvas {
 			}
 			if (_drag == toIndex) return;
 			move(_drag, toIndex);
-			movedReceivers.raiseEvent(cast(size_t) _drag, toIndex);
+			movedReceivers.raiseEvent(cast(size_t)_drag, toIndex);
 			_drag = toIndex;
 			raiseSelectionEvent(e);
 			return;
@@ -727,14 +727,14 @@ class PImageItem : Item {
 		int tsq = 2 * 2 + ds.y;
 		int cPad = ds.y / 5;
 
-		_cBounds.x = .max(0, cast(int) image.width - tsq);
+		_cBounds.x = .max(0, cast(int)image.width - tsq);
 		if (parent.p_style & SWT.READ_ONLY) {
 			_cBounds.width = 0;
 		} else {
-			_cBounds.width = .min(tsq, cast(int) image.width);
+			_cBounds.width = .min(tsq, cast(int)image.width);
 		}
 		_cBounds.height = tsq;
-		_tBounds.width = cast(int) image.width - _cBounds.width;
+		_tBounds.width = cast(int)image.width - _cBounds.width;
 		_tBounds.height = tsq;
 		_dragBounds.width = image.width;
 		_dragBounds.height = tsq;

@@ -397,9 +397,9 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 	/* ---- Accept files drop ------------------------------------------ */
 
-	auto ft = cast(Transfer) FileTransfer.getInstance();
+	auto ft = cast(Transfer)FileTransfer.getInstance();
 	addDropFunctions(shell, DND.DROP_COPY, [ft], (DropTargetEvent e) {
-		foreach (file; (cast(ArrayWrapperString2) e.data).array) {
+		foreach (file; (cast(ArrayWrapperString2)e.data).array) {
 			try {
 				mainPanel.loadImage(file);
 			} catch (Exception e) {

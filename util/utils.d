@@ -98,7 +98,7 @@ uint padding(uint count, uint n) {
 T1 normalizeRange(T1, T2, T3)(T1 value, T2 from, T3 to) {
 	if (0 == to) return value;
 	if (to <= value || value < from) {
-		value -= cast(ulong) (value / to) * to;
+		value -= cast(ulong)(value / to) * to;
 	}
 	if (value < from) {
 		value += to;
@@ -155,7 +155,7 @@ RetType raiseEvent(RetType, Args ...)(RetType delegate(Args)[] receivers, Args a
 /// Remove receiver in receivers.
 bool removeReceiver(T)(ref T[] receivers, in T receiver) {
 	foreach (i; 0 .. receivers.length) {
-		if (receiver is cast(const) receivers[i]) {
+		if (receiver is cast(const)receivers[i]) {
 			foreach (j; i .. receivers.length - 1) {
 				receivers[j + 1] = receivers[j];
 			}
@@ -168,7 +168,7 @@ bool removeReceiver(T)(ref T[] receivers, in T receiver) {
 
 /// Rounds value at range from T.min to T.max.
 T roundCast(T, N)(in N value, in T min = T.min, in T max = T.max) {
-	return cast(T) .min(max, .max(min, value));
+	return cast(T).min(max, .max(min, value));
 }
 
 /// Parse string. This function don't throw an exception.

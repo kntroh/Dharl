@@ -103,19 +103,19 @@ version (Windows) {
 
 	/// Load shared library.
 	libHandle dlopen(string lib) {
-		return cast(libHandle) LoadLibraryW(.toUTF16z(lib));
+		return cast(libHandle)LoadLibraryW(.toUTF16z(lib));
 	}
 	/// Gets symbol on shared library.
 	nothrow
 	libHandle dlsym(libHandle lib, string sym) {
 		if (!lib) return null;
-		return cast(libHandle) GetProcAddress(cast(void*) lib, .toStringz(sym));
+		return cast(libHandle)GetProcAddress(cast(void*)lib, .toStringz(sym));
 	}
 	/// Release shared library.
 	nothrow
 	bool dlclose(ref libHandle lib) {
 		if (!lib) return false;
-		auto result = FreeLibrary(cast(void*) lib);
+		auto result = FreeLibrary(cast(void*)lib);
 		if (result) lib = null;
 		return 0 != result;
 	}
@@ -137,7 +137,7 @@ version (Windows) {
 			if (freeLibrary) .dlclose(_dllShell);
 		}
 
-		auto fSHGetFolderPath = cast(SHGetFolderPathW) dlsym(_dllShell, "SHGetFolderPathW");
+		auto fSHGetFolderPath = cast(SHGetFolderPathW)dlsym(_dllShell, "SHGetFolderPathW");
 		if (!fSHGetFolderPath) return defaultValue;
 
 		wchar[MAX_PATH] pathBuf;
@@ -170,19 +170,19 @@ version (Windows) {
 
 	/// Load shared library.
 	libHandle dlopen(string lib) {
-		return cast(libHandle) core.sys.posix.dlfcn.dlopen(.toStringz(lib), RTLD_NOW);
+		return cast(libHandle)core.sys.posix.dlfcn.dlopen(.toStringz(lib), RTLD_NOW);
 	}
 	/// Gets symbol on shared library.
 	nothrow
 	libHandle dlsym(libHandle lib, string sym) {
 		if (!lib) return null;
-		return cast(libHandle) core.sys.posix.dlfcn.dlsym(cast(void*) lib, .toStringz(sym));
+		return cast(libHandle)core.sys.posix.dlfcn.dlsym(cast(void*)lib, .toStringz(sym));
 	}
 	/// Release shared library.
 	nothrow
 	bool dlclose(ref libHandle lib) {
 		if (!lib) return false;
-		auto result = core.sys.posix.dlfcn.dlclose(cast(void*) lib);
+		auto result = core.sys.posix.dlfcn.dlclose(cast(void*)lib);
 		if (0 == result) lib = null;
 		return 0 == result;
 	}

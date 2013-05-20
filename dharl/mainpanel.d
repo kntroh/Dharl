@@ -251,7 +251,7 @@ class MainPanel : Composite {
 			});
 		};
 		_paletteView.colorSwapReceivers ~= (int pixel1, int pixel2) {
-			Undoable[] us = [cast(Undoable) _paletteView, _paintArea];
+			Undoable[] us = [cast(Undoable)_paletteView, _paintArea];
 			_um.store(us, {
 				_paintArea.swapColor(pixel1, pixel2);
 				return true;
@@ -496,7 +496,7 @@ class MainPanel : Composite {
 		}, SWT.RADIO, 0 == _c.conf.tone);
 		_tones.p_listeners!(SWT.Dispose) ~= &clearTonesToolBar;
 
-		auto toneIndex = cast(int) _c.conf.tone - 1;
+		auto toneIndex = cast(int)_c.conf.tone - 1;
 		if (0 <= toneIndex && toneIndex < _c.conf.tones.length) {
 			_paintArea.tone = _c.conf.tones[toneIndex].value;
 		}
@@ -798,9 +798,9 @@ class MainPanel : Composite {
 				} else {
 					foreach (filter; FILTER) {
 						if (filter.endsWith(ext)) {
-							auto buf = new ByteArrayInputStream(cast(byte[]) data());
+							auto buf = new ByteArrayInputStream(cast(byte[])data());
 							auto imgData = new ImageData(buf);
-							auto depth = cast(ubyte) imgData.depth;
+							auto depth = cast(ubyte)imgData.depth;
 							auto img = new MLImage;
 							img.init(imgData, _c.text.newLayer);
 							r ~= img;
@@ -818,7 +818,7 @@ class MainPanel : Composite {
 			if (!img.layerCount) continue;
 			auto data = img.layer(0).image;
 			assert (data.depth <= 8);
-			ubyte depth = cast(ubyte) data.depth;
+			ubyte depth = cast(ubyte)data.depth;
 			auto pDepth = img in depths;
 			if (pDepth) depth = *pDepth;
 			bool saved = !data.palette.isDirect && depth <= 8;
@@ -831,7 +831,7 @@ class MainPanel : Composite {
 			if (1 < imgs.length) {
 				name ~= " (%s)".format(i + 1);
 			}
-			loadImage(img, name, file, cast(ubyte) .min(depth, 8), saved);
+			loadImage(img, name, file, cast(ubyte).min(depth, 8), saved);
 		}
 	}
 	private void loadImage(MLImage img, string name, string path, ubyte depth, bool saved) {
@@ -1384,7 +1384,7 @@ class MainPanel : Composite {
 	}
 	/// ditto
 	private void setPalettes(in PaletteData[] palettes, size_t sel) {
-		Undoable[] storeData = [cast(Undoable) _paintArea, _paletteView];
+		Undoable[] storeData = [cast(Undoable)_paintArea, _paletteView];
 		_um.store(storeData);
 
 		// update palette

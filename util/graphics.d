@@ -56,13 +56,13 @@ void pointsOfPath(void delegate(int x, int y, int w, int h) dlg, PaintMode mode,
 		} else {
 			int xFrom = x - s;
 			int xTo = x + xw + s;
-			if (xTo < 0 || cast(int) w <= xFrom) return;
+			if (xTo < 0 || cast(int)w <= xFrom) return;
 			int yFrom = y - s;
 			int yTo = y + yh + s;
-			if (yTo < 0 || cast(int) h <= yFrom) return;
-			xTo = min(cast(int) w, xTo);
+			if (yTo < 0 || cast(int)h <= yFrom) return;
+			xTo = min(cast(int)w, xTo);
 			xFrom = max(0, xFrom);
-			yTo = min(cast(int) h, yTo);
+			yTo = min(cast(int)h, yTo);
 			yFrom = max(0, yFrom);
 			dlg(xFrom, yFrom, xTo - xFrom, yTo - yFrom);
 		}
@@ -123,15 +123,15 @@ void pointsOfPath(void delegate(int x, int y, int w, int h) dlg, PaintMode mode,
 			// horizontal
 			int ss = size * 2 - 1;
 			assert (ss >= 1);
-			int to = min(cast(int) (w - (size - 1)), mxx);
-			int x = max(cast(int) (size - 1), mnx);
+			int to = min(cast(int)(w - (size - 1)), mxx);
+			int x = max(cast(int)(size - 1), mnx);
 			around(x, y1, to + 1 - x, 1);
 		} else if (x1 == x2) {
 			// vertical
 			int ss = size * 2 - 1;
 			assert (ss >= 1);
-			int to = min(cast(int) (h - (size - 1)), mxy);
-			int y = max(cast(int) (size - 1), mny);
+			int to = min(cast(int)(h - (size - 1)), mxy);
+			int y = max(cast(int)(size - 1), mny);
 			around(x1, y, 1, to + 1 - y);
 		} else {
 			// diagonal line
@@ -141,7 +141,7 @@ void pointsOfPath(void delegate(int x, int y, int w, int h) dlg, PaintMode mode,
 			around(x1, y1, 1, 1);
 			foreach (i; 1 .. len) {
 				// among
-				real dt = cast(real) i / len;
+				real dt = cast(real)i / len;
 				int x = roundTo!(int)((x2 - x1) * dt);
 				int y = roundTo!(int)((y2 - y1) * dt);
 				around(x1 + x, y1 + y, 1, 1);
@@ -161,8 +161,8 @@ void pointsOfPath(void delegate(int x, int y, int w, int h) dlg, PaintMode mode,
 		});
 		break;
 	case PaintMode.RectLine:
-		if (mxx < 0 || cast(int) w <= mnx) return;
-		if (mxy < 0 || cast(int) h <= mny) return;
+		if (mxx < 0 || cast(int)w <= mnx) return;
+		if (mxy < 0 || cast(int)h <= mny) return;
 		mnx = min(x1, x2);
 		mxx = max(x1, x2);
 		mny = min(y1, y2);
@@ -179,9 +179,9 @@ void pointsOfPath(void delegate(int x, int y, int w, int h) dlg, PaintMode mode,
 		oval((int cx, int cy, int x, int y) {
 			int ix1 = cx - x;
 			int ix2 = cx + x + xshift;
-			if (ix2 < 0 || cast(int) w <= ix1) return;
-			int x1 = max(cast(int) (size - 1), ix1);
-			int x2 = min(cast(int) (w - (size - 1)), ix2);
+			if (ix2 < 0 || cast(int)w <= ix1) return;
+			int x1 = max(cast(int)(size - 1), ix1);
+			int x2 = min(cast(int)(w - (size - 1)), ix2);
 
 			// Draws line from top left to top right.
 			int ya = cy + y + yshift;
@@ -197,12 +197,12 @@ void pointsOfPath(void delegate(int x, int y, int w, int h) dlg, PaintMode mode,
 		});
 		break;
 	case PaintMode.RectFill:
-		if (mxx < 0 || cast(int) w <= mnx) return;
-		if (mxy < 0 || cast(int) h <= mny) return;
-		mnx = max(cast(int) (size - 1), mnx);
-		mxx = min(cast(int) (w - (size - 1)), mxx);
-		mny = max(cast(int) (size - 1), mny);
-		mxy = min(cast(int) (h - (size - 1)), mxy);
+		if (mxx < 0 || cast(int)w <= mnx) return;
+		if (mxy < 0 || cast(int)h <= mny) return;
+		mnx = max(cast(int)(size - 1), mnx);
+		mxx = min(cast(int)(w - (size - 1)), mxx);
+		mny = max(cast(int)(size - 1), mny);
+		mxy = min(cast(int)(h - (size - 1)), mxy);
 		foreach (y; mny .. mxy + 1) {
 			pointsOfPath(dlg, PaintMode.Straight, mnx, y, mxx, y, w, h, size);
 		}
@@ -499,7 +499,7 @@ void medianCut(ref CRGB[] colors, size_t countOfTarget) {
 				cALen++;
 			}
 			// average
-			box.typVal[rgb] = cast(ubyte) (sum / (box.to - box.from));
+			box.typVal[rgb] = cast(ubyte)(sum / (box.to - box.from));
 
 			int len = max - min;
 			if (box.len < len) {
@@ -623,7 +623,7 @@ class ColorTree {
 		}
 		size_t i = nodeIndex(color);
 		if (!_node[i]) {
-			_node[i] = new ColorTree(cast(ubyte) (_level + 1), color, index);
+			_node[i] = new ColorTree(cast(ubyte)(_level + 1), color, index);
 			return true;
 		}
 		return _node[i].add(color, index);
@@ -813,20 +813,20 @@ void resize(T)(int rw, int rh, T delegate(int x, int y) pget, void delegate(int 
 	if (0 == rw || 0 == w || 0 == rh || 0 == h) {
 		return;
 	}
-	real gw = cast(real) rw / w;
-	real gh = cast(real) rh / h;
-	real gwr = cast(real) w / rw;
-	real ghr = cast(real) h / rh;
+	real gw = cast(real)rw / w;
+	real gh = cast(real)rh / h;
+	real gwr = cast(real)w / rw;
+	real ghr = cast(real)h / rh;
 	void yProc(int xBase, int xNew) {
 		if (rh < h) {
 			foreach (y; 0 .. h) {
 				int yBase = sy + y;
-				int yNew = sy + cast(int) (y * gh);
+				int yNew = sy + cast(int)(y * gh);
 				pset(xNew, yNew, pget(xBase, yBase));
 			}
 		} else if (h < rh) {
 			foreach_reverse (y; 0 .. rh) {
-				int yBase = sy + cast(int) (y * ghr);
+				int yBase = sy + cast(int)(y * ghr);
 				int yNew = sy + y;
 				pset(xNew, yNew, pget(xBase, yBase));
 			}
@@ -839,11 +839,11 @@ void resize(T)(int rw, int rh, T delegate(int x, int y) pget, void delegate(int 
 	}
 	if (rw < w) {
 		foreach (x; 0 .. w) {
-			yProc(sx + x, sx + cast(int) (x * gw));
+			yProc(sx + x, sx + cast(int)(x * gw));
 		}
 	} else if (w < rw) {
 		foreach_reverse (x; 0 .. rw) {
-			yProc(sx + cast(int) (x * gwr), sx + x);
+			yProc(sx + cast(int)(x * gwr), sx + x);
 		}
 	} else {
 		foreach (x; 0 .. w) {
@@ -895,8 +895,8 @@ void turn(T)(real deg, T delegate(int x, int y) pget, void delegate(int x, int y
 		}
 	} else {
 		auto rad = radian(deg);
-		int dcos = cast(int) ((-rad).cos() * (1 << 10)); 
-		int dsin = cast(int) ((-rad).sin() * (1 << 10)); 
+		int dcos = cast(int)((-rad).cos() * (1 << 10)); 
+		int dsin = cast(int)((-rad).sin() * (1 << 10)); 
 		int cx = w / 2;
 		int cy = h / 2;
 		foreach (y; 0 .. h) {

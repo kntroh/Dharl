@@ -580,7 +580,7 @@ class PaintArea : Canvas, Undoable {
 	void transparentPixel(size_t layer, int v) {
 		checkWidget();
 		checkInit();
-		if (v < -1 || cast(int) _image.palette.colors.length <= v) {
+		if (v < -1 || cast(int)_image.palette.colors.length <= v) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		_image.layer(layer).image.transparentPixel = v;
@@ -1075,7 +1075,7 @@ class PaintArea : Canvas, Undoable {
 		} else {
 			data = _image.createImageData(ia, 8, _layers);
 		}
-		auto it = cast(Transfer) ImageTransfer.getInstance();
+		auto it = cast(Transfer)ImageTransfer.getInstance();
 		cb.setContents([data], [it]);
 
 		statusChangedReceivers.raiseEvent();
@@ -1090,7 +1090,7 @@ class PaintArea : Canvas, Undoable {
 		auto cb = new Clipboard(d);
 		scope (exit) cb.dispose();
 
-		auto data = cast(ImageData) cb.getContents(ImageTransfer.getInstance());
+		auto data = cast(ImageData)cb.getContents(ImageTransfer.getInstance());
 		if (!data) return;
 
 		fixPaste();
@@ -1100,18 +1100,18 @@ class PaintArea : Canvas, Undoable {
 
 		auto colors = new CRGB[imageData.palette.colors.length];
 		foreach (i, rgb; imageData.palette.colors) {
-			colors[i].r = cast(ubyte) rgb.red;
-			colors[i].g = cast(ubyte) rgb.green;
-			colors[i].b = cast(ubyte) rgb.blue;
+			colors[i].r = cast(ubyte)rgb.red;
+			colors[i].g = cast(ubyte)rgb.green;
+			colors[i].b = cast(ubyte)rgb.blue;
 		}
 		auto tree = new ColorTree(colors, false);
 		foreach (idx; 0 .. data.width) {
 			foreach (idy; 0 .. data.height) {
 				auto rgb = data.palette.getRGB(data.getPixel(idx, idy));
 				CRGB c;
-				c.r = cast(ubyte) rgb.red;
-				c.g = cast(ubyte) rgb.green;
-				c.b = cast(ubyte) rgb.blue;
+				c.r = cast(ubyte)rgb.red;
+				c.g = cast(ubyte)rgb.green;
+				c.b = cast(ubyte)rgb.blue;
 				int pixel = tree.searchLose(c);
 				imageData.setPixel(idx, idy, pixel);
 			}
@@ -1356,9 +1356,9 @@ class PaintArea : Canvas, Undoable {
 		auto colors = image.palette.colors;
 		auto rgbs = new CRGB[colors.length];
 		foreach (i, ref rgb; rgbs) {
-			rgb.r = cast(ubyte) colors[i].red;
-			rgb.g = cast(ubyte) colors[i].green;
-			rgb.b = cast(ubyte) colors[i].blue;
+			rgb.r = cast(ubyte)colors[i].red;
+			rgb.g = cast(ubyte)colors[i].green;
+			rgb.b = cast(ubyte)colors[i].blue;
 		}
 		auto tree = new ColorTree(rgbs, false);
 		void chg(ref int[] ps) {
@@ -1792,7 +1792,7 @@ class PaintArea : Canvas, Undoable {
 	const
 	private int ctoi(int c) {
 		checkInit();
-		return c / cast(int) _zoom;
+		return c / cast(int)_zoom;
 	}
 	/// ditto
 	private int cxtoix(int c) {
@@ -1813,7 +1813,7 @@ class PaintArea : Canvas, Undoable {
 	const
 	private int itoc(int i) {
 		checkInit();
-		return i * cast(int) _zoom;
+		return i * cast(int)_zoom;
 	}
 	/// ditto
 	private int ixtocx(int i) {
@@ -2686,7 +2686,7 @@ class PaintArea : Canvas, Undoable {
 			zoom = max(1, zoom / 2);
 		} else {
 			assert (0 < e.count);
-			zoom = min(cast(int) zoom * 2, ZOOM_MAX);
+			zoom = min(cast(int)zoom * 2, ZOOM_MAX);
 		}
 
 		if (zoom != old) {
@@ -2771,7 +2771,7 @@ class PaintArea : Canvas, Undoable {
 	}
 	override void restore(Object data, UndoMode mode) {
 		cancelPaste();
-		auto st = cast(StoreData) data;
+		auto st = cast(StoreData)data;
 		enforce(st);
 		_image.restore(st.image, mode);
 		if (st.pasteLayer) {
@@ -3092,7 +3092,7 @@ class LayerList : Canvas {
 
 		auto se = new Event;
 		se.widget = this;
-		se.time = cast(int) System.currentTimeMillis();
+		se.time = cast(int)System.currentTimeMillis();
 		se.stateMask = 0;
 		se.doit = true;
 		notifyListeners(SWT.Selection, se);
@@ -3273,7 +3273,7 @@ class LayerList : Canvas {
 		auto ib = CRect(0, 0, _paintArea.image.width, _paintArea.image.height);
 		int w;
 		if (LAYER_H < ib.height) {
-			w = cast(int) (ib.width * (cast(real) LAYER_H / ib.height));
+			w = cast(int)(ib.width * (cast(real)LAYER_H / ib.height));
 		} else {
 			w = ib.width;
 		}

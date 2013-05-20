@@ -148,17 +148,17 @@ version (Windows) {
 
 				// Load functions.
 				PluginInfo info;
-				info.getPluginInfo = cast(GetPluginInfo) lib.dlsym("GetPluginInfo");
+				info.getPluginInfo = cast(GetPluginInfo)lib.dlsym("GetPluginInfo");
 				if (!info.getPluginInfo) {
 					lib.dlclose();
 					continue;
 				}
-				info.isSupported    = cast(IsSupported) lib.dlsym("IsSupported");
-				info.getPictureInfo = cast(GetPictureInfo) lib.dlsym("GetPictureInfo");
-				info.getPicture     = cast(GetPicture) lib.dlsym("GetPicture");
-				info.getArchiveInfo = cast(GetArchiveInfo) lib.dlsym("GetArchiveInfo");
-				info.getFileInfo    = cast(GetFileInfo) lib.dlsym("GetFileInfo");
-				info.getFile        = cast(GetFile) lib.dlsym("GetFile");
+				info.isSupported    = cast(IsSupported)lib.dlsym("IsSupported");
+				info.getPictureInfo = cast(GetPictureInfo)lib.dlsym("GetPictureInfo");
+				info.getPicture     = cast(GetPicture)lib.dlsym("GetPicture");
+				info.getArchiveInfo = cast(GetArchiveInfo)lib.dlsym("GetArchiveInfo");
+				info.getFileInfo    = cast(GetFileInfo)lib.dlsym("GetFileInfo");
+				info.getFile        = cast(GetFile)lib.dlsym("GetFile");
 
 				info.handle = lib;
 				info.pluginFile     = file.absolutePath().buildNormalizedPath();
@@ -225,7 +225,7 @@ version (Windows) {
 				head[len .. $] = 0;
 			}
 			return loadWithSusieImpl(file, file.extension(), newLayerName, tryLoadWithoutPlugin, head, {
-				return cast(ubyte[]) file.read();
+				return cast(ubyte[])file.read();
 			});
 		}
 		/// ditto
@@ -251,7 +251,7 @@ version (Windows) {
 			}
 
 			// Parameters for IsSupported().
-			auto dw = cast(DWORD) head.ptr;
+			auto dw = cast(DWORD)head.ptr;
 			auto filename = file.toMBSz();
 
 			all: foreach (lib; _plugins) {
@@ -267,25 +267,25 @@ version (Windows) {
 					if (!lib.isSupported(filename, dw)) continue;
 
 					// Memory image of file.
-					auto data = cast(char[]) (fileBytes is null ? readData() : fileBytes);
+					auto data = cast(char[])(fileBytes is null ? readData() : fileBytes);
 					int errcode;
 
 					// Gets bitmap data by Susie Plug-in.
 					HLOCAL bInfo = null;
 					HLOCAL bm = null;
 					scope (exit) {
-						if (bInfo && !(*(cast(void**) bInfo))) LocalFree(*(cast(void**) bInfo));
-						if (bm && !(*(cast(void**) bm))) LocalFree(*(cast(void**) bm));
+						if (bInfo && !(*(cast(void**)bInfo))) LocalFree(*(cast(void**)bInfo));
+						if (bm && !(*(cast(void**)bm))) LocalFree(*(cast(void**)bm));
 					}
 					errcode = lib.getPicture(data.ptr, data.length, MEMORY, &bInfo, &bm, null, 0);
 					if (0 != errcode) continue;
-					if (!bInfo || !bm || !(*(cast(void**) bInfo)) || !(*(cast(void**) bm))) {
+					if (!bInfo || !bm || !(*(cast(void**)bInfo)) || !(*(cast(void**)bm))) {
 						continue;
 					}
 
 					// Creates bitmap data.
-					auto info = *(cast(BITMAPINFO**) bInfo);
-					auto bmp = *(cast(ubyte**) bm);
+					auto info = *(cast(BITMAPINFO**)bInfo);
+					auto bmp = *(cast(ubyte**)bm);
 					auto w = info.bmiHeader.biWidth.littleEndian;
 					auto h = info.bmiHeader.biHeight.littleEndian;
 					auto bytesPerLine = w + .padding(w, 4);
@@ -332,8 +332,8 @@ version (Windows) {
 
 					// Bitmap data bytes.
 					auto bytes = new byte[BITMAPFILEHEADER_SIZE + headerSize + size];
-					auto header = cast(BITMAPFILEHEADER*) bytes.ptr;
-					header.bfType = (cast(USHORT) ('B' | ('M' << 8))).littleEndian;
+					auto header = cast(BITMAPFILEHEADER*)bytes.ptr;
+					header.bfType = (cast(USHORT)('B' | ('M' << 8))).littleEndian;
 					header.bfSize = bytes.length.littleEndian;
 					header.bfOffBits = (BITMAPFILEHEADER_SIZE + headerSize).littleEndian;
 
@@ -355,18 +355,18 @@ version (Windows) {
 					if (!lib.isSupported(filename, dw)) continue;
 
 					// Memory image of file.
-					auto data = cast(char[]) (fileBytes is null ? readData() : fileBytes);
+					auto data = cast(char[])(fileBytes is null ? readData() : fileBytes);
 					int errcode;
 
 					// Gets archive file information.
 					HLOCAL info = null;
 					scope (exit) {
-						if (info && !(*(cast(void**) info))) LocalFree((*(cast(void**) info)));
+						if (info && !(*(cast(void**)info))) LocalFree((*(cast(void**)info)));
 					}
 					errcode = lib.getArchiveInfo(data.ptr, data.length, MEMORY, &info);
 					if (0 != errcode) continue;
 					if (!info) continue;
-					auto fileInfo = *(cast(fileInfo**) info);
+					auto fileInfo = *(cast(fileInfo**)info);
 					if (!fileInfo) continue;
 
 					// Processing files in archive.
@@ -374,12 +374,12 @@ version (Windows) {
 
 						HLOCAL dest;
 						scope (exit) {
-							if (dest && !(*(cast(void**) dest))) LocalFree((*(cast(void**) dest)));
+							if (dest && !(*(cast(void**)dest))) LocalFree((*(cast(void**)dest)));
 						}
 						// BUG: Pass a memory image to axzip.spi, to hang.
-						errcode = lib.getFile(filename, fileInfo.position, cast(char*) &dest, 0x0100, null, 0);
+						errcode = lib.getFile(filename, fileInfo.position, cast(char*)&dest, 0x0100, null, 0);
 						if (0 != errcode) continue all;
-						auto uncomp = *(cast(ubyte**) dest);
+						auto uncomp = *(cast(ubyte**)dest);
 
 						// Beginning (2KB) of file in archive.
 						ubyte[2048] headA;

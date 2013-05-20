@@ -232,7 +232,7 @@ auto p_filters(int Type)(Display display) {
 /// Casts return value of widget#getData().
 @property
 D dataTo(D)(Widget widget) {
-	return cast(D) widget.data;
+	return cast(D)widget.data;
 }
 
 /// Calls display.syncExec() or display.asyncExec() with dlg.

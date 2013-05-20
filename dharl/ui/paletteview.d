@@ -159,7 +159,7 @@ class PaletteView : Canvas, Undoable {
 	@property
 	void transparentPixel(int index) {
 		checkWidget();
-		if (index < -1 || cast(int) _colors.length <= index) {
+		if (index < -1 || cast(int)_colors.length <= index) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		if (-1 != _tPixel) piRedrawColor(_tPixel);
@@ -313,10 +313,10 @@ class PaletteView : Canvas, Undoable {
 		size_t i = 1;
 		foreach (pi; pi1 + 1 .. pi2) {
 			auto rgb = _colors[pi];
-			real rt = cast(real) i / piLen; // Ratio from pi1 to pi2.
-			rgb.red   = rgb1.red   + cast(int) (mr * rt);
-			rgb.green = rgb1.green + cast(int) (mg * rt);
-			rgb.blue  = rgb1.blue  + cast(int) (mb * rt);
+			real rt = cast(real)i / piLen; // Ratio from pi1 to pi2.
+			rgb.red   = rgb1.red   + cast(int)(mr * rt);
+			rgb.green = rgb1.green + cast(int)(mg * rt);
+			rgb.blue  = rgb1.blue  + cast(int)(mb * rt);
 			piRedrawColor(pi);
 			i++;
 		}
@@ -670,7 +670,7 @@ class PaletteView : Canvas, Undoable {
 				piRedrawColor(piBtn);
 			} else if (e.stateMask & SWT.CTRL) {
 				// copy
-				colorChangeReceivers.raiseEvent(_piTo, cast(const) _colors[piBtn]);
+				colorChangeReceivers.raiseEvent(_piTo, cast(const)_colors[piBtn]);
 				color(_piTo, color(piBtn));
 			}
 			piSelectColorImpl(e, _piTo);
@@ -758,7 +758,7 @@ class PaletteView : Canvas, Undoable {
 		// Number of color in current row.
 		if (_colors.length % col) row++;
 
-		bool shift = cast(bool) (e.stateMask & SWT.SHIFT);
+		bool shift = cast(bool)(e.stateMask & SWT.SHIFT);
 		int pixel = shift ? pixel2 : pixel1;
 		switch (e.keyCode) {
 		case SWT.ARROW_UP:
@@ -844,14 +844,14 @@ class PaletteView : Canvas, Undoable {
 		auto data = new StoreData;
 		foreach (i, ref rgb; data.colors) {
 			auto c = _colors[i];
-			rgb.r = cast(ubyte) c.red;
-			rgb.g = cast(ubyte) c.green;
-			rgb.b = cast(ubyte) c.blue;
+			rgb.r = cast(ubyte)c.red;
+			rgb.g = cast(ubyte)c.green;
+			rgb.b = cast(ubyte)c.blue;
 		}
 		return data;
 	}
 	override void restore(Object data, UndoMode mode) {
-		auto st = cast(StoreData) data;
+		auto st = cast(StoreData)data;
 		enforce(st);
 		foreach (i, ref rgb; st.colors) {
 			color(i, rgb.r, rgb.g, rgb.b);

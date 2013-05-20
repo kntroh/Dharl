@@ -58,7 +58,7 @@ struct DImage {
 @property
 private DImage importImage(string File)() {
 	static if (is(typeof(import(File)))) {
-		return DImage(File.stripExtension(), cast(ubyte[]) import(File).dup);
+		return DImage(File.stripExtension(), cast(ubyte[])import(File).dup);
 	} else {
 		pragma(msg, "Resource not found: " ~ File);
 		return DImage(File.stripExtension(), []);

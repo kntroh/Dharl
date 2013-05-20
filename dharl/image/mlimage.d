@@ -119,7 +119,7 @@ class MLImage : Undoable {
 		.enforce(info);
 
 		// Parses image information.
-		auto xml = cast(char[]) archive.expand(info);
+		auto xml = cast(char[])archive.expand(info);
 		auto parser = new DocumentParser(.assumeUnique(xml));
 		.enforce("dharl" == parser.tag.name);
 
@@ -157,7 +157,7 @@ class MLImage : Undoable {
 
 				// Image data.
 				auto bytes = archive.expand(images[ep.tag.attr["file"]]);
-				auto buf = new ByteArrayInputStream(cast(byte[]) bytes);
+				auto buf = new ByteArrayInputStream(cast(byte[])bytes);
 				layer.image = .colorReduction(new ImageData(buf), false);
 				assert (layer.image.palette.colors.length == 256);
 
@@ -281,7 +281,7 @@ class MLImage : Undoable {
 				le.tag.attr["base"] = .text(true);
 			}
 
-			auto bytes = cast(ubyte[]) stream.toByteArray();
+			auto bytes = cast(ubyte[])stream.toByteArray();
 			archive.addMember(createMember(file, bytes));
 		}
 		// Combinations.
@@ -302,7 +302,7 @@ class MLImage : Undoable {
 
 		// Image information.
 		auto xml = doc.prolog ~ "\n" ~ doc.pretty(2).join("\n") ~ "\n";
-		archive.addMember(createMember("dharl.xml", cast(ubyte[]) xml));
+		archive.addMember(createMember("dharl.xml", cast(ubyte[])xml));
 
 		return archive.build();
 	}
@@ -351,7 +351,7 @@ class MLImage : Undoable {
 			auto loader = writeCombinationImpl(depth, combi);
 			auto buf = new ByteArrayOutputStream;
 			loader.save(buf, imageType);
-			r[combinationFilename(imageType, combi)] = cast(ubyte[]) buf.toByteArray();
+			r[combinationFilename(imageType, combi)] = cast(ubyte[])buf.toByteArray();
 		}
 		return r;
 	}
@@ -1301,7 +1301,7 @@ class MLImage : Undoable {
 	/// Require o is return value at storeData().
 	const
 	bool equalsTo(ref const(Object) o) {
-		auto data = cast(const(StoreData)) o;
+		auto data = cast(const(StoreData))o;
 		if (!data) return false;
 		if (_iw != data.width || _ih != data.height) return false;
 		if (_layers.length != data.layers.length) return false;
@@ -1333,9 +1333,9 @@ class MLImage : Undoable {
 		foreach (pi, ref palette; data.palettes) {
 			foreach (i, ref rgb; palette) {
 				auto c = _palette[pi].colors[i];
-				rgb.r = cast(ubyte) c.red;
-				rgb.g = cast(ubyte) c.green;
-				rgb.b = cast(ubyte) c.blue;
+				rgb.r = cast(ubyte)c.red;
+				rgb.g = cast(ubyte)c.green;
+				rgb.b = cast(ubyte)c.blue;
 			}
 		}
 		data.layers = new byte[][_layers.length];
@@ -1352,7 +1352,7 @@ class MLImage : Undoable {
 		return data;
 	}
 	override void restore(Object data, UndoMode mode) {
-		auto st = cast(StoreData) data;
+		auto st = cast(StoreData)data;
 		enforce(st);
 		_palette.length = st.palettes.length;
 		foreach (pi, ref palette; _palette) {

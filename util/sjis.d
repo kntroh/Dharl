@@ -75,15 +75,15 @@ char[] convTo(CP CP1, CP CP2)(in char[] s) {
 			foreach (wchar c; s) {
 				wchar sc = UNI_SJIS[c];
 				if (sc == 0xFFFF) {
-					buf[len] = cast(char) 0x3F; // '?'
+					buf[len] = cast(char)0x3F; // '?'
 					len++;
 				} else {
-					char top = cast(char) (sc >> 8);
+					char top = cast(char)(sc >> 8);
 					if (top) {
 						buf[len] = top;
 						len++;
 					}
-					buf[len] = cast(char) (sc & 0xFF);
+					buf[len] = cast(char)(sc & 0xFF);
 					len++;
 				}
 			}
@@ -98,14 +98,14 @@ char[] convTo(CP CP1, CP CP2)(in char[] s) {
 			size_t len = 0;
 			void put(wchar c) {
 				if (c > 0x7FF) {
-					buf[len] = cast(char) ((c >> 12) | 0xE0); len++;
-					buf[len] = cast(char) (((c >> 6) & 0x3F) | 0x80); len++;
-					buf[len] = cast(char) ((c & 0x3F) | 0x80); len++;
+					buf[len] = cast(char)((c >> 12) | 0xE0); len++;
+					buf[len] = cast(char)(((c >> 6) & 0x3F) | 0x80); len++;
+					buf[len] = cast(char)((c & 0x3F) | 0x80); len++;
 				} else if (c > 0x7F) {
-					buf[len] = cast(char) ((c >> 6) | 0xC0); len++;
-					buf[len] = cast(char) ((c & 0x3F) | 0x80); len++;
+					buf[len] = cast(char)((c >> 6) | 0xC0); len++;
+					buf[len] = cast(char)((c & 0x3F) | 0x80); len++;
 				} else {
-					buf[len] = cast(char) c; len++;
+					buf[len] = cast(char)c; len++;
 				}
 			}
 			wchar cbuf = 0;
@@ -145,11 +145,11 @@ char[] convTo(CP CP1, CP CP2)(in char[] s) {
 		}
 	}
 } unittest {
-	assert (convTo!(CP.UNI, CP.SJIS)(cast(char[]) [0x95, 0x5C, 0x8E, 0xA6]) == "表示");
-	assert (convTo!(CP.SJIS, CP.UNI)("表示") == cast(char[]) [0x95, 0x5C, 0x8E, 0xA6]);
+	assert (convTo!(CP.UNI, CP.SJIS)(cast(char[])[0x95, 0x5C, 0x8E, 0xA6]) == "表示");
+	assert (convTo!(CP.SJIS, CP.UNI)("表示") == cast(char[])[0x95, 0x5C, 0x8E, 0xA6]);
 	assert (convTo!(CP.UNI, CP.SJIS)(convTo!(CP.SJIS, CP.UNI)("表示")) == "表示");
-	assert (convTo!(CP.UNI, CP.SJIS)(cast(char[]) [0xB1, 0xB2, 0xB3, 0xB4, 0xB5]) == "ｱｲｳｴｵ");
-	assert (convTo!(CP.SJIS, CP.UNI)("ｱｲｳｴｵ") == cast(char[]) [0xB1, 0xB2, 0xB3, 0xB4, 0xB5]);
+	assert (convTo!(CP.UNI, CP.SJIS)(cast(char[])[0xB1, 0xB2, 0xB3, 0xB4, 0xB5]) == "ｱｲｳｴｵ");
+	assert (convTo!(CP.SJIS, CP.UNI)("ｱｲｳｴｵ") == cast(char[])[0xB1, 0xB2, 0xB3, 0xB4, 0xB5]);
 	assert (convTo!(CP.UNI, CP.SJIS)(convTo!(CP.SJIS, CP.UNI)("ｶｷｸｹｺ")) == "ｶｷｸｹｺ");
 	assert (convTo!(CP.UNI, CP.SJIS)(convTo!(CP.SJIS, CP.UNI)("ｶ表ｷｸ示_~ｹｺ")) == "ｶ表ｷｸ示_~ｹｺ");
 }

@@ -45,9 +45,9 @@ ImageData colorReduction(ImageData image, bool errorDiffusion = true) {
 	foreach(y; 0 .. image.height) {
 		foreach(x; 0 .. image.width) {
 			auto rgb = image.palette.getRGB(image.getPixel(x, y));
-			ubyte r = cast(ubyte) rgb.red;
-			ubyte g = cast(ubyte) rgb.green;
-			ubyte b = cast(ubyte) rgb.blue;
+			ubyte r = cast(ubyte)rgb.red;
+			ubyte g = cast(ubyte)rgb.green;
+			ubyte b = cast(ubyte)rgb.blue;
 			colors[ci] = CRGB(r, g, b);
 			colors2[ci] = CRGB(r, g, b);
 			ci++;
@@ -104,16 +104,16 @@ ImageData colorReduction(ImageData image, bool errorDiffusion = true) {
 					// Error diffusion.
 					auto c = result.palette.colors[sel];
 					// errors
-					int er = cast(int) rgb.r - c.red;
-					int eg = cast(int) rgb.g - c.green;
-					int eb = cast(int) rgb.b - c.blue;
+					int er = cast(int)rgb.r - c.red;
+					int eg = cast(int)rgb.g - c.green;
+					int eb = cast(int)rgb.b - c.blue;
 					void diffusion(size_t x, size_t y, real rate) {
 						if (image.width <= x || image.height <= y) return;
 						size_t ci = y * image.width + x;
 						auto trgb = colors2[ci];
-						trgb.r = roundCast!(ubyte)(trgb.r + cast(int) (er * rate));
-						trgb.g = roundCast!(ubyte)(trgb.g + cast(int) (eg * rate));
-						trgb.b = roundCast!(ubyte)(trgb.b + cast(int) (eb * rate));
+						trgb.r = roundCast!(ubyte)(trgb.r + cast(int)(er * rate));
+						trgb.g = roundCast!(ubyte)(trgb.g + cast(int)(eg * rate));
+						trgb.b = roundCast!(ubyte)(trgb.b + cast(int)(eb * rate));
 						colors2[ci] = trgb;
 					}
 					diffusion(x + 1, y, 0.375);

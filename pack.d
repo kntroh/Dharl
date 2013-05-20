@@ -30,11 +30,11 @@ void main(string[] args) {
 		member.externalAttributes = MEMBER_IS_FILE;
 		member.internalAttributes = 1;
 		member.flags |= UNICODE_FILENAME;
-		member.expandedData = cast(ubyte[]) file.read();
+		member.expandedData = cast(ubyte[])file.read();
 		return member;
 	}
 
-	auto ver = cast(char[]) "@version.txt".read();
+	auto ver = cast(char[])"@version.txt".read();
 	ver = ver.chomp().toLower().replace(" ", "");
 
 	auto archive = new ZipArchive();

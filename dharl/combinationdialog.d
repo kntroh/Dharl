@@ -133,7 +133,7 @@ class CombinationDialog : DharlDialog {
 		_layers.p_layoutData = GD.fill(true, true);
 		_layers.p_listeners!(SWT.Selection) ~= (Event e) {
 			if (SWT.CHECK != e.detail) return;
-			auto item = cast(TableItem) e.item;
+			auto item = cast(TableItem)e.item;
 			checkLayer(_layers.indexOf(item), item.p_checked);
 		};
 		// palette

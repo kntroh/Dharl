@@ -69,7 +69,7 @@ private T cimgImpl(T)(in DImage dimg, CursorSpot hotspot) {
 	auto p = dimg.id in table;
 	if (p) return *p;
 	// Creates image from bytes.
-	auto inp = new ByteArrayInputStream(cast(byte[]) dimg.data);
+	auto inp = new ByteArrayInputStream(cast(byte[])dimg.data);
 	auto data = new ImageData(inp);
 	data.transparentPixel = 0;
 	static if (is(T:Image)) {
