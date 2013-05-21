@@ -35,6 +35,7 @@ private import java.nonstandard.Locale;
 void main(string[] args) {
 	string exe = .moduleFileName(args[0]);
 	.coutf("Execute: %s", exe);
+	.errorLog = "%s.log".format(exe);
 
 	// Pipe name for process communication.
 	static immutable PIPE_NAME = "dharl";

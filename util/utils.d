@@ -8,39 +8,49 @@ module util.utils;
 private import std.algorithm;
 private import std.array;
 private import std.conv;
+private import std.file;
 private import std.functional;
 private import std.math;
 private import std.path;
+private import std.string;
 private import std.traits;
+
+shared string errorLog = "";
 
 version (Console) {
 	private import std.stdio;
 
 	/// Prints debug message.
 	void coutf(T...)(string msgf, T args) {
-		writefln(msgf, args);
+		.writefln(msgf, args);
 	}
 	/// ditto
 	void cout(T...)(T args) {
-		writeln(args);
-	}
-	/// Outputs error message.
-	void erroroutf(T...)(string msgf, T args) {
-		writefln(msgf, args);
-	}
-	/// ditto
-	void errorout(T...)(T args) {
-		writeln(args);
+		.writeln(args);
 	}
 } else {
 	/// Prints debug message.
-	void coutf(T...)(string msgf, T args) { /* Do nothing */ }
+	void coutf(T...)(string msgf, T args) { /* No processing */ }
 	/// ditto
-	void cout(T...)(T args) { /* Do nothing */ }
-	/// Outputs error message.
-	void erroroutf(T...)(string msgf, T args) { /* Do nothing */ }
-	/// ditto
-	void errorout(T...)(T args) { /* Do nothing */ }
+	void cout(T...)(T args) { /* No processing */ }
+}
+/// Outputs error message.
+void erroroutf(T...)(string msgf, T args) {
+	if (errorLog != "") {
+		std.file.append(errorLog, "%s\n\n".format(msgf.format(args)));
+	}
+	version (Console) {
+		.writefln(msgf, args);
+	}
+}
+/// ditto
+void errorout(T...)(T args) {
+	if (errorLog != "") {
+		std.file.append(errorLog, "%s\n\n".format(args.text()));
+	}
+	version (Console) {
+		.writeln(args);
+	}
 }
 
 debug private import std.datetime;
