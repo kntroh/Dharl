@@ -604,7 +604,7 @@ class MLImage : Undoable {
 			}
 		}
 
-		cloneCombi(_combi, src._combi);
+		changed |= cloneCombi(_combi, src._combi);
 
 		return changed;
 	}
@@ -654,7 +654,7 @@ class MLImage : Undoable {
 			}
 		}
 
-		cloneCombi(_combi, src._combi);
+		changed |= cloneCombi(_combi, src._combi);
 
 		return changed;
 	}
@@ -689,6 +689,7 @@ class MLImage : Undoable {
 		foreach (ref combi; _combi) {
 			if(_palette.length <= combi.selectedPalette) {
 				combi.selectedPalette = 0;
+				changed = true;
 			}
 		}
 		return changed;
@@ -761,7 +762,7 @@ class MLImage : Undoable {
 			r._layers ~= Layer(d, name[i], true);
 		}
 		r.pushPalette(this);
-		cloneCombi(r._combi, _combi);
+		cloneCombi(r._combi, _combi, layer);
 		return r;
 	}
 
@@ -1264,17 +1265,42 @@ class MLImage : Undoable {
 	}
 
 	/// Creates clone of combi to dest.
-	private void cloneCombi(ref Combination[] dest, in Combination[] combi) {
+	private bool cloneCombi(ref Combination[] dest, in Combination[] combi, in size_t[] layer = null) {
+		bool changed = false;
+
 		if (dest is null) {
 			dest = new Combination[combi.length];
-		} else {
+			changed = true;
+		} else if (dest.length != combi.length) {
 			dest.length = combi.length;
+			changed = true;
 		}
 		foreach (i, c; combi) {
-			dest[i].name = c.name;
-			dest[i].visible = c.visible.dup;
-			dest[i].selectedPalette = c.selectedPalette;
+			if (dest[i].name != c.name) {
+				dest[i].name = c.name;
+				changed = true;
+			}
+			bool[] visible;
+			if (layer) {
+				visible = new bool[layer.length];
+				size_t j = 0;
+				foreach (l; layer) {
+					visible[j] = c.visible[l];
+					j++;
+				}
+			} else {
+				visible = c.visible.dup;
+			}
+			if (dest[i].visible != visible) {
+				dest[i].visible = visible;
+				changed = true;
+			}
+			if (dest[i].selectedPalette != c.selectedPalette) {
+				dest[i].selectedPalette = c.selectedPalette;
+				changed = true;
+			}
 		}
+		return changed;
 	}
 
 	/// A data object for undo.
