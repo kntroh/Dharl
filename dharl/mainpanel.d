@@ -211,7 +211,7 @@ class MainPanel : Composite {
 					_paintArea.fixPaste();
 					if (item.pushImage(_paintArea.image)) {
 						_pushBase = _paintArea.image.storeData;
-						_currentName = item.p_text;
+						_currentName = item.dataTo!PImageParams.name;
 						modified(item);
 						return true;
 					}
@@ -230,7 +230,7 @@ class MainPanel : Composite {
 				_paintPreview.redraw();
 				_layerList.redraw();
 				_pushBase = _paintArea.image.storeData;
-				_currentName = item.p_text;
+				_currentName = item.dataTo!PImageParams.name;
 				break;
 			default: assert (0);
 			}
