@@ -604,7 +604,7 @@ class MLImage : Undoable {
 			}
 		}
 
-		changed |= cloneCombi(_combi, src._combi);
+		changed |= pushCombinations(src._combi);
 
 		return changed;
 	}
@@ -654,7 +654,7 @@ class MLImage : Undoable {
 			}
 		}
 
-		changed |= cloneCombi(_combi, src._combi);
+		changed |= pushCombinations(src._combi);
 
 		return changed;
 	}
@@ -689,6 +689,21 @@ class MLImage : Undoable {
 		foreach (ref combi; _combi) {
 			if(_palette.length <= combi.selectedPalette) {
 				combi.selectedPalette = 0;
+				changed = true;
+			}
+		}
+		return changed;
+	}
+	/// Push combinations data.
+	private bool pushCombinations(in Combination[] src) {
+		bool changed = cloneCombi(_combi, src);
+		foreach (ref combi; _combi) {
+			if (_palette.length <= combi.selectedPalette) {
+				combi.selectedPalette = 0;
+				changed = true;
+			}
+			if (combi.visible.length != _layers.length) {
+				combi.visible.length = _layers.length;
 				changed = true;
 			}
 		}
