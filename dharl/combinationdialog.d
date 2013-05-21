@@ -234,7 +234,7 @@ class CombinationDialog : DharlDialog {
 			string name = "%s_%s".format(_name.stripExtension(), index + 1);
 			_combiList.add(name, index);
 			auto visible = new bool[_image.layerCount];
-			visible[] = true;
+			visible[] = false;
 			auto combi = Combination(name, visible, 0);
 			_combiData.insertInPlace(index, combi);
 			auto pi = new PImageItem(_preview, SWT.NONE, index);
