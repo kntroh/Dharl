@@ -10,10 +10,12 @@ private import util.environment;
 private import util.graphics;
 private import util.utils;
 
+private import dharl.combinationdialog;
 private import dharl.common;
 private import dharl.dialogs;
 private import dharl.mainpanel;
 
+private import dharl.image.mlimage;
 private import dharl.image.susie;
 
 private import dharl.ui.uicommon;
@@ -23,6 +25,7 @@ private import std.algorithm;
 private import std.array;
 private import std.conv;
 private import std.file;
+private import std.getopt;
 private import std.path;
 private import std.string;
 
@@ -31,19 +34,95 @@ private import org.eclipse.swt.all;
 private import java.lang.all : ArrayWrapperString2;
 private import java.nonstandard.Locale;
 
+/// Pipe name for process communication.
+private immutable PIPE_NAME = "dharl";
+
+/// Commands of process communication.
+private immutable MSG_EXECUTE      = "execute";
+/// ditto
+private immutable MSG_GET_ARGUMENT = "get argument";
+/// ditto
+private immutable MSG_ARGUMENT     = "argument "; // appends filepath after space
+/// ditto
+private immutable MSG_QUIT         = "quit";
+
 /// Entry point of program.
 void main(string[] args) {
 	string exe = .moduleFileName(args[0]);
 	.coutf("Execute: %s", exe);
 	.errorLog = "%s.log".format(exe);
 
-	// Pipe name for process communication.
-	static immutable PIPE_NAME = "dharl";
-	// Commands of process communication.
-	static immutable MSG_EXECUTE      = "execute";
-	static immutable MSG_GET_ARGUMENT = "get argument";
-	static immutable MSG_ARGUMENT     = "argument "; // appends filepath after space
-	static immutable MSG_QUIT         = "quit";
+	// Load application configuration.
+	string appData = .appData(exe.dirName(), true).buildPath("dharl").buildPath("settings.xml");
+	.coutf("AppData: %s", appData);
+	auto c = new DCommon(exe);
+	if (appData.exists()) {
+		try {
+			c.conf.readXMLFile(appData);
+		} catch (Exception e) {
+			.erroroutf("Read failure: %s", appData);
+		}
+	}
+	// Reads language file.
+	auto lang = c.moduleFileName.dirName().buildPath("lang").buildPath(.caltureName().setExtension(".xml"));
+	if (lang.exists()) {
+		try {
+			c.text.readXMLFile(lang);
+		} catch (Exception e) {
+			.erroroutf("Read failure: %s", lang);
+		}
+	}
+
+	// Gets command line options.
+	bool help = false;
+	bool writeCombi = false;
+	int imageType = c.conf.combinationImageType;
+	string targDir = ".";
+	.getopt(
+		args,
+		"h|help", &help,
+		"w|write-combinations", &writeCombi,
+		"t|image-type", &imageType,
+		"d|target-directory", &targDir
+	);
+
+	if (help) {
+		// Print help message.
+		auto supportFormats = SUPPORTED_FORMATS.dup.join(";");
+
+		string[] imageTypes;
+		foreach (typeValue; COMBINATION_IMAGE_TYPES) {
+			ubyte depth = .combinationImageTypeToDepth(typeValue);
+			string f;
+			switch (.combinationImageTypeToFormat(typeValue)) {
+			case SWT.IMAGE_BMP:
+				f = c.text.fSaveImageTypeBitmap;
+				break;
+			case SWT.IMAGE_PNG:
+				f = c.text.fSaveImageTypePNG;
+				break;
+			default:
+				assert (0);
+			}
+			string type = c.text.fImageTypeInUsage;
+			imageTypes ~= type.format(typeValue, f.format(depth, 1 << depth));
+		}
+
+		.coutf(c.text.usage, VERSION, supportFormats, imageTypes.join("\n"));
+		return;
+	}
+
+	if (writeCombi) {
+		// Write combinations from *.dhr files to image file.
+		string[] argFiles;
+		foreach (i, arg; args[1 .. $]) {
+			if (0 == arg.extension().filenameCmp(".dhr")) {
+				argFiles ~= arg;
+			}
+		}
+		writeCombinations(argFiles, imageType, targDir);
+		return;
+	}
 
 	// Files in startup arguments.
 	auto argFiles = new string[args.length - 1];
@@ -69,27 +148,6 @@ void main(string[] args) {
 		// Opened files at existing process.
 		// So quit this process.
 		return;
-	}
-
-	// Load application configuration.
-	string appData = .appData(exe.dirName(), true).buildPath("dharl").buildPath("settings.xml");
-	.coutf("AppData: %s", appData);
-	auto c = new DCommon(exe);
-	if (appData.exists()) {
-		try {
-			c.conf.readXMLFile(appData);
-		} catch (Exception e) {
-			.erroroutf("Read failure: %s", appData);
-		}
-	}
-	// Reads language file.
-	auto lang = c.moduleFileName.dirName().buildPath("lang").buildPath(.caltureName().setExtension(".xml"));
-	if (lang.exists()) {
-		try {
-			c.text.readXMLFile(lang);
-		} catch (Exception e) {
-			.erroroutf("Read failure: %s", lang);
-		}
 	}
 
 	// Creates window and controls.
@@ -529,4 +587,32 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	c.conf.mainWindow.value.refWindow(shell);
 
 	return mainPanel;
+}
+
+/// Writes combinations in *.dhr files to image files.
+void writeCombinations(in string[] dhrFiles, int imageType, string targDir) {
+	int imageFormat;
+	ubyte depth;
+	try {
+		imageFormat = .combinationImageTypeToFormat(imageType);
+		depth = .combinationImageTypeToDepth(imageType);
+	} catch (SWTException e) {
+		.erroroutf("Invalid image type: %s", imageType);
+		return;
+	}
+	foreach (file; dhrFiles) {
+		MLImage image;
+		try {
+			image = new MLImage(file);
+		} catch (Exception e) {
+			.erroroutf("Failed to read file: %s", file);
+			continue;
+		}
+		try {
+			image.writeCombination(imageFormat, depth, targDir);
+		} catch (Exception e) {
+			.erroroutf("Failed to write combinations: %s", file);
+			continue;
+		}
+	}
 }

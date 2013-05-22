@@ -201,14 +201,21 @@ class CombinationDialog : DharlDialog {
 		}
 
 		// image type and depth
-		string bmp = c.text.fSaveImageTypeBitmap;
-		string png = c.text.fSaveImageTypePNG;
-		_imageType.add(bmp.format(8, 256));
-		_imageType.add(bmp.format(4, 16));
-		_imageType.add(bmp.format(1, 2));
-		_imageType.add(png.format(8, 256));
-		_imageType.add(png.format(4, 16));
-		_imageType.add(png.format(1, 2));
+		foreach (typeValue; COMBINATION_IMAGE_TYPES) {
+			ubyte depth = .combinationImageTypeToDepth(typeValue);
+			string f;
+			switch (.combinationImageTypeToFormat(typeValue)) {
+			case SWT.IMAGE_BMP:
+				f = c.text.fSaveImageTypeBitmap;
+				break;
+			case SWT.IMAGE_PNG:
+				f = c.text.fSaveImageTypePNG;
+				break;
+			default:
+				assert (0);
+			}
+			_imageType.add(f.format(depth, 1 << depth));
+		}
 		c.conf.combinationImageType.value.refSelectionIndex(_imageType);
 
 		// output folder
@@ -381,46 +388,18 @@ class CombinationDialog : DharlDialog {
 	/// Selection depth.
 	@property
 	private ubyte selectedDepth() {
-		switch (_imageType.p_selectionIndex) {
-		case 0: // 256-colors bitmap
-			return 8;
-		case 1: // 16-colors bitmap
-			return 4;
-		case 2: // 2-colors bitmap
-			return 1;
-		case 3: // 256-colors png
-			return 8;
-		case 4: // 16-colors png
-			return 4;
-		case 5: // 2-colors png
-			return 1;
-		default:
-			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
-			assert (0);
-		}
+		return .combinationImageTypeToDepth(_imageType.p_selectionIndex);
 	}
-	/// Selection image type.
+	/// Selection image format.
 	@property
-	private int selectedImageType() {
-		switch (_imageType.p_selectionIndex) {
-		case 0: // 256-colors bitmap
-		case 1: // 16-colors bitmap
-		case 2: // 2-colors bitmap
-			return SWT.IMAGE_BMP;
-		case 3: // 256-colors png
-		case 4: // 16-colors png
-		case 5: // 2-colors png
-			return SWT.IMAGE_PNG;
-		default:
-			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
-			assert (0);
-		}
+	private int selectedImageFormat() {
+		return .combinationImageTypeToFormat(_imageType.p_selectionIndex);
 	}
 
 	/// Save combinations.
 	private void saveCombination() {
 		ubyte depth = selectedDepth;
-		int imageType = selectedImageType;
+		int imageType = selectedImageFormat;
 		string dir = _target.p_text.absolutePath(c.moduleFileName.dirName());
 		try {
 			_image.writeCombination(imageType, depth, dir, (ref string[] filename, out bool cancel) {
@@ -445,5 +424,46 @@ class CombinationDialog : DharlDialog {
 
 	protected override bool apply() {
 		return true;
+	}
+}
+
+/// Selectable combination image types.
+immutable COMBINATION_IMAGE_TYPES = [0, 1, 2, 3, 4, 5];
+
+/// Gets color depth from image type value.
+ubyte combinationImageTypeToDepth(int imageType) {
+	switch (imageType) {
+	case 0: // 256-colors bitmap
+		return 8;
+	case 1: // 16-colors bitmap
+		return 4;
+	case 2: // 2-colors bitmap
+		return 1;
+	case 3: // 256-colors png
+		return 8;
+	case 4: // 16-colors png
+		return 4;
+	case 5: // 2-colors png
+		return 1;
+	default:
+		SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		assert (0);
+	}
+}
+
+/// Gets image format from image type value.
+int combinationImageTypeToFormat(int imageType) {
+	switch (imageType) {
+	case 0: // 256-colors bitmap
+	case 1: // 16-colors bitmap
+	case 2: // 2-colors bitmap
+		return SWT.IMAGE_BMP;
+	case 3: // 256-colors png
+	case 4: // 16-colors png
+	case 5: // 2-colors png
+		return SWT.IMAGE_PNG;
+	default:
+		SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		assert (0);
 	}
 }

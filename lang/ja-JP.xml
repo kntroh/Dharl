@@ -67,6 +67,18 @@
   <about>バージョン情報(&amp;A)</about>
  </menu>
  <appName>Dharl</appName>
+ <usage>ドット絵エディタ Dharl
+Version.%s
+使い方:
+  dharl files ... { -options }
+
+  files                   画像ファイル (%s)
+  -h --help               ヘルプを表示して終了します
+  -w --write-combinations *.dhrファイル内の組み合わせを出力します
+  -t --image-type         -wと共に指定し、画像形式を選択します:
+%s
+  -d --target-directory   -wと共に指定し、出力先フォルダを選択します</usage>
+ <fImageTypeInUsage>                            %s: %s</fImageTypeInUsage>
  <fAppNameWithImage>%s - %s</fAppNameWithImage>
  <fAppNameWithImageChanged>*%s - %s</fAppNameWithImageChanged>
  <fQuestionDialog>確認 - %s</fQuestionDialog>

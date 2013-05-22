@@ -14,6 +14,12 @@ private import std.path;
 private import std.string;
 private import std.xml;
 
+/// Version of the application.
+immutable VERSION = import("@version.txt").chomp();
+
+/// Supported image formats of Dharl.
+immutable SUPPORTED_FORMATS = "*.dhr;*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx;*.edg".split(";");
+
 /// Common data and methods for the application.
 class DCommon {
 	/// Module file path of the application.
@@ -39,12 +45,21 @@ class DCommon {
 	/// All messages and texts.
 	@property
 	DText text() { return _text; }
+	/// ditto
+	@property
+	const
+	const(DText) text() { return _text; }
 	/// All icons and images.
 	@property
-	DImages image() { return _image; }
+	const
+	const(DImages) image() { return _image; }
 	/// Application configuration.
 	@property
 	DConfig conf() { return _conf; }
+	/// ditto
+	@property
+	const
+	const(DConfig) conf() { return _conf; }
 }
 
 /// A image ID and data.
@@ -160,6 +175,20 @@ class DText {
 
 	/// Messages.
 	mixin MsgProp!("appName", "Dharl");
+
+	mixin MsgProp!("usage", r"Dharl - The Pixel Art Editor
+Version.%s
+Usage:
+  dharl files ... { -options }
+
+  files                   Image files (%s)
+  -h --help               Print help and quit program
+  -w --write-combinations Write combinations from files (*.dhr) to image files
+  -t --image-type         Specified along with -w, specify the image format:
+%s
+  -d --target-directory   Specified along with -w, specify the output folder"); /// ditto
+	mixin MsgProp!("fImageTypeInUsage", "                            %s: %s"); /// ditto
+
 	mixin MsgProp!("fAppNameWithImage", "%s - %s"); /// ditto
 	mixin MsgProp!("fAppNameWithImageChanged", "*%s - %s"); /// ditto
 

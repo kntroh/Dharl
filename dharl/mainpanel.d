@@ -68,9 +68,6 @@ class MainPanel : Composite {
 	/// Receivers of loaded event.
 	void delegate(string file)[] loadedReceivers;
 
-	/// Default image file filter.
-	private static immutable FILTER = "*.dhr;*.bmp;*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.dpx;*.edg".split(";");
-
 	private DCommon _c = null;
 
 	private SusiePlugin _susiePlugin = null;
@@ -747,7 +744,7 @@ class MainPanel : Composite {
 		auto dlg = new FileDialog(this.p_shell, SWT.OPEN | SWT.MULTI);
 
 		// File filter.
-		string[] filter = FILTER.dup;
+		string[] filter = SUPPORTED_FORMATS.dup;
 		if (initSusiePlugin()) {
 			filter ~= _susiePlugin.susieExtensions;
 			filter = filter.sort().uniq().array();
@@ -802,7 +799,7 @@ class MainPanel : Composite {
 					scope (exit) s.close();
 					r ~= .loadEDG(s);
 				} else {
-					foreach (filter; FILTER) {
+					foreach (filter; SUPPORTED_FORMATS) {
 						if (filter.endsWith(ext)) {
 							auto buf = new ByteArrayInputStream(cast(byte[])data());
 							auto imgData = new ImageData(buf);

@@ -383,7 +383,7 @@ class AboutDialog : DharlDialog {
 
 		basicImageBox(area, .cimg(c.image.dharlLogo));
 
-		basicLabel(area, c.text.aboutMessage.value.format(import("@version.txt").chomp()));
+		basicLabel(area, c.text.aboutMessage.value.format(VERSION));
 	}
 
 	protected override bool apply() {
