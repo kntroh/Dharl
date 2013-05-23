@@ -24,6 +24,21 @@ private import std.string;
 
 private import org.eclipse.swt.all;
 
+/// Creates instance of DialogState from c.
+DialogState dialogStateFrom(in DCommon c, bool modal = true, bool resizable = true, bool keyOperation = true) {
+	DialogState state;
+	state.modal        = modal;
+	state.resizable    = resizable;
+	state.keyOperation = keyOperation;
+	state.yes    = c.text.yes;
+	state.ok     = c.text.ok;
+	state.no     = c.text.no;
+	state.cancel = c.text.cancel;
+	state.apply  = c.text.apply;
+	state.buttonWidthMin = c.conf.dialogButtonWidth;
+	return state;
+}
+
 /// Abstract dialog for Dharl.
 abstract class DharlDialog : BasicDialog {
 
@@ -32,19 +47,7 @@ abstract class DharlDialog : BasicDialog {
 	/// The only constructor.
 	this (DCommon c, Shell parent, string title, Image image, bool modal, bool resizable, bool keyOperation, DBtn buttons) {
 		_c = c;
-
-		DialogState state;
-		state.modal        = modal;
-		state.resizable    = resizable;
-		state.keyOperation = keyOperation;
-		state.yes    = c.text.yes;
-		state.ok     = c.text.ok;
-		state.no     = c.text.no;
-		state.cancel = c.text.cancel;
-		state.apply  = c.text.apply;
-		state.buttonWidthMin = c.conf.dialogButtonWidth;
-
-		super (parent, title, image, buttons, state);
+		super (parent, title, image, buttons, dialogStateFrom(c, modal, resizable, keyOperation));
 	}
 
 	/// Common functions and texts of application.

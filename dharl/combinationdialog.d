@@ -1,5 +1,6 @@
 
-/// This module includes dialog of editor for combinations of layers in MLImage.
+/// This module includes dialog of editor for
+/// combinations of layers in MLImage and members related to it.
 ///
 /// License: Public Domain
 /// Authors: kntroh

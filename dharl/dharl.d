@@ -20,6 +20,7 @@ private import dharl.image.susie;
 
 private import dharl.ui.uicommon;
 private import dharl.ui.dwtutils;
+private import dharl.ui.simpletextdialog;
 
 private import std.algorithm;
 private import std.array;
@@ -108,7 +109,14 @@ void main(string[] args) {
 			imageTypes ~= type.format(typeValue, f.format(depth, 1 << depth));
 		}
 
-		.coutf(c.text.usage, VERSION, supportFormats, imageTypes.join("\n"));
+		string message = c.text.usage.value.format(VERSION, supportFormats, imageTypes.join("\n"));
+		.coutf(message);
+
+		auto dialog = new SimpleTextDialog(null, c.text.appName, .cimg(c.image.dharl), dialogStateFrom(c));
+		dialog.p_message = message;
+		dialog.open();
+		dialog.p_display.startApplication(&dialog.isDisposed);
+
 		return;
 	}
 
@@ -197,7 +205,7 @@ void main(string[] args) {
 	scope (exit) sendToPipe(PIPE_NAME, MSG_QUIT);
 
 	// Open window.
-	shell.startApplication((Exception e) {
+	shell.startApplication((Throwable e) {
 		.errorout(e);
 		showErrorDialog(shell, .text(e), c.text.fErrorDialog.value.format(c.text.appName));
 		return true;

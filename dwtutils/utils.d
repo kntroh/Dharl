@@ -23,18 +23,23 @@ private import org.eclipse.swt.all;
 /// If it returns false, quit the application.
 /// If catchException is null,
 /// quit the application is when someone thrown exception.
-void startApplication(Shell mainShell, bool delegate(Exception e) catchException = null) {
+void startApplication(Shell mainShell, bool delegate(Throwable e) catchException = null) {
 	.enforce(mainShell);
-	auto display = mainShell.p_display;
+	mainShell.open();
+	startApplication(mainShell.p_display, &mainShell.isDisposed, catchException);
+}
+/// ditto
+void startApplication(Display display, bool delegate() isQuit, bool delegate(Throwable e) catchException = null) {
+	.enforce(display);
+	.enforce(isQuit);
 	scope (exit) display.dispose();
 
-	mainShell.open();
-	while (!mainShell.p_disposed) {
+	while (!isQuit()) {
 		try {
 			if (!display.readAndDispatch()) {
 				display.sleep();
 			}
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			if (catchException) {
 				if (!catchException(e)) {
 					throw e;

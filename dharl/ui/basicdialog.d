@@ -168,6 +168,12 @@ abstract class BasicDialog {
 		_shl.open();
 	}
 
+	/// Gets instance of Display this dialog belongs.
+	Display getDisplay() { return _shl.p_display; }
+
+	/// If dialog is disposed, returns true.
+	bool isDisposed() { return _shl.p_disposed; }
+
 	/// This method is call when shell open.
 	protected void onOpen(Shell shell) {
 		// No processing.

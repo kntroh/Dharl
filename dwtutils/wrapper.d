@@ -53,6 +53,7 @@ shell.p_visible = true;
 ---
 */
 mixin GetSetWrapper!("Accelerator"); /// ditto
+mixin GetSetWrapper!("Active"); /// ditto
 mixin GetSetWrapper!("Alpha"); /// ditto
 mixin GetSetWrapper!("Antialias"); /// ditto
 mixin GetSetWrapper!("AutoHide"); /// ditto
