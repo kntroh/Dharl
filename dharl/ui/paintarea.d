@@ -1323,7 +1323,7 @@ class PaintArea : Canvas, Undoable {
 
 	/// Utility methods for transform.
 	private int[] iPGetPixels(int ix, int iy) {
-		enforce (_pasteLayer);
+		.enforce(_pasteLayer);
 		auto ps = new int[_pasteLayer.layerCount];
 		foreach (i, ref p; ps) {
 			p = _pasteLayer.layer(i).image.getPixel(ix, iy);
@@ -1332,23 +1332,49 @@ class PaintArea : Canvas, Undoable {
 	}
 	/// ditto
 	private void iPSetPixels(int ix, int iy, int[] pixels) {
-		enforce (_pasteLayer);
+		.enforce(_pasteLayer);
 		assert (pixels.length == _pasteLayer.layerCount);
 		foreach (i, p; pixels) {
 			_pasteLayer.layer(i).image.setPixel(ix, iy, p);
 		}
 	}
 	/// ditto
-	private int[] iGetPixels2(int ix, int iy) {
-		return iGetPixels(ix, iy).dup;
+	private int[] iGetPixels2(int ix, int iy, bool allLayers) {
+		checkWidget();
+		checkInit();
+		if (allLayers) {
+			if (_image.empty) return [];
+			if (!iInImage(ix, iy)) return [];
+			_pixelsTemp.length = _image.layerCount;
+			foreach (l; 0 .. _image.layerCount) {
+				_pixelsTemp[l] = _image.layer(l).image.getPixel(ix, iy);
+			}
+			return _pixelsTemp.dup;
+		} else {
+			return iGetPixels(ix, iy).dup;
+		}
 	}
 	/// ditto
-	private void iSetPixels2(int ix, int iy, int[] pixels) {
-		iSetPixels(ix, iy, pixels);
+	private void iSetPixels2(int ix, int iy, bool allLayers, int[] pixels) {
+		checkWidget();
+		checkInit();
+		if (allLayers) {
+			.enforce(pixels.length == _image.layerCount);
+			if (_image.empty) return;
+			if (!iInImage(ix, iy)) return;
+			foreach (l; 0 .. _image.layerCount) {
+				if (-1 == pixels[l]) continue;
+				_image.layer(l).image.setPixel(ix, iy, pixels[l]);
+			}
+			clearCache(false);
+			redraw(ixtocx(ix), iytocy(iy), itoc(1), itoc(1), false);
+		} else {
+			iSetPixels(ix, iy, pixels);
+		}
 	}
 
 	/// Increase or decrease brightness.
-	void changeBrightness(int upDown) {
+	void changeBrightness(int upDown, bool allLayers) {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
@@ -1382,18 +1408,18 @@ class PaintArea : Canvas, Undoable {
 			if (_um) _um.store(this);
 			clearCache(false);
 			iFillRect((int ix, int iy) {
-				auto ps = iGetPixels2(ix, iy);
+				auto ps = iGetPixels2(ix, iy, allLayers);
 				chg(ps);
-				iSetPixels2(ix, iy, ps);
+				iSetPixels2(ix, iy, allLayers, ps);
 			}, 0, 0, _image.width, _image.height);
 		} else {
 			if (_um) _um.store(this);
 			clearCache(false);
 			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
 			iFillRect((int ix, int iy) {
-				auto ps = iGetPixels2(ix, iy);
+				auto ps = iGetPixels2(ix, iy, allLayers);
 				chg(ps);
-				iSetPixels2(ix, iy, ps);
+				iSetPixels2(ix, iy, allLayers, ps);
 			}, ir.x, ir.y, ir.width, ir.height);
 		}
 		clearCache(false);
@@ -1401,7 +1427,7 @@ class PaintArea : Canvas, Undoable {
 	}
 
 	/// Transforms image.
-	private void transform(void function
+	private void transform(bool allLayers, void function
 			(int[] delegate(int x, int y) pget,
 			void delegate(int x, int y, int[] pixels) pset,
 			int sx, int sy, int w, int h) func) {
@@ -1415,52 +1441,55 @@ class PaintArea : Canvas, Undoable {
 		} else if (_iSelRange.p_empty) {
 			if (_um) _um.store(this);
 			clearCache(false);
-			func(&iGetPixels2, &iSetPixels2,
-				0, 0, _image.width, _image.height);
+			auto pget = (int x, int y) => iGetPixels2(x, y, allLayers);
+			auto pset = (int x, int y, int[] pixels) => iSetPixels2(x, y, allLayers, pixels);
+			func(pget, pset, 0, 0, _image.width, _image.height);
 		} else {
 			if (_um) _um.store(this);
 			clearCache(false);
 			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
-			func(&iGetPixels2, &iSetPixels2, ir.x, ir.y, ir.width, ir.height);
+			auto pget = (int x, int y) => iGetPixels2(x, y, allLayers);
+			auto pset = (int x, int y, int[] pixels) => iSetPixels2(x, y, allLayers, pixels);
+			func(pget, pset, ir.x, ir.y, ir.width, ir.height);
 		}
 		drawReceivers.raiseEvent();
 	}
 
 	/// Transforms image data to mirror horizontally or vertically.
-	void mirrorHorizontal() {
-		transform(&.mirrorHorizontal!(int[]));
+	void mirrorHorizontal(bool allLayers) {
+		transform(allLayers, &.mirrorHorizontal!(int[]));
 	}
 	/// ditto
-	void mirrorVertical() {
-		transform(&.mirrorVertical!(int[]));
+	void mirrorVertical(bool allLayers) {
+		transform(allLayers, &.mirrorVertical!(int[]));
 	}
 	/// Flips image data horizontally or vertically.
-	void flipHorizontal() {
-		transform(&.flipHorizontal!(int[]));
+	void flipHorizontal(bool allLayers) {
+		transform(allLayers, &.flipHorizontal!(int[]));
 	}
 	/// ditto
-	void flipVertical() {
-		transform(&.flipVertical!(int[]));
+	void flipVertical(bool allLayers) {
+		transform(allLayers, &.flipVertical!(int[]));
 	}
 	/// Moves image data in each direction.
 	/// Rotates a pixel of bounds.
-	void rotateRight() {
-		transform(&.rotateRight!(int[]));
+	void rotateRight(bool allLayers) {
+		transform(allLayers, &.rotateRight!(int[]));
 	}
 	/// ditto
-	void rotateLeft() {
-		transform(&.rotateLeft!(int[]));
+	void rotateLeft(bool allLayers) {
+		transform(allLayers, &.rotateLeft!(int[]));
 	}
 	/// ditto
-	void rotateUp() {
-		transform(&.rotateUp!(int[]));
+	void rotateUp(bool allLayers) {
+		transform(allLayers, &.rotateUp!(int[]));
 	}
 	/// ditto
-	void rotateDown() {
-		transform(&.rotateDown!(int[]));
+	void rotateDown(bool allLayers) {
+		transform(allLayers, &.rotateDown!(int[]));
 	}
 	/// Turns image.
-	void turn(real deg) {
+	void turn(real deg, bool allLayers) {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
@@ -1476,16 +1505,18 @@ class PaintArea : Canvas, Undoable {
 			clearCache(false);
 			auto back = new int[_layers.length];
 			back[] = backgroundPixel;
-			.turn(deg, &iGetPixels2, &iSetPixels2,
-				0, 0, _image.width, _image.height, back);
+			auto pget = (int x, int y) => iGetPixels2(x, y, allLayers);
+			auto pset = (int x, int y, int[] pixels) => iSetPixels2(x, y, allLayers, pixels);
+			.turn(deg, pget, pset, 0, 0, _image.width, _image.height, back);
 		} else {
 			if (_um) _um.store(this);
 			clearCache(false);
 			auto back = new int[_layers.length];
 			back[] = backgroundPixel;
 			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
-			.turn(deg, &iGetPixels2, &iSetPixels2,
-				ir.x, ir.y, ir.width, ir.height, back);
+			auto pget = (int x, int y) => iGetPixels2(x, y, allLayers);
+			auto pset = (int x, int y, int[] pixels) => iSetPixels2(x, y, allLayers, pixels);
+			.turn(deg, pget, pset, ir.x, ir.y, ir.width, ir.height, back);
 		}
 		clearCache(false);
 		drawReceivers.raiseEvent();
@@ -1576,7 +1607,7 @@ class PaintArea : Canvas, Undoable {
 				if (_um) _um.store(this);
 				redrawCursorArea();
 				if (scaling) {
-					.resize!(int[])(iNewW, iNewH, &iGetPixels, &iSetPixels2, ix, iy, iw, ih);
+					.resize!(int[])(iNewW, iNewH, &iGetPixels, &iSetPixels, ix, iy, iw, ih);
 				} else {
 					if (iw < iNewW) {
 						iFillRect(&iSetBackPixel, ix + iw, iy, iNewW - iw, ih);
@@ -1928,7 +1959,7 @@ class PaintArea : Canvas, Undoable {
 		redraw(ixtocx(ix), iytocy(iy), itoc(1), itoc(1), false);
 	}
 	/// ditto
-	private void iSetPixels(int ix, int iy, in int[] pixels) {
+	private void iSetPixels(int ix, int iy, int[] pixels) {
 		checkWidget();
 		checkInit();
 		enforce(pixels.length == _layers.length);

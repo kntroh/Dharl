@@ -758,3 +758,54 @@ template EventName(int EventType) {
 }
 static assert (EventName!(SWT.KeyDown) == "keyPressed");
 static assert (EventName!(SWT.Dispose) == "widgetDisposed()");
+
+/// This is used when change a processing of events
+/// depending on the state of any key.
+/// Example:
+/// ---
+/// // Switches target layers with shift key down.
+/// void rotateLeft (bool allLayers) { /* ... */ }
+/// void rotateDown (bool allLayers) { /* ... */ }
+/// void rotateUp   (bool allLayers) { /* ... */ }
+/// void rotateRight(bool allLayers) { /* ... */ }
+/// auto s = new KeyObserver(trans, SWT.SHIFT);
+/// basicToolItem(tools, "Rotate &Left",  s.withShift(&rotateLeft));
+/// basicToolItem(tools, "Rotate &Down",  s.withShift(&rotateDown));
+/// basicToolItem(tools, "Rotate &Up",    s.withShift(&rotateUp));
+/// basicToolItem(tools, "Rotate &Right", s.withShift(&rotateRight));
+///
+/// void func() {
+/// 	if (s.keyDown) {
+/// 		// ...
+/// 	} else {
+/// 		// ...
+/// 	}
+/// }
+/// ---
+class KeyObserver {
+	/// Is key down?
+	private bool _keyDown = false;
+
+	/// Creates instance and starts observation of key.
+	/// When occurs dispose event of widget,
+	/// run cleanup function for release all resources.
+	this (Widget widget, int keyCode) {
+		auto keyDownInfo = widget.p_display.p_filters!(SWT.KeyDown) ~= (Event e) { _keyDown |= e.keyCode == keyCode; };
+		auto keyUpInfo = widget.p_display.p_filters!(SWT.KeyUp) ~= (Event e) { _keyDown ^= e.keyCode == keyCode; };
+		widget.p_listeners!(SWT.Dispose) ~= {
+			keyDownInfo.remove();
+			keyUpInfo.remove();
+		};
+	}
+
+	/// Is shift key down?
+	@property
+	const
+	bool keyDown() { return _keyDown; }
+
+	/// Creates event listener from delegate with shift parameter.
+	const
+	void delegate(Event e) withKey(void delegate(bool shift) listener) {
+		return (Event e)  => listener(keyDown);
+	}
+}

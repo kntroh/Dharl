@@ -79,6 +79,9 @@ class MainPanel : Composite {
 	private ColorSlider _colorSlider = null;
 	private PImageList _imageList = null;
 
+	// Switches processing of some with state of shift key.
+	private KeyObserver _shiftDown = null;
+
 	/// Tool bar for tones.
 	private ToolBar _tones = null;
 
@@ -105,6 +108,8 @@ class MainPanel : Composite {
 		_currentName = _c.text.newFilename;
 
 		this.p_layout = new FillLayout;
+
+		_shiftDown = new KeyObserver(this, SWT.SHIFT);
 
 		_um = new UndoManager(_c.conf.undoMax);
 
@@ -531,18 +536,18 @@ class MainPanel : Composite {
 		// Toolbar of transform operation.
 		auto trans = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
 		trans.p_layoutData = GD(GridData.FILL_HORIZONTAL).wHint(0).hSpan(2);
-		basicToolItem(trans, _c.text.menu.turn90,  .cimg(_c.image.turn90),  { turn(90);  });
-		basicToolItem(trans, _c.text.menu.turn270, .cimg(_c.image.turn270), { turn(270); });
-		basicToolItem(trans, _c.text.menu.turn180, .cimg(_c.image.turn180), { turn(180); });
+		basicToolItem(trans, _c.text.menu.turn90, .cimg(_c.image.turn90), &turn90);
+		basicToolItem(trans, _c.text.menu.turn270, .cimg(_c.image.turn270), &turn270);
+		basicToolItem(trans, _c.text.menu.turn180, .cimg(_c.image.turn180), &turn180);
 		basicToolItem(trans, _c.text.menu.turn, .cimg(_c.image.turn), &turn);
-		basicToolItem(trans, _c.text.menu.mirrorHorizontal, .cimg(_c.image.mirrorHorizontal), &paintArea.mirrorHorizontal);
-		basicToolItem(trans, _c.text.menu.mirrorVertical, .cimg(_c.image.mirrorVertical), &paintArea.mirrorVertical);
-		basicToolItem(trans, _c.text.menu.flipHorizontal, .cimg(_c.image.flipHorizontal), &paintArea.flipHorizontal);
-		basicToolItem(trans, _c.text.menu.flipVertical, .cimg(_c.image.flipVertical), &paintArea.flipVertical);
-		basicToolItem(trans, _c.text.menu.rotateLeft, .cimg(_c.image.rotateLeft), &paintArea.rotateLeft);
-		basicToolItem(trans, _c.text.menu.rotateDown, .cimg(_c.image.rotateDown), &paintArea.rotateDown);
-		basicToolItem(trans, _c.text.menu.rotateUp, .cimg(_c.image.rotateUp), &paintArea.rotateUp);
-		basicToolItem(trans, _c.text.menu.rotateRight, .cimg(_c.image.rotateRight), &paintArea.rotateRight);
+		basicToolItem(trans, _c.text.menu.mirrorHorizontal, .cimg(_c.image.mirrorHorizontal), &mirrorHorizontal);
+		basicToolItem(trans, _c.text.menu.mirrorVertical, .cimg(_c.image.mirrorVertical), &mirrorVertical);
+		basicToolItem(trans, _c.text.menu.flipHorizontal, .cimg(_c.image.flipHorizontal), &flipHorizontal);
+		basicToolItem(trans, _c.text.menu.flipVertical, .cimg(_c.image.flipVertical), &flipVertical);
+		basicToolItem(trans, _c.text.menu.rotateLeft, .cimg(_c.image.rotateLeft), &rotateLeft);
+		basicToolItem(trans, _c.text.menu.rotateDown, .cimg(_c.image.rotateDown), &rotateDown);
+		basicToolItem(trans, _c.text.menu.rotateUp, .cimg(_c.image.rotateUp), &rotateUp);
+		basicToolItem(trans, _c.text.menu.rotateRight, .cimg(_c.image.rotateRight), &rotateRight);
 		basicToolItem(trans, _c.text.menu.increaseBrightness, .cimg(_c.image.increaseBrightness), &increaseBrightness);
 		basicToolItem(trans, _c.text.menu.decreaseBrightness, .cimg(_c.image.decreaseBrightness), &decreaseBrightness);
 		basicToolItem(trans, _c.text.menu.resize, .cimg(_c.image.resize), &resize);
@@ -1210,23 +1215,49 @@ class MainPanel : Composite {
 		modified(item);
 	}
 
+	/// Turns any degrees the image.
+	/// This method shows a dialog box for degree inputs.
 	void turn() {
 		checkWidget();
 		checkInit();
+		bool shiftDown = _shiftDown.keyDown;
 		auto dialog = new TurnDialog(this.p_shell, _c);
 		dialog.init(0);
 		dialog.appliedReceivers ~= {
-			turn(dialog.degree);
+			turnImpl(dialog.degree, shiftDown);
 		};
 		dialog.open();
 	}
+	/// Turns any degrees the image.
 	void turn(int degree) {
 		checkWidget();
 		checkInit();
+		turnImpl(degree, _shiftDown.keyDown);
+	}
+	/// ditto
+	void turnImpl(int degree, bool shiftDown) {
 		degree = normalizeRange(degree, 0, 360);
 		if (0 == degree) return;
-		_paintArea.turn(degree);
+		_paintArea.turn(degree, shiftDown);
 	}
+	/// ditto
+	void turn90() {
+		checkWidget();
+		checkInit();
+		turn(90);
+	};
+	/// ditto
+	void turn270() {
+		checkWidget();
+		checkInit();
+		turn(270);
+	};
+	/// ditto
+	void turn180() {
+		checkWidget();
+		checkInit();
+		turn(180);
+	};
 
 	/// Creates gradation colors from selected pixel 1 to pixel 2.
 	void createGradation() {
@@ -1256,13 +1287,69 @@ class MainPanel : Composite {
 		// Update of ColorSlider is not need.
 	}
 
+	/// Transforms image data to mirror horizontally or vertically.
+	void mirrorHorizontal() {
+		checkWidget();
+		checkInit();
+		_paintArea.mirrorHorizontal(_shiftDown.keyDown);
+	}
+	/// ditto
+	void mirrorVertical() {
+		checkWidget();
+		checkInit();
+		_paintArea.mirrorVertical(_shiftDown.keyDown);
+	}
+
+	/// Flips image data horizontally or vertically.
+	void flipHorizontal() {
+		checkWidget();
+		checkInit();
+		_paintArea.flipHorizontal(_shiftDown.keyDown);
+	}
+	/// ditto
+	void flipVertical() {
+		checkWidget();
+		checkInit();
+		_paintArea.flipVertical(_shiftDown.keyDown);
+	}
+
+	/// Moves image data in each direction.
+	/// Rotates a pixel of bounds.
+	void rotateLeft() {
+		checkWidget();
+		checkInit();
+		_paintArea.rotateLeft(_shiftDown.keyDown);
+	}
+	/// ditto
+	void rotateDown() {
+		checkWidget();
+		checkInit();
+		_paintArea.rotateDown(_shiftDown.keyDown);
+	}
+	/// ditto
+	void rotateUp() {
+		checkWidget();
+		checkInit();
+		_paintArea.rotateUp(_shiftDown.keyDown);
+	}
+	/// ditto
+	void rotateRight() {
+		checkWidget();
+		checkInit();
+		_paintArea.rotateRight(_shiftDown.keyDown);
+	}
+
 	/// Increase or decrease brightness.
 	void increaseBrightness() {
-		_paintArea.changeBrightness(32);
+		checkWidget();
+		checkInit();
+		_paintArea.changeBrightness(32, _shiftDown.keyDown);
 	}
 	/// ditto
 	void decreaseBrightness() {
-		_paintArea.changeBrightness(-32);
+		checkWidget();
+		checkInit();
+		_paintArea.changeBrightness(-32, _shiftDown.keyDown);
 	}
 
 	/// Is editing color mask?
