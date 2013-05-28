@@ -82,6 +82,11 @@ class MainPanel : Composite {
 	// Switches processing of some with state of shift key.
 	private KeyObserver _shiftDown = null;
 
+	/// Table of ToolItem from PaintMode.
+	private ToolItem[PaintMode] _modeItems;
+	/// ToolItem of range selection mode.
+	private ToolItem _toolOfRangeSelection;
+
 	/// Tool bar for tones.
 	private ToolBar _tones = null;
 
@@ -307,9 +312,10 @@ class MainPanel : Composite {
 		// Splitter of preview and toolbar.
 		auto ptSplitter = basicVSplitter(paintSplitter, false);
 		_c.conf.sashPosPreview_Tools.value.refSelection(ptSplitter);
-
 		// Preview of image in drawing.
 		_paintPreview = new PaintPreview(ptSplitter, SWT.BORDER | SWT.DOUBLE_BUFFERED);
+		// Tools for drawing.
+		constructModeToolBar(ptSplitter);
 
 		// Area of drawing.
 		_paintArea = new PaintArea(paintSplitter, SWT.BORDER | SWT.DOUBLE_BUFFERED);
@@ -318,77 +324,17 @@ class MainPanel : Composite {
 		_paintArea.enabledBackColor = _c.conf.enabledBackColor;
 
 		// Composite for controls related to color.
-		auto comp = basicComposite(ppSplitter, GL.window(3, false));
+		auto comp = basicComposite(ppSplitter, GL.window(2, false));
 
-		// Slider for changing color.
-		_colorSlider = basicVColorSlider(comp);
-		_colorSlider.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING).vSpan(2);
-		auto css = _colorSlider.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+		// Palette and color controls.
+		auto paletteComp = basicComposite(comp);
+		paletteComp.p_layoutData = GD.fill(false, true);
+		constructPaletteAndTools(paletteComp);
 
-		// Viewer of palette.
-		_paletteView = new PaletteView(comp, SWT.BORDER | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
-		_paletteView.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING).vSpan(4);
-		_paletteView.maskMode = _c.conf.maskMode;
-
-		// Drawing tools.
-		auto lToolBar = basicToolBar(comp);
-		lToolBar.p_layoutData = GD(GridData.FILL_HORIZONTAL);
-		basicToolItem(lToolBar, _c.text.menu.addLayer, cimg(_c.image.addLayer), &addLayer);
-		basicToolItem(lToolBar, _c.text.menu.removeLayer, cimg(_c.image.removeLayer), &removeLayer);
-		separator(lToolBar);
-		auto tUpLayer = basicToolItem(lToolBar, _c.text.menu.up, cimg(_c.image.up), &upLayer);
-		auto tDownLayer = basicToolItem(lToolBar, _c.text.menu.down, cimg(_c.image.down), &downLayer);
-
-		// List of layers.
-		_layerList = new LayerList(comp, SWT.BORDER | SWT.DOUBLE_BUFFERED);
-		_layerList.p_layoutData = GD(GridData.FILL_BOTH).vSpan(3);
-		_layerList.undoManager = um;
-		_layerList.p_listeners!(SWT.Selection) ~= {
-			tUpLayer.p_enabled = canUpLayer;
-			tDownLayer.p_enabled = canDownLayer;
-			statusChangedReceivers.raiseEvent();
-		};
-
-		// Tools for color control.
-		auto pToolBar = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
-		pToolBar.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_CENTER);
-		basicToolItem(pToolBar, _c.text.menu.createGradation,
-			cimg(_c.image.createGradation),
-			&createGradation);
-		ToolItem tMask;
-		tMask = basicToolItem(pToolBar, _c.text.menu.maskMode, cimg(_c.image.maskMode), {
-			maskMode = tMask.p_selection;
-		}, SWT.CHECK);
-		_c.conf.maskMode.value.refSelection(tMask);
-		ToolItem tBack;
-		tBack = basicToolItem(pToolBar, _c.text.menu.enabledBackColor, cimg(_c.image.enabledBackColor), {
-			_paintArea.enabledBackColor = tBack.p_selection;
-		}, SWT.CHECK);
-		_c.conf.enabledBackColor.value.refSelection(tBack);
-		void updatePaletteMenu() {
-			tMask.p_selection = maskMode;
-			tBack.p_selection = _paintArea.enabledBackColor;
-		}
-		statusChangedReceivers ~= &updatePaletteMenu;
-		updatePaletteMenu();
-
-		auto pToolBar2 = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
-		pToolBar2.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_CENTER);
-		auto tPOp = dropDownToolItem(pToolBar2, _c.text.menu.paletteOperation, .cimg(_c.image.paletteOperation), &paletteOperation);
-		tPOp.menu.p_listeners!(SWT.Show) ~= {
-			foreach (item; tPOp.menu.p_items) {
-				item.dispose();
-			}
-			void createMenu(size_t i) {
-				auto item = basicMenuItem(tPOp.menu, _c.text.fPaletteName.value.format(i + 1), {
-					selectPalette(i);
-				}, SWT.RADIO);
-				item.p_selection = (i == _paintArea.selectedPalette);
-			}
-			foreach (i; 0 .. _paintArea.palettes.length) {
-				createMenu(i);
-			}
-		};
+		// Layer list.
+		auto layersComp = basicComposite(comp);
+		layersComp.p_layoutData = GD.fill(true, true);
+		constructLayerList(layersComp);
 
 		// Initializes controls.
 		auto cs = _c.conf.character;
@@ -419,14 +365,115 @@ class MainPanel : Composite {
 		_layerList.init(_paintArea);
 		_colorSlider.color = _paletteView.color(_paletteView.pixel1);
 
-		tUpLayer.p_enabled = canUpLayer;
-		tDownLayer.p_enabled = canDownLayer;
+		// Selection tool.
+		if (_c.conf.tool == 0) {
+			_paintArea.rangeSelection = true;
+		} else {
+			_paintArea.rangeSelection = false;
+			foreach (i, mode; EnumMembers!PaintMode) {
+				if (_c.conf.tool == i + 1) {
+					_paintArea.mode = mode;
+					break;
+				}
+			}
+		}
+		refreshModeMenu();
 
-		constructModeToolBar(ptSplitter);
+		// Selection tone.
+		auto toneIndex = cast(int)_c.conf.tone - 1;
+		if (0 <= toneIndex && toneIndex < _c.conf.tones.length) {
+			_paintArea.tone = _c.conf.tones[toneIndex].value;
+		}
+		refreshTonesToolBar();
+
+		// Selection grids.
+		_paintArea.grid1 = _c.conf.mainGrid;
+		_paintArea.grid2 = _c.conf.subGrid;
 
 		// Stores image data for undo operation.
 		_pushBase = _paintArea.image.storeData;
 	}
+
+	/// Creates palette control and related tools.
+	void constructPaletteAndTools(Composite parent) {
+		parent.p_layout = GL.noMargin(2, false);
+
+		// Slider for changing color.
+		_colorSlider = basicVColorSlider(parent);
+		_colorSlider.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING);
+		auto css = _colorSlider.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+
+		// Viewer of palette.
+		_paletteView = new PaletteView(parent, SWT.BORDER | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
+		_paletteView.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING).vSpan(3);
+		_paletteView.maskMode = _c.conf.maskMode;
+
+		// Tools for color control.
+		auto pToolBar = basicToolBar(parent, SWT.WRAP | SWT.FLAT);
+		pToolBar.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_CENTER);
+		basicToolItem(pToolBar, _c.text.menu.createGradation,
+			cimg(_c.image.createGradation),
+			&createGradation);
+		ToolItem tMask;
+		tMask = basicToolItem(pToolBar, _c.text.menu.maskMode, cimg(_c.image.maskMode), {
+			maskMode = tMask.p_selection;
+		}, SWT.CHECK);
+		_c.conf.maskMode.value.refSelection(tMask);
+		ToolItem tBack;
+		tBack = basicToolItem(pToolBar, _c.text.menu.enabledBackColor, cimg(_c.image.enabledBackColor), {
+			_paintArea.enabledBackColor = tBack.p_selection;
+		}, SWT.CHECK);
+		_c.conf.enabledBackColor.value.refSelection(tBack);
+		void updatePaletteMenu() {
+			tMask.p_selection = maskMode;
+			tBack.p_selection = _paintArea.enabledBackColor;
+		}
+		statusChangedReceivers ~= &updatePaletteMenu;
+		updatePaletteMenu();
+
+		auto pToolBar2 = basicToolBar(parent, SWT.WRAP | SWT.FLAT);
+		pToolBar2.p_layoutData = GD(GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_CENTER);
+		auto tPOp = dropDownToolItem(pToolBar2, _c.text.menu.paletteOperation, .cimg(_c.image.paletteOperation), &paletteOperation);
+		tPOp.menu.p_listeners!(SWT.Show) ~= {
+			foreach (item; tPOp.menu.p_items) {
+				item.dispose();
+			}
+			void createMenu(size_t i) {
+				auto item = basicMenuItem(tPOp.menu, _c.text.fPaletteName.value.format(i + 1), {
+					selectPalette(i);
+				}, SWT.RADIO);
+				item.p_selection = (i == _paintArea.selectedPalette);
+			}
+			foreach (i; 0 .. _paintArea.palettes.length) {
+				createMenu(i);
+			}
+		};
+	}
+
+	/// Creates the layer list and related tools.
+	void constructLayerList(Composite parent) {
+		parent.p_layout = GL.noMargin(1, true);
+
+		// Tools for layer list.
+		auto lToolBar = basicToolBar(parent);
+		lToolBar.p_layoutData = GD.fill(true, false);
+		basicToolItem(lToolBar, _c.text.menu.addLayer, cimg(_c.image.addLayer), &addLayer);
+		basicToolItem(lToolBar, _c.text.menu.removeLayer, cimg(_c.image.removeLayer), &removeLayer);
+		separator(lToolBar);
+		auto tUpLayer = basicToolItem(lToolBar, _c.text.menu.up, cimg(_c.image.up), &upLayer);
+		auto tDownLayer = basicToolItem(lToolBar, _c.text.menu.down, cimg(_c.image.down), &downLayer);
+
+		// List of layers.
+		_layerList = new LayerList(parent, SWT.BORDER | SWT.DOUBLE_BUFFERED);
+		_layerList.p_layoutData = GD.fill(true, true);
+		_layerList.undoManager = _um;
+		_layerList.p_listeners!(SWT.Selection) ~= {
+			tUpLayer.p_enabled = canUpLayer;
+			tDownLayer.p_enabled = canDownLayer;
+			statusChangedReceivers.raiseEvent();
+		};
+	}
+
 	/// Creates paint mode toolbar.
 	private void constructModeToolBar(Composite parent) {
 		auto comp = basicComposite(parent, GL.noMargin(2, false));
@@ -440,26 +487,25 @@ class MainPanel : Composite {
 		}
 
 		// Creates paint mode toolbar.
-		ToolItem[PaintMode] modeItems;
 		auto mToolBar = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
 		mToolBar.p_layoutData = GD(GridData.FILL_HORIZONTAL).wHint(0).hSpan(2);
 		void createModeItem(string text, Image img, PaintMode mode) {
+			auto toolValue = mToolBar.p_itemCount;
 			auto mt = basicToolItem(mToolBar, text, img, {
 				_paintArea.mode = mode;
+				if (!_paintArea.rangeSelection) {
+					_c.conf.tool = toolValue;
+				}
 			}, SWT.RADIO);
-			modeItems[mode] = mt;
-			if (_c.conf.tool == mToolBar.p_itemCount - 1) {
-				_paintArea.mode = mode;
-			}
+			_modeItems[mode] = mt;
 		}
 		// Selection mode.
-		ToolItem tSel;
-		tSel = basicToolItem(mToolBar, _c.text.menu.selection, cimg(_c.image.selection), {
-			_paintArea.rangeSelection = tSel.p_selection;
-		}, SWT.RADIO, _paintArea.rangeSelection);
-		if (_c.conf.tool == mToolBar.p_itemCount - 1) {
-			_paintArea.rangeSelection = true;
-		}
+		_toolOfRangeSelection = basicToolItem(mToolBar, _c.text.menu.selection, cimg(_c.image.selection), {
+			_paintArea.rangeSelection = _toolOfRangeSelection.p_selection;
+			if (_paintArea.rangeSelection) {
+				_c.conf.tool = 0;
+			}
+		}, SWT.RADIO);
 
 		// Paint mode.
 		createModeItem(_c.text.menu.freePath, cimg(_c.image.freePath), PaintMode.FreePath);
@@ -470,27 +516,7 @@ class MainPanel : Composite {
 		createModeItem(_c.text.menu.rectFill, cimg(_c.image.rectFill), PaintMode.RectFill);
 		createModeItem(_c.text.menu.fillArea, cimg(_c.image.fillArea), PaintMode.Fill);
 
-		statusChangedReceivers ~= {
-			if (_paintArea.rangeSelection) {
-				_c.conf.tool = 0;
-			} else {
-				foreach (i, mode; EnumMembers!PaintMode) {
-					if (mode is _paintArea.mode) {
-						_c.conf.tool = i + 1;
-						break;
-					}
-				}
-			}
-		};
-		void refreshModeMenu() {
-			bool range = _paintArea.rangeSelection;
-			tSel.p_selection = range;
-			foreach (mode, item; modeItems) {
-				item.p_selection = !range && _paintArea.mode == mode;
-			}
-		}
 		statusChangedReceivers ~= &refreshModeMenu;
-		refreshModeMenu();
 
 		createSeparator();
 
@@ -503,12 +529,6 @@ class MainPanel : Composite {
 			_c.conf.tone = 0;
 		}, SWT.RADIO, 0 == _c.conf.tone);
 		_tones.p_listeners!(SWT.Dispose) ~= &clearTonesToolBar;
-
-		auto toneIndex = cast(int)_c.conf.tone - 1;
-		if (0 <= toneIndex && toneIndex < _c.conf.tones.length) {
-			_paintArea.tone = _c.conf.tones[toneIndex].value;
-		}
-		refreshTonesToolBar();
 
 		createSeparator();
 
@@ -561,13 +581,11 @@ class MainPanel : Composite {
 		tMainGrid = basicToolItem(grids, _c.text.menu.mainGrid, .cimg(_c.image.mainGrid), {
 			paintArea.grid1 = tMainGrid.p_selection;
 		}, SWT.CHECK);
-		paintArea.grid1 = _c.conf.mainGrid;
 		_c.conf.mainGrid.value.refSelection(tMainGrid);
 		ToolItem tSubGrid;
 		tSubGrid = basicToolItem(grids, _c.text.menu.subGrid, .cimg(_c.image.subGrid), {
 			paintArea.grid2 = tSubGrid.p_selection;
 		}, SWT.CHECK);
-		paintArea.grid2 = _c.conf.subGrid;
 		_c.conf.subGrid.value.refSelection(tSubGrid);
 		void updateGrid() {
 			tMainGrid.p_selection = paintArea.grid1;
@@ -575,9 +593,19 @@ class MainPanel : Composite {
 		}
 		statusChangedReceivers ~= &updateGrid;
 	}
+	/// Updates mode toolbar and configration.
+	private void refreshModeMenu() {
+		.enforce(_toolOfRangeSelection);
+		.enforce(_paintArea);
+		bool range = _paintArea.rangeSelection;
+		_toolOfRangeSelection.p_selection = range;
+		foreach (mode, item; _modeItems) {
+			item.p_selection = !range && _paintArea.mode == mode;
+		}
+	}
 	/// Updates tones toolbar.
 	private void refreshTonesToolBar() {
-		enforce(_tones);
+		.enforce(_tones);
 		checkWidget();
 		auto d = this.p_display;
 
