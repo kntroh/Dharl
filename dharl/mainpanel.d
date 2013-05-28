@@ -1058,7 +1058,7 @@ class MainPanel : Composite {
 			}
 
 			auto loader = new ImageLoader;
-			auto data = item.image.createImageData(params.depth);
+			auto data = item.image.createImageData(depth);
 			loader.data ~= data;
 			switch (ext) {
 			case ".bmp":
