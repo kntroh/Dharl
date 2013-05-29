@@ -79,7 +79,13 @@ class MainPanel : Composite {
 	private ColorSlider _colorSlider = null;
 	private PImageList _imageList = null;
 
-	// Switches processing of some with state of shift key.
+	/// For relayout.
+	private Composite _paintPane = null;
+	private Composite _palettePane = null; /// ditto
+	private Composite _layerPane = null; /// ditto
+	private Composite _listPane = null; /// ditto
+
+	/// Switches processing of some with state of shift key.
 	private KeyObserver _shiftDown = null;
 
 	/// Table of ToolItem from PaintMode.
@@ -118,12 +124,165 @@ class MainPanel : Composite {
 
 		_um = new UndoManager(_c.conf.undoMax);
 
-		/// Splits PImageList and other controls.
-		auto splitter = basicHSplitter(this, false);
-		constructPaintArea(splitter, _um);
-		constructImageList(splitter, _um);
-		_c.conf.sashPosWork_List.value.refSelection(splitter);
+		Composite paint, palette, layer, list;
+		createParents(paint, palette, layer, list);
 
+		// Creates controls.
+		_paintPane = basicComposite(paint);
+		_paintPane.p_layoutData = GD.fill(true, true);
+		_palettePane = basicComposite(palette);
+		_palettePane.p_layoutData = GD.fill(true, true);
+		_layerPane = basicComposite(layer);
+		_layerPane.p_layoutData = GD.fill(true, true);
+		_listPane = basicComposite(list);
+		_listPane.p_layoutData = GD.fill(true, true);
+		constructPaintArea(_paintPane);
+		constructPaletteAndTools(_palettePane);
+		constructLayerList(_layerPane);
+		constructImageList(_listPane);
+
+		initControls();
+	}
+
+	/// Relayout controls with DCommon.conf.layout parameter.
+	void relayout() {
+		auto children = this.p_children;
+
+		Composite paint, palette, layer, list;
+		createParents(paint, palette, layer, list);
+		_paintPane.setParent(paint);
+		_palettePane.setParent(palette);
+		_layerPane.setParent(layer);
+		_listPane.setParent(list);
+
+		foreach (child; children) {
+			child.dispose();
+		}
+
+		layout(true, true);
+	}
+
+	void createParents(out Composite paint, out Composite palette, out Composite layer, out Composite list) {
+		switch (_c.conf.layout.value) {
+		case 0:
+			// Splits PImageList and other controls.
+			auto splitter = basicHSplitter(this, false);
+			_c.conf.layout0_sashPosWork_List.value.refSelection(splitter);
+			// Splitter of paint area and palette.
+			auto ppSplitter = basicVSplitter(splitter, false);
+			_c.conf.layout0_sashPosPaint_Palette.value.refSelection(ppSplitter);
+
+			// Creates composites.
+			// Paint area.
+			paint = basicComposite(ppSplitter);
+			paint.p_layout = GL.zero(1, true);
+			// Palete and layer list.
+			auto paletteAndLayer = basicComposite(ppSplitter, GL.window(2, false));
+			// Palette and color controls.
+			palette = basicComposite(paletteAndLayer);
+			palette.p_layout = GL.zero(1, true);
+			palette.p_layoutData = GD.fill(false, true);
+			// Layer list.
+			layer = basicComposite(paletteAndLayer);
+			layer.p_layout = GL.zero(1, true);
+			layer.p_layoutData = GD.fill(true, true);
+			// Image list.
+			list = basicComposite(splitter);
+			list.p_layout = GL.zero(1, true);
+			break;
+		case 1:
+			// Splits PImageList and other controls.
+			auto splitter1 = basicHSplitter(this, false);
+			_c.conf.layout1_sashPosPaint_Other.value.refSelection(splitter1);
+			// Paint area.
+			paint = basicComposite(splitter1);
+			paint.p_layout = GL.zero(1, true);
+			splitter1.resizable = paint;
+
+			auto paletteAndImageList = basicComposite(splitter1, GL.window(1, true).margin(0));
+
+			// Palette and color controls.
+			palette = basicComposite(paletteAndImageList);
+			palette.p_layout = GL.zero(1, true);
+			palette.p_layoutData = GD.begin(true, false);
+
+			// Splits layer list and paint area.
+			auto splitter2 = basicHSplitter(paletteAndImageList, false);
+			_c.conf.layout1_sashPosLayer_List.value.refSelection(splitter2);
+			splitter2.p_layoutData = GD.fill(true, true);
+
+			// Layer list.
+			layer = basicComposite(splitter2);
+			layer.p_layout = GL.zero(1, true);
+			// Image list.
+			list = basicComposite(splitter2);
+			list.p_layout = GL.zero(1, true);
+			break;
+		default:
+			goto case 0;
+		}
+	}
+
+	/// Initializes controls.
+	void initControls() {
+		// Paint area.
+		auto cs = _c.conf.character;
+		_paintArea.init(cs.width, cs.height, _paletteView.createPalette());
+		_paintArea.zoom = _c.conf.zoom;
+		_paintArea.mode = PaintMode.FreePath;
+		_paintArea.cursorSize = _c.conf.lineWidth;
+		_paintArea.pixel = _paletteView.pixel1;
+		_paintArea.backgroundPixel = _paletteView.pixel2;
+		_paintArea.addLayer(0, _c.text.newLayer);
+		auto pen = ccur(_c.image.cursorPen, CursorSpot.TopLeft);
+		auto cross = ccur(_c.image.cursorCross, CursorSpot.Center);
+		auto dropper = ccur(_c.image.cursorDropper, CursorSpot.TopLeft);
+		auto bucket = ccur(_c.image.cursorBucket, CursorSpot.TopLeft);
+		_paintArea.cursor(PaintMode.FreePath, pen);
+		_paintArea.cursor(PaintMode.Straight, cross);
+		_paintArea.cursor(PaintMode.OvalLine, cross);
+		_paintArea.cursor(PaintMode.RectLine, cross);
+		_paintArea.cursor(PaintMode.OvalFill, cross);
+		_paintArea.cursor(PaintMode.RectFill, cross);
+		_paintArea.cursor(PaintMode.Fill, bucket);
+		_paintArea.cursorDropper = dropper;
+		_paintArea.cursorSelRange = cross;
+		_paintArea.statusTextXY = _c.text.fStatusTextXY;
+		_paintArea.statusTextRange = _c.text.fStatusTextRange;
+		_paintPreview.init(_paintArea);
+		_paletteView.p_cursor = dropper;
+		_layerList.init(_paintArea);
+		_colorSlider.color = _paletteView.color(_paletteView.pixel1);
+
+		// Selection tool.
+		if (_c.conf.tool == 0) {
+			_paintArea.rangeSelection = true;
+		} else {
+			_paintArea.rangeSelection = false;
+			foreach (i, mode; EnumMembers!PaintMode) {
+				if (_c.conf.tool == i + 1) {
+					_paintArea.mode = mode;
+					break;
+				}
+			}
+		}
+		refreshModeMenu();
+
+		// Selection tone.
+		auto toneIndex = cast(int)_c.conf.tone - 1;
+		if (0 <= toneIndex && toneIndex < _c.conf.tones.length) {
+			_paintArea.tone = _c.conf.tones[toneIndex].value;
+		}
+		refreshTonesToolBar();
+
+		// Selection grids.
+		_paintArea.grid1 = _c.conf.mainGrid;
+		_paintArea.grid2 = _c.conf.subGrid;
+
+		// Stores image data for undo operation.
+		_pushBase = _paintArea.image.storeData;
+
+		// Register event handlers.
 		_paletteView.p_listeners!(SWT.Selection) ~= {
 			_um.resetRetryWord();
 			_paintArea.pixel = _paletteView.pixel1;
@@ -294,20 +453,15 @@ class MainPanel : Composite {
 	}
 
 	/// Creates controls of paint area and palette.
-	private void constructPaintArea(Composite parent, UndoManager um) {
+	private void constructPaintArea(Composite parent) {
 		checkWidget();
 		checkInit();
-
-		auto d = parent.p_display;
-
-		// Splitter of paint area and palette.
-		auto ppSplitter = basicVSplitter(parent, false);
-		_c.conf.sashPosPaint_Palette.value.refSelection(ppSplitter);
+		parent.p_layout = GL.zero(1, false);
 
 		// Splitter of paintArea and tools.
-		auto paintSplitter = basicHSplitter(ppSplitter, false);
+		auto paintSplitter = basicHSplitter(parent, false);
+		paintSplitter.p_layoutData = GD.fill(true, true);
 		_c.conf.sashPosPaint_Preview.value.refSelection(paintSplitter);
-		ppSplitter.resizable = paintSplitter;
 
 		// Splitter of preview and toolbar.
 		auto ptSplitter = basicVSplitter(paintSplitter, false);
@@ -319,83 +473,14 @@ class MainPanel : Composite {
 
 		// Area of drawing.
 		_paintArea = new PaintArea(paintSplitter, SWT.BORDER | SWT.DOUBLE_BUFFERED);
-		_paintArea.p_layoutData = GD(GridData.FILL_BOTH).hSpan(2);
-		_paintArea.undoManager = um;
+		_paintArea.undoManager = _um;
 		_paintArea.enabledBackColor = _c.conf.enabledBackColor;
-
-		// Composite for controls related to color.
-		auto comp = basicComposite(ppSplitter, GL.window(2, false));
-
-		// Palette and color controls.
-		auto paletteComp = basicComposite(comp);
-		paletteComp.p_layoutData = GD.fill(false, true);
-		constructPaletteAndTools(paletteComp);
-
-		// Layer list.
-		auto layersComp = basicComposite(comp);
-		layersComp.p_layoutData = GD.fill(true, true);
-		constructLayerList(layersComp);
-
-		// Initializes controls.
-		auto cs = _c.conf.character;
-		_paintArea.init(cs.width, cs.height, _paletteView.createPalette());
-		_paintArea.zoom = _c.conf.zoom;
-		_paintArea.mode = PaintMode.FreePath;
-		_paintArea.cursorSize = _c.conf.lineWidth;
-		_paintArea.pixel = _paletteView.pixel1;
-		_paintArea.backgroundPixel = _paletteView.pixel2;
-		_paintArea.addLayer(0, _c.text.newLayer);
-		auto pen = ccur(_c.image.cursorPen, CursorSpot.TopLeft);
-		auto cross = ccur(_c.image.cursorCross, CursorSpot.Center);
-		auto dropper = ccur(_c.image.cursorDropper, CursorSpot.TopLeft);
-		auto bucket = ccur(_c.image.cursorBucket, CursorSpot.TopLeft);
-		_paintArea.cursor(PaintMode.FreePath, pen);
-		_paintArea.cursor(PaintMode.Straight, cross);
-		_paintArea.cursor(PaintMode.OvalLine, cross);
-		_paintArea.cursor(PaintMode.RectLine, cross);
-		_paintArea.cursor(PaintMode.OvalFill, cross);
-		_paintArea.cursor(PaintMode.RectFill, cross);
-		_paintArea.cursor(PaintMode.Fill, bucket);
-		_paintArea.cursorDropper = dropper;
-		_paintArea.cursorSelRange = cross;
-		_paintArea.statusTextXY = _c.text.fStatusTextXY;
-		_paintArea.statusTextRange = _c.text.fStatusTextRange;
-		_paintPreview.init(_paintArea);
-		_paletteView.p_cursor = dropper;
-		_layerList.init(_paintArea);
-		_colorSlider.color = _paletteView.color(_paletteView.pixel1);
-
-		// Selection tool.
-		if (_c.conf.tool == 0) {
-			_paintArea.rangeSelection = true;
-		} else {
-			_paintArea.rangeSelection = false;
-			foreach (i, mode; EnumMembers!PaintMode) {
-				if (_c.conf.tool == i + 1) {
-					_paintArea.mode = mode;
-					break;
-				}
-			}
-		}
-		refreshModeMenu();
-
-		// Selection tone.
-		auto toneIndex = cast(int)_c.conf.tone - 1;
-		if (0 <= toneIndex && toneIndex < _c.conf.tones.length) {
-			_paintArea.tone = _c.conf.tones[toneIndex].value;
-		}
-		refreshTonesToolBar();
-
-		// Selection grids.
-		_paintArea.grid1 = _c.conf.mainGrid;
-		_paintArea.grid2 = _c.conf.subGrid;
-
-		// Stores image data for undo operation.
-		_pushBase = _paintArea.image.storeData;
 	}
 
 	/// Creates palette control and related tools.
 	void constructPaletteAndTools(Composite parent) {
+		checkWidget();
+		checkInit();
 		parent.p_layout = GL.noMargin(2, false);
 
 		// Slider for changing color.
@@ -452,6 +537,8 @@ class MainPanel : Composite {
 
 	/// Creates the layer list and related tools.
 	void constructLayerList(Composite parent) {
+		checkWidget();
+		checkInit();
 		parent.p_layout = GL.noMargin(1, true);
 
 		// Tools for layer list.
@@ -476,6 +563,8 @@ class MainPanel : Composite {
 
 	/// Creates paint mode toolbar.
 	private void constructModeToolBar(Composite parent) {
+		checkWidget();
+		checkInit();
 		auto comp = basicComposite(parent, GL.noMargin(2, false));
 		void createSeparator() {
 			auto sep = separator(comp);
@@ -645,10 +734,13 @@ class MainPanel : Composite {
 	}
 
 	/// Creates imageList.
-	private void constructImageList(Composite parent, UndoManager um) {
+	private void constructImageList(Composite parent) {
 		checkWidget();
 		checkInit();
+		parent.p_layout = GL.zero(1, true);
+
 		_imageList = new PImageList(parent, SWT.BORDER | SWT.DOUBLE_BUFFERED);
+		_imageList.p_layoutData = GD.fill(true, true);
 		auto cs = _c.conf.character;
 		_imageList.setPieceSize(cs.width, cs.height);
 	}

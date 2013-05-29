@@ -258,6 +258,8 @@ Usage:
 	mixin MsgProp!("characterSize", "Character Size"); /// ditto
 	mixin MsgProp!("characterWidth", "Character Width"); /// ditto
 	mixin MsgProp!("characterHeight", "Character Height"); /// ditto
+	mixin MsgProp!("layout", "Layout"); /// ditto
+	mixin MsgProp!("fLayoutName", "Layout %s"); /// ditto
 
 	mixin MsgProp!("fStatusTextXY", "%s, %s"); /// ditto
 	mixin MsgProp!("fStatusTextRange", "%s, %s to %s, %s (%s x %s)"); /// ditto
@@ -384,13 +386,19 @@ class DConfig {
 
 	/// Parameters of layout.
 	mixin Prop!("mainWindow", WindowParameter, WindowParameter(int.min, int.min, 900, 700));
-
-	mixin Prop!("sashPosWork_List",     int, 550); /// ditto
+	mixin Prop!("dialogButtonWidth", uint, 80, true); /// ditto
 	mixin Prop!("sashPosPaint_Preview", int, 100); /// ditto
 	mixin Prop!("sashPosPreview_Tools", int, 150); /// ditto
-	mixin Prop!("sashPosPaint_Palette", int, 400); /// ditto
 
-	mixin Prop!("dialogButtonWidth", uint, 80, true); /// ditto
+	mixin Prop!("layout", int, 0); /// Layout number. 0 or 1 available now.
+
+	/// Parameters of layout = 0.
+	mixin Prop!("layout0_sashPosWork_List",     int, 550);
+	mixin Prop!("layout0_sashPosPaint_Palette", int, 400); /// ditto
+
+	/// Parameters of layout = 1.
+	mixin Prop!("layout1_sashPosPaint_Other", int, 550);
+	mixin Prop!("layout1_sashPosLayer_List",  int, 100); /// ditto
 
 	/// History of files.
 	mixin Prop!("fileHistory", PArray!("path", string), PArray!("path", string).init);

@@ -57,9 +57,14 @@ abstract class DharlDialog : BasicDialog {
 
 /// Dialog of application configuration.
 class ConfigDialog : DharlDialog {
+	/// Maximum number of layout.
+	private static immutable LAYOUT_MAX = 1;
 
 	/// Character (paint area) size.
-	private Spinner _cw, _ch;
+	private Spinner _cw = null, _ch = null;
+
+	/// Layout number. 0 or 1 available now.
+	private int _layout = 0;
 
 	/// The only constructor.
 	this (Shell parent, DCommon c) {
@@ -70,29 +75,58 @@ class ConfigDialog : DharlDialog {
 	}
 
 	protected override void setup(Composite area) {
-		area.p_layout = GL(1, false);
+		area.p_layout = GL(2, false);
 
 		// Character (paint area) size.
-		auto group = basicGroup(area, c.text.characterSize, GL(2, false));
-		group.p_layoutData = GD.fill(true, true);
+		auto cGroup = basicGroup(area, c.text.characterSize, GL(2, false));
+		cGroup.p_layoutData = GD.fill(true, true);
 
-		basicLabel(group, c.text.characterWidth);
-		_cw = basicSpinner(group, 1, 9999);
+		auto lcw = basicLabel(cGroup, c.text.characterWidth);
+		lcw.p_layoutData = GD.end(true, false);
+		_cw = basicSpinner(cGroup, 1, 9999);
 		mod(_cw);
-		basicLabel(group, _c.text.characterHeight);
-		_ch = basicSpinner(group, 1, 9999);
+		_cw.p_layoutData = GD.begin(true, false);
+
+		auto lch = basicLabel(cGroup, _c.text.characterHeight);
+		lch.p_layoutData = GD.end(true, false);
+		_ch = basicSpinner(cGroup, 1, 9999);
 		mod(_ch);
+		_ch.p_layoutData = GD.begin(true, false);
 
 		// Sets configuration to controls.
 		_cw.p_selection = c.conf.character.width;
 		_ch.p_selection = c.conf.character.height;
+
+		// Layout.
+		auto lGroup = basicGroup(area, c.text.layout, GL(1, true));
+		lGroup.p_layoutData = GD.fill(true, true);
+
+		_layout = c.conf.layout;
+		void createLayoutRadio(int num) {
+			Button radio;
+			radio = basicRadio(lGroup, c.text.fLayoutName.value.format(num + 1), {
+				if (radio.p_selection) {
+					_layout = num;
+				}
+			});
+			mod(radio);
+			radio.p_layoutData = GD.fill(true, true);
+			if (num == _layout) {
+				radio.p_selection = true;
+			}
+		}
+		foreach (i; 0 .. LAYOUT_MAX + 1) {
+			createLayoutRadio(i);
+		}
 	}
 
 	protected override bool apply() {
-
 		// Character (paint area) size.
 		c.conf.character.width  = _cw.p_selection;
 		c.conf.character.height = _ch.p_selection;
+
+		// Layout.
+		c.conf.layout = _layout;
 
 		return true;
 	}

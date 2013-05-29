@@ -139,6 +139,8 @@ Version.%s
  <characterSize>描画領域のサイズ</characterSize>
  <characterWidth>幅</characterWidth>
  <characterHeight>高さ</characterHeight>
+ <layout>レイアウト</layout>
+ <fLayoutName>レイアウト %s</fLayoutName>
  <fStatusTextXY>%s, %s</fStatusTextXY>
  <fStatusTextRange>%s, %s ～ %s, %s (%s×%s)</fStatusTextRange>
  <combinations>組み合わせ</combinations>

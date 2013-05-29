@@ -776,7 +776,7 @@ struct GD {
 
 /// A wrapper for settings to a FormLayout.
 struct FL {
-	/// GridLayout.
+	/// FormLayout.
 	FormLayout data = null;
 	/// ditto
 	alias data this;

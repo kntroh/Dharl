@@ -450,6 +450,14 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	separator(mTool, toolBar);
 	auto mConf = basicMenuItem(mTool, toolBar, c.text.menu.configuration, cimg(c.image.configuration), {
 		auto dialog = new ConfigDialog(shell, c);
+
+		int layout = c.conf.layout;
+		dialog.appliedReceivers ~= {
+			if (layout != c.conf.layout) {
+				mainPanel.relayout();
+			}
+		};
+
 		dialog.open();
 	});
 
