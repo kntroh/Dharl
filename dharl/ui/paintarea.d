@@ -2820,6 +2820,7 @@ class PaintArea : Canvas, Undoable {
 		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();
+		changedLayerReceivers.raiseEvent();
 		restoreReceivers.raiseEvent(mode);
 	}
 	@property
