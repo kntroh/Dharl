@@ -3476,7 +3476,7 @@ class LayerList : Canvas {
 			return;
 		}
 		checkWidget();
-		setFocus();
+		forceFocus();
 		if (1 != e.button && 3 != e.button) return;
 		bool reverse = (e.stateMask & SWT.SHIFT) || (e.stateMask & SWT.CTRL) || 3 == e.button;
 

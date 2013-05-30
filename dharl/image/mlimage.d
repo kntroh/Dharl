@@ -22,6 +22,7 @@ private import std.file;
 private import std.path;
 private import std.range;
 private import std.string;
+private import std.typecons;
 private import std.xml;
 private import std.zip;
 
@@ -981,6 +982,9 @@ class MLImage : Undoable {
 		foreach (ref combi; _combi) {
 			combi.visible = combi.visible.remove(index);
 		}
+		if (_layers.length && index == _layers.length) {
+			_layers[$ - 1].image.transparentPixel = -1;
+		}
 	}
 	/// ditto
 	void removeLayers(size_t from, size_t to) {
@@ -992,16 +996,12 @@ class MLImage : Undoable {
 		}
 		assert (from < _layers.length);
 		checkInit();
-		size_t range = to - from;
-		foreach (index; from .. to) {
-			_layers[index] = _layers[from + index];
+		if (0 < from && to == _layers.length) {
+			_layers[from - 1].image.transparentPixel = -1;
 		}
-		_layers.length -= range;
+		_layers = _layers.remove(tuple(from, to));
 		foreach (ref combi; _combi) {
-			foreach (index; from .. to) {
-				combi.visible[index] = combi.visible[from + index];
-			}
-			combi.visible.length -= range;
+			combi.visible = combi.visible.remove(tuple(from, to));
 		}
 	}
 	/// Swap layer index.

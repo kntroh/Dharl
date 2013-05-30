@@ -1,6 +1,7 @@
 dharl.exe
 dharl.res
 build.log
+dharl.exe.log
 personal_memo.txt
 dharl_*.zip
 objs/*
