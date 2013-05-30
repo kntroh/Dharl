@@ -32,7 +32,7 @@ Dharlのウィンドウは、大まかにいって次の二つの領域に分割
 
 + ビルド方法 +
 
-dmd 2.059とDWT2(https://github.com/d-widget-toolkit/dwt)が必要です。
+dmd 2.063とDWT2(https://github.com/d-widget-toolkit/dwt)が必要です。
 
 次のコマンドでビルドできます。
 ---

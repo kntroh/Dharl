@@ -31,7 +31,7 @@ Your work flow is as follows for example:
 
 + Build Process +
 
-Require dmd 2.059 and DWT2 (https://github.com/d-widget-toolkit/dwt) to build of the Dharl.
+Require dmd 2.063 and DWT2 (https://github.com/d-widget-toolkit/dwt) to build of the Dharl.
 
 Build the Dharl with this command:
 ---
