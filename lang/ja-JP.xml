@@ -24,6 +24,7 @@
   <down>下へ(&amp;D)</down>
   <addLayer>レイヤの追加(&amp;L)</addLayer>
   <removeLayer>レイヤの削除(&amp;Y)</removeLayer>
+  <uniteLayer>下のレイヤに結合(&amp;U)</uniteLayer>
   <mode>描画(&amp;M)</mode>
   <enabledBackColor>移動などで背景色を無視する(&amp;T)	Ctrl+P</enabledBackColor>
   <selection>選択モード(&amp;S)	Ctrl+1</selection>
