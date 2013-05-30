@@ -1023,6 +1023,29 @@ class MLImage : Undoable {
 		}
 	}
 
+	/// Unite layers.
+	void uniteLayers(size_t destIndex, size_t srcIndex) {
+		if (_layers.length <= destIndex) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (_layers.length <= srcIndex) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkInit();
+		if (destIndex == srcIndex) return;
+		auto dest = _layers[destIndex].image;
+		auto src = _layers[srcIndex].image;
+		foreach (x; 0 .. width) {
+			foreach (y; 0 .. height) {
+				int pixel = src.getPixel(x, y);
+				if (pixel != src.transparentPixel) {
+					dest.setPixel(x, y, pixel);
+				}
+			}
+		}
+		removeLayer(srcIndex);
+	}
+
 	/// Index of selection palette.
 	@property
 	const

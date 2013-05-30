@@ -353,6 +353,10 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tDownLayer = basicMenuItem(mEdit, c.text.menu.down, cimg(c.image.down), {
 		mainPanel.downLayer();
 	});
+	separator(mEdit);
+	auto tUniteLayers = basicMenuItem(mEdit, c.text.menu.uniteLayers, cimg(c.image.uniteLayers), {
+		mainPanel.uniteLayers();
+	});
 
 
 	/* ---- View menu -------------------------------------------------- */
@@ -537,6 +541,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 		tUpLayer.p_enabled = mainPanel.canUpLayer;
 		tDownLayer.p_enabled = mainPanel.canDownLayer;
+		tUniteLayers.p_enabled = mainPanel.canUniteLayers;
 
 		mCombi.p_enabled = mainPanel.canEditCombination;
 	}

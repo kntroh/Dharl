@@ -353,8 +353,7 @@ class PaintArea : Canvas, Undoable {
 		_layers = remove!(SwapStrategy.unstable)(_layers, index);
 		if (!_layers.length) {
 			_layers.length = 1;
-			if (_image.layerCount <= index) index--;
-			_layers[0] = index;
+			_layers[0] = .min(index, _image.layerCount - 1);
 		}
 		clearCache(false);
 		redraw();
@@ -433,6 +432,30 @@ class PaintArea : Canvas, Undoable {
 			selectedLayers = _layers.remove!(SwapStrategy.stable)(sel2) ~ index1;
 		}
 
+		clearCache(false);
+		redraw();
+		drawReceivers.raiseEvent();
+		changedLayerReceivers.raiseEvent();
+		statusChangedReceivers.raiseEvent();
+	}
+	/// Unite layers
+	void uniteLayers(size_t destIndex, size_t srcIndex) {
+		if (_image.layerCount <= destIndex) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		if (_image.layerCount <= srcIndex) {
+			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkWidget();
+		checkInit();
+		if (destIndex == srcIndex) return;
+		if (_um) _um.store(this);
+		_image.uniteLayers(destIndex, srcIndex);
+		_layers = remove!(SwapStrategy.unstable)(_layers, srcIndex);
+		if (!_layers.length) {
+			_layers.length = 1;
+			_layers[0] = .min(srcIndex, _image.layerCount - 1);
+		}
 		clearCache(false);
 		redraw();
 		drawReceivers.raiseEvent();

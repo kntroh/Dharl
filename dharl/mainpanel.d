@@ -549,6 +549,8 @@ class MainPanel : Composite {
 		separator(lToolBar);
 		auto tUpLayer = basicToolItem(lToolBar, _c.text.menu.up, cimg(_c.image.up), &upLayer);
 		auto tDownLayer = basicToolItem(lToolBar, _c.text.menu.down, cimg(_c.image.down), &downLayer);
+		separator(lToolBar);
+		auto lUniteLayers = basicToolItem(lToolBar, _c.text.menu.uniteLayers, cimg(_c.image.uniteLayers), &uniteLayers);
 
 		// List of layers.
 		_layerList = new LayerList(parent, SWT.BORDER | SWT.DOUBLE_BUFFERED);
@@ -557,6 +559,7 @@ class MainPanel : Composite {
 		_layerList.p_listeners!(SWT.Selection) ~= {
 			tUpLayer.p_enabled = canUpLayer;
 			tDownLayer.p_enabled = canDownLayer;
+			lUniteLayers.p_enabled = canUniteLayers;
 			statusChangedReceivers.raiseEvent();
 		};
 	}
@@ -1503,6 +1506,16 @@ class MainPanel : Composite {
 		_paintArea.removeLayers(ls[0], ls[$ - 1] + 1);
 	}
 	/// ditto
+	void uniteLayers() {
+		checkWidget();
+		checkInit();
+		if (!canUniteLayers) return;
+		auto ls = _paintArea.selectedLayers;
+		assert (0 != ls.length);
+		assert (ls[0] + 1 < _paintArea.image.layerCount);
+		_paintArea.uniteLayers(ls[0] + 1, ls[0]);
+	}
+	/// ditto
 	void upLayer() {
 		checkWidget();
 		checkInit();
@@ -1512,6 +1525,13 @@ class MainPanel : Composite {
 			if (0 == l) break;
 			_paintArea.swapLayers(l - 1, l);
 		}
+	}
+	/// ditto
+	@property
+	const
+	bool canUniteLayers() {
+		checkInit();
+		return _paintArea.image.layerCount != _paintArea.selectedLayers[$ - 1] + 1;
 	}
 	/// ditto
 	@property
