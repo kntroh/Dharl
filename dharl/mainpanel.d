@@ -252,7 +252,7 @@ class MainPanel : Composite {
 		_paintPreview.init(_paintArea);
 		_paletteView.p_cursor = dropper;
 		_layerList.init(_paintArea);
-		_colorSlider.color = _paletteView.color(_paletteView.pixel1);
+		_colorSlider.color = _paletteView.color(_paletteView.selectedPixel);
 
 		// Selection tool.
 		if (_c.conf.tool == 0) {
@@ -288,7 +288,7 @@ class MainPanel : Composite {
 			_paintArea.pixel = _paletteView.pixel1;
 			_paintArea.backgroundPixel = _paletteView.pixel2;
 			_paintArea.mask = _paletteView.mask;
-			_colorSlider.color = _paletteView.color(_paletteView.pixel1);
+			_colorSlider.color = _paletteView.color(_paletteView.selectedPixel);
 		};
 		_paletteView.changedTransparentPixelReceivers ~= (int tPixel) {
 			auto layers = _paintArea.selectedLayers;
@@ -303,7 +303,7 @@ class MainPanel : Composite {
 		_paintArea.p_listeners!(SWT.Selection) ~= {
 			_um.resetRetryWord();
 			_paletteView.pixel1 = _paintArea.pixel;
-			_colorSlider.color = _paletteView.color(_paletteView.pixel1);
+			_colorSlider.color = _paletteView.color(_paletteView.selectedPixel);
 		};
 		_layerList.p_listeners!(SWT.Selection) ~= {
 			int tPixel = -1;
@@ -349,7 +349,7 @@ class MainPanel : Composite {
 			_layerList.p_toolTipText = toolTip;
 		};
 		_colorSlider.p_listeners!(SWT.Selection) ~= {
-			auto pixel = _paletteView.pixel1;
+			auto pixel = _paletteView.selectedPixel;
 			auto rgb = _colorSlider.color;
 			if (rgb == _paletteView.color(pixel)) return;
 
@@ -440,7 +440,7 @@ class MainPanel : Composite {
 		};
 		_paletteView.restoreReceivers ~= (UndoMode mode) {
 			_paintArea.colors = _paletteView.colors;
-			_colorSlider.color = _paletteView.color(_paletteView.pixel1);
+			_colorSlider.color = _paletteView.color(_paletteView.selectedPixel);
 			_paintPreview.redraw();
 		};
 		_imageList.removeReceivers ~= &canCloseImage;
