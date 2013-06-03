@@ -2345,10 +2345,9 @@ class PaintArea : Canvas, Undoable {
 		if ((_pasteLayer || _rangeSel) && !_iSelRange.p_empty) {
 			// If selection area, draw focus line.
 			auto cca = cCursorArea();
-			auto oldLineStyle = e.gc.p_lineStyle;
-			e.gc.p_lineStyle = SWT.LINE_DOT;
-			scope (exit) e.gc.p_lineStyle = oldLineStyle;
-			e.gc.drawRectangle(cca.x, cca.y, cca.width - 1, cca.height - 1);
+			auto color1 = d.getSystemColor(SWT.COLOR_BLACK);
+			auto color2 = d.getSystemColor(SWT.COLOR_WHITE);
+			.drawColorfulFocus(e.gc, color1, color2, cca.x, cca.y, cca.width - 1, cca.height - 1);
 		} else {
 			// Draws cursor.
 			if (showCursor && 1 != _mouseDown && _mouseEnter && 0 != _layers.length) {

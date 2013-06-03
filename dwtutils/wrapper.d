@@ -102,6 +102,7 @@ mixin GetSetWrapper!("ItemCount"); /// ditto
 mixin GetSetWrapper!("Items"); /// ditto
 mixin GetSetWrapper!("Layout"); /// ditto
 mixin GetSetWrapper!("LayoutData"); /// ditto
+mixin GetSetWrapper!("LineAttributes"); /// ditto
 mixin GetSetWrapper!("LineDash"); /// ditto
 mixin GetSetWrapper!("LineStyle"); /// ditto
 mixin GetSetWrapper!("LineWidth"); /// ditto
