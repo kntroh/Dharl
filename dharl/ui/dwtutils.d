@@ -233,7 +233,10 @@ Font pixelTextFont(Display d, Font base, int boxWidth, int boxHeight) {
 	return new Font(d, fontName, .min(fontWidth, fontHeight), SWT.NONE);
 }
 /// Selects system color for pixel number text in box.
-Color pixelTextColor(Display d, in RGB rgb) {
+alias standOutColor pixelTextColor;
+
+/// Gets system color stand out on rgb.
+Color standOutColor(Display d, in RGB rgb) {
 	if (rgb.red + rgb.green + rgb.blue < 128 * 3) {
 		return d.getSystemColor(SWT.COLOR_WHITE);
 	} else {

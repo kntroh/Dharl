@@ -45,7 +45,11 @@ class PaletteView : Canvas, Undoable {
 	/// Bitmap depth.
 	private ubyte _depth = 8;
 	/// Index of selected color.
-	private int _pixel1 = 1, _pixel2 = 0;
+	private int _pixel1 = 1, _pixel2 = 0, _selectedPixel = 1;
+	invariant () {
+		assert (_selectedPixel == _pixel1 || _selectedPixel == _pixel2,
+			"%s, %s, %s".format(_pixel1, _pixel2, _selectedPixel));
+	}
 	/// Index of drop target.
 	private int _piTo = -1;
 	/// Index of transparent pixel;
@@ -128,7 +132,9 @@ class PaletteView : Canvas, Undoable {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		piRedrawColor(_pixel1);
+		piRedrawColor(_selectedPixel);
 		_pixel1 = index;
+		_selectedPixel = index;
 		piRedrawColor(index);
 	}
 	/// ditto
@@ -145,17 +151,28 @@ class PaletteView : Canvas, Undoable {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
 		piRedrawColor(_pixel2);
+		piRedrawColor(_selectedPixel);
 		_pixel2 = index;
+		_selectedPixel = index;
 		piRedrawColor(index);
 	}
-	/// ditto
+
+	/// Last selected pixel.
+	/// This value will match value of pxiel1 or pixel2
+	/// invariably.
+	@property
+	const
+	size_t selectedPixel() {
+		return _selectedPixel;
+	}
+
+	/// Transparent pixel. A default value is -1.
 	@property
 	const
 	int transparentPixel() {
 		return _tPixel;
 	}
-
-	/// Transparent pixel. A default value is -1.
+	/// ditto
 	@property
 	void transparentPixel(int index) {
 		checkWidget();
@@ -562,6 +579,11 @@ class PaletteView : Canvas, Undoable {
 			if (_piTo != -1) {
 				drawFocus(_piTo, SWT.COLOR_GRAY);
 			}
+
+			auto pixel = selectedPixel;
+			e.gc.p_foreground = standOutColor(d, _colors[pixel]);
+			auto cp = pitoc(pixel);
+			e.gc.drawRectangle(cp.x + 1, cp.y + 1, _cBoxWidth - 3, _cBoxHeight - 3);
 		}
 	}
 
@@ -584,8 +606,8 @@ class PaletteView : Canvas, Undoable {
 		int piBtn = piFromButton(button);
 		piRedrawColor(piBtn);
 		switch (button) {
-		case 1: _pixel1 = pi; break;
-		case 3: _pixel2 = pi; break;
+		case 1: pixel1 = pi; break;
+		case 3: pixel2 = pi; break;
 		default: assert (0);
 		}
 		piRedrawColor(pi);
@@ -626,9 +648,7 @@ class PaletteView : Canvas, Undoable {
 			int piBtn = piFromButton(e.button);
 			if (piBtn == -1) return;
 
-			if (pi != piBtn) {
-				piSelectColorImpl(e, pi);
-			}
+			piSelectColorImpl(e, pi);
 			_downButton = e.button;
 			if (e.button == 1 && (e.stateMask & (SWT.SHIFT | SWT.CTRL))) {
 				// Starts swap or copy.
