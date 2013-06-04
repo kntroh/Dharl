@@ -79,6 +79,9 @@ class MainPanel : Composite {
 	private ColorSlider _colorSlider = null;
 	private PImageList _imageList = null;
 
+	// Information of updated in paint area.
+	private Label _paintAreaUpdated = null;
+
 	/// For relayout.
 	private Composite _paintPane = null;
 	private Composite _palettePane = null; /// ditto
@@ -369,11 +372,13 @@ class MainPanel : Composite {
 			if (e.button != 1 && e.button != 3) return;
 			int sel = _imageList.indexOf(e.x, e.y);
 			if (-1 == sel) return;
+			_paintAreaUpdated.p_redraw = false;
+			scope (exit) _paintAreaUpdated.p_redraw = true;
 			switch (e.button) {
 			case 1:
 				// Send on paintArea to imageList item.
 				auto item = _imageList.item(sel);
-				_um.store(item.image, {
+				bool pushed = _um.store(item.image, {
 					_paintArea.fixPaste();
 					if (item.pushImage(_paintArea.image)) {
 						_pushBase = _paintArea.image.storeData;
@@ -383,6 +388,7 @@ class MainPanel : Composite {
 					}
 					return false;
 				});
+				if (pushed) paintAreaUpdated = false;
 				break;
 			case 3:
 				// Send on imageList item to paintArea.
@@ -397,12 +403,14 @@ class MainPanel : Composite {
 				_layerList.redraw();
 				_pushBase = _paintArea.image.storeData;
 				_currentName = item.dataTo!PImageParams.name;
+				paintAreaUpdated = false;
 				break;
 			default: assert (0);
 			}
 		};
 		_um.statusChangedReceivers ~= {
 			statusChangedReceivers.raiseEvent();
+			paintAreaUpdated = true;
 		};
 		_paintArea.statusChangedReceivers ~= {
 			statusChangedReceivers.raiseEvent();
@@ -463,8 +471,16 @@ class MainPanel : Composite {
 		paintSplitter.p_layoutData = GD.fill(true, true);
 		_c.conf.sashPosPaint_Preview.value.refSelection(paintSplitter);
 
+		auto tools = basicComposite(paintSplitter);
+		tools.p_layout = GL.zero(1, true);
+
+		// Information of updated in paint area.
+		_paintAreaUpdated = basicLabel(tools, _c.text.noUpdated, SWT.CENTER | SWT.BORDER);
+		_paintAreaUpdated.p_layoutData = GD.fill(true, false);
+
 		// Splitter of preview and toolbar.
-		auto ptSplitter = basicVSplitter(paintSplitter, false);
+		auto ptSplitter = basicVSplitter(tools, false);
+		ptSplitter.p_layoutData = GD.fill(true, true);
 		_c.conf.sashPosPreview_Tools.value.refSelection(ptSplitter);
 		// Preview of image in drawing.
 		_paintPreview = new PaintPreview(ptSplitter, SWT.BORDER | SWT.DOUBLE_BUFFERED);
@@ -746,6 +762,21 @@ class MainPanel : Composite {
 		_imageList.p_layoutData = GD.fill(true, true);
 		auto cs = _c.conf.character;
 		_imageList.setPieceSize(cs.width, cs.height);
+	}
+
+	/// Display information of paint area updated.
+	@property
+	private void paintAreaUpdated(bool updated) {
+		if (updated) {
+			auto d = _paintAreaUpdated.getDisplay();
+			_paintAreaUpdated.p_background = d.getSystemColor(SWT.COLOR_RED);
+			_paintAreaUpdated.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
+			_paintAreaUpdated.p_text = _c.text.updated;
+		} else {
+			_paintAreaUpdated.p_background = this.p_background;
+			_paintAreaUpdated.p_foreground = this.p_foreground;
+			_paintAreaUpdated.p_text = _c.text.noUpdated;
+		}
 	}
 
 	/// Area of drawing.

@@ -216,6 +216,8 @@ Usage:
 	mixin MsgProp!("descLayerTransparentPixel", "Transparent pixel.\nIt switches by Shift+Rightclick on the palette."); /// ditto
 	mixin MsgProp!("descLayerName", "Click to edit the layer name."); /// ditto
 
+	mixin MsgProp!("noUpdated", "No Updated"); /// ditto
+	mixin MsgProp!("updated", "Updated"); /// ditto
 	mixin MsgProp!("paintAreaChanged", "The paint area has been changed.\nAre you sure you want to quit?"); /// ditto
 	mixin MsgProp!("fCanvasChanged", "%s has been changed.\nDo you want to save it?"); /// ditto
 	mixin MsgProp!("warningDisappearsData", "If you didn't save with *.dhr, data such as layers disappears.\nDo you want to save it?"); /// ditto

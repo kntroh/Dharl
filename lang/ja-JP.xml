@@ -101,6 +101,8 @@ Version.%s
  <layerVisible>表示</layerVisible>
  <descLayerVisibility>クリックで表示・非表示を切替</descLayerVisibility>
  <descLayerTransparentPixel>パレット上のシフト+右クリックで透過色を切替</descLayerTransparentPixel>
+ <noUpdated>更新無し</noUpdated>
+ <updated>更新</updated>
  <descLayerName>クリックでレイヤ名を変更</descLayerName>
  <paintAreaChanged>描画領域が変更されています。
 終了してよろしいですか？</paintAreaChanged>
