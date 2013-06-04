@@ -266,7 +266,7 @@ class Editor {
 	}
 }
 
-/// Start edit when be press F2 key or double click.
+/// Start edit when be press F2 key or click selected item.
 Editor createEditor(Table table, bool emptyIsCancel, void delegate(int index, string name) decision) {
 	TableItem itm = null;
 	string lastText = "";
@@ -313,7 +313,7 @@ Editor createEditor(Table table, bool emptyIsCancel, void delegate(int index, st
 		click = false;
 	};
 	auto selected = {
-		// Update selection.
+		// Update selection (lazy).
 		d.asyncExecWith({
 			if (!selection) click = false;
 			int index = table.p_selectionIndex;
