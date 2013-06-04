@@ -8,8 +8,11 @@ module dwtutils.utils;
 public import dwtutils.factory;
 public import dwtutils.wrapper;
 
+private import core.thread;
+
 private import std.algorithm;
 private import std.conv;
+private import std.datetime;
 private import std.exception;
 private import std.math;
 private import std.range;
@@ -290,16 +293,68 @@ Editor createEditor(Table table, bool emptyIsCancel, void delegate(int index, st
 			itm.p_text = text;
 		});
 	}
+
+	// Start edit with keyboard operation.
 	table.p_listeners!(SWT.KeyDown) ~= (Event e) {
 		if (SWT.F2 != e.keyCode) return;
 		int index = table.p_selectionIndex;
 		if (-1 == index) return;
 		edit(index);
 	};
-	table.mouseDoubleClick ~= (MouseEvent e) {
+
+	// Start edit with mouse operation.
+	auto d = table.p_display;
+	TableItem selection = null; // Selection item, when focus is on the table.
+	bool click = false; // If had valid mouse down operation, sets true to this flag.
+	int count = 0; // Count of mouse down.
+	table.focusLost ~= {
+		// Clears selection.
+		selection = null;
+		click = false;
+	};
+	auto selected = {
+		// Update selection.
+		d.asyncExecWith({
+			if (!selection) click = false;
+			int index = table.p_selectionIndex;
+			selection = index == -1 ? null : table.getItem(index);
+		});
+	};
+	table.focusGained ~= selected;
+	table.widgetSelected ~= selected;
+	table.mouseDown ~= (MouseEvent e) {
+		// If meet conditions, sets true to click.
+		//  * Left button.
+		//  * Single click.
+		//  * Selected before click.
+		click = false;
+		count = e.count;
+		if (1 == e.count && e.button == 1 && selection) {
+			auto itm = table.getItem(CPoint(e.x, e.y));
+			if (itm is selection) {
+				click = true;
+			}
+		}
+	};
+	table.mouseUp ~= (MouseEvent e) {
+		// If meet conditions, start edit after certain time.
+		if (!click) return;
+		click = false;
+		if (1 < count || e.button != 1) return;
 		auto itm = table.getItem(CPoint(e.x, e.y));
-		if (!itm) return;
-		edit(table.indexOf(itm));
+		if (!itm || itm !is selection) return;
+		auto index = table.indexOf(itm);
+		auto dTime = dur!"msecs"(d.p_doubleClickTime);
+		(new Thread({
+			// Wait certain time.
+			auto limit = Clock.currTime() + dTime;
+			while (Clock.currTime() < limit) {
+				Thread.sleep(dur!"msecs"(1));
+				if (itm !is selection) return;
+			}
+			// Start edit.
+			d.asyncExecWith(&edit, index);
+		})).start();
 	};
 	return editor;
 }
