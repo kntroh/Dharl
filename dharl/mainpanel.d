@@ -308,6 +308,10 @@ class MainPanel : Composite {
 			_paletteView.pixel1 = _paintArea.pixel;
 			_colorSlider.color = _paletteView.color(_paletteView.selectedPixel);
 		};
+		_paintArea.restoreReceivers ~= (UndoMode mode) {
+			_paletteView.colors = _paintArea.palette;
+			_colorSlider.color = _paletteView.color(_paintArea.pixel);
+		};
 		_layerList.p_listeners!(SWT.Selection) ~= {
 			int tPixel = -1;
 			auto layers = _paintArea.selectedLayers;
