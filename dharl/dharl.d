@@ -120,22 +120,24 @@ void main(string[] args) {
 		return;
 	}
 
-	if (writeCombi) {
-		// Write combinations from *.dhr files to image file.
-		string[] argFiles;
-		foreach (i, arg; args[1 .. $]) {
-			if (0 == arg.extension().filenameCmp(".dhr")) {
-				argFiles ~= arg;
-			}
+	// Files in startup arguments.
+	string[] argFiles;;
+	foreach (i, arg; args[1 .. $]) {
+		foreach (file; arg.glob()) {
+			argFiles ~= file;
 		}
-		writeCombinations(argFiles, imageType, targDir);
-		return;
 	}
 
-	// Files in startup arguments.
-	auto argFiles = new string[args.length - 1];
-	foreach (i, arg; args[1 .. $]) {
-		argFiles[i] = arg.absolutePath().buildNormalizedPath();
+	if (writeCombi) {
+		// Write combinations from *.dhr files to image file.
+		string[] argFilesDhr;
+		foreach (i, arg; argFiles) {
+			if (0 == arg.extension().filenameCmp(".dhr")) {
+				argFilesDhr ~= arg;
+			}
+		}
+		writeCombinations(argFilesDhr, imageType, targDir);
+		return;
 	}
 
 	// Sends message to existing process (if exist it).

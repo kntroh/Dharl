@@ -8,6 +8,7 @@ module util.utils;
 private import std.algorithm;
 private import std.array;
 private import std.conv;
+private import std.exception;
 private import std.file;
 private import std.functional;
 private import std.math;
@@ -264,4 +265,48 @@ C[] omitPath(C)(C[] path, size_t length, string omitString = "...") {
 /// Replaces all line endings in text to "\n".
 C[] normalizeLineEndings(C)(C[] text) {
 	return text.replace("\r\n", "\n").replace("\r", "\n");
+}
+
+/// Gets file entries from matching by glob.
+auto glob(const(char)[] pattern, bool followSymlink = true) {
+	struct S {
+		private const(char)[] pattern;
+		private DirEntry[] array;
+
+		@property
+		const
+		bool empty() { return !array.length; }
+
+		@property
+		DirEntry front() { return array[0]; }
+
+		void popFront() { array = array[1 .. $]; }
+
+		this (const(char)[] pattern) {
+			this.pattern = pattern;
+			auto drive = pattern.driveName();
+			auto splitted = pathSplitter(pattern).array();
+			if (drive != "") {
+				splitted = splitted[1..$];
+			}
+			void recurse(string current, in string[] splitted) {
+				if (!splitted.length) return;
+				if (splitted[0] == "." || splitted[0] == "..") {
+					recurse(current.buildPath(splitted[0]), splitted[1..$]);
+					return;
+				}
+				foreach (DirEntry file; dirEntries(current, splitted[0], SpanMode.shallow, followSymlink)) {
+					if (1 == splitted.length) {
+						array ~= file;
+					} else if (file.isDir) {
+						recurse(cast(string)file, splitted[1..$]);
+					}
+				}
+			}
+			recurse(.assumeUnique(drive), .assumeUnique(splitted));
+		}
+	}
+	return S(pattern);
+
+	static assert (isIterable!S);
 }
