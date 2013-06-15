@@ -285,25 +285,30 @@ auto glob(const(char)[] pattern, bool followSymlink = true) {
 		this (const(char)[] pattern) {
 			this.pattern = pattern;
 			auto drive = pattern.driveName();
-			auto splitted = pathSplitter(pattern).array();
+			auto cSplitted = pathSplitter(pattern).array();
+			if (!cSplitted.length) return;
 			if (drive != "") {
-				splitted = splitted[1..$];
+				cSplitted = cSplitted[1..$];
+			} else if (cSplitted[0].length == 1 && cSplitted[0][0].isDirSeparator()) {
+				drive = cSplitted[0];
+				cSplitted = cSplitted[1..$];
 			}
-			void recurse(string current, in string[] splitted) {
-				if (!splitted.length) return;
-				if (splitted[0] == "." || splitted[0] == "..") {
-					recurse(current.buildPath(splitted[0]), splitted[1..$]);
+			auto splitted = .assumeUnique(cSplitted);
+			size_t sIndex = 0;
+			void recurse(string current, size_t sIndex) {
+				if (splitted[sIndex] == "." || splitted[sIndex] == "..") {
+					recurse(current.buildPath(splitted[sIndex]), sIndex + 1);
 					return;
 				}
-				foreach (DirEntry file; dirEntries(current, splitted[0], SpanMode.shallow, followSymlink)) {
-					if (1 == splitted.length) {
+				foreach (DirEntry file; dirEntries(current, splitted[sIndex], SpanMode.shallow, followSymlink)) {
+					if (sIndex + 1 == splitted.length) {
 						array ~= file;
 					} else if (file.isDir) {
-						recurse(cast(string)file, splitted[1..$]);
+						recurse(cast(string)file, sIndex + 1);
 					}
 				}
 			}
-			recurse(.assumeUnique(drive), .assumeUnique(splitted));
+			recurse(.assumeUnique(drive), sIndex);
 		}
 	}
 	return S(pattern);
