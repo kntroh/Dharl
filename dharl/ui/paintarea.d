@@ -1350,6 +1350,7 @@ class PaintArea : Canvas, Undoable {
 	/// ditto
 	private void fixTextDrawing() {
 		if (!_iTextImage) return;
+		bool stored = false;
 		foreach (l; _layers) {
 			if (!_image.layer(l).visible) continue;
 			foreach (itx; 0 .. _iSelRange.width) {
@@ -1358,6 +1359,10 @@ class PaintArea : Canvas, Undoable {
 					int iy = ity + _iSelRange.y;
 					int pixel = _iTextImage.getPixel(itx, ity);
 					if (pixel != 0) {
+						if (!stored && _um) {
+							stored = true;
+							_um.store(this);
+						}
 						// The _pixel and a pixel on the textImage is different.
 						iSetPixel(ix, iy, _pixel, l, false);
 					}

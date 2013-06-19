@@ -434,8 +434,12 @@ class DConfig {
 	/// Line width.
 	mixin Prop!("lineWidth", uint, 1);
 
-	/// Bounds of tool window for text drawing.
+	/// Values of tool window for text drawing.
 	mixin Prop!("textDrawingTools", WindowParameter, WindowParameter(int.min, int.min, 200, 50));
+	mixin Prop!("fontName", string, "Arial"); /// ditto
+	mixin Prop!("fontPoint", uint, 12); /// ditto
+	mixin Prop!("bold", bool, false); /// ditto
+	mixin Prop!("italic", bool, false); /// ditto
 
 	/// Palette state.
 	mixin Prop!("enabledBackColor", bool, false);

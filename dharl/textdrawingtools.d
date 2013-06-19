@@ -49,34 +49,53 @@ class TextDrawingTools {
 
 		// Controls of font style.
 		auto fontComp = basicComposite(_shell, GL.window(3, false).margin(0));
+		// font name
 		string[] fontNames;
 		foreach (fontData; d.getFontList(null, true)) {
 			fontNames ~= fontData.p_name;
+			if (_c.conf.fontName == fontData.p_name) {
+				_fontName = _c.conf.fontName;
+			}
 		}
 		fontNames = fontNames.sort;
 		fontNames = fontNames.uniq().array();
-		if (fontNames.length) _fontName = fontNames[0];
 		auto name = basicCombo(fontComp, true, fontNames.sort);
 		name.p_listeners!(SWT.Modify) ~= {
 			_fontName = name.p_text;
+			_c.conf.fontName = _fontName;
 			statusChangedReceivers.raiseEvent();
 		};
+		if (_fontName == "") {
+			_fontName = name.p_text;
+		} else {
+			name.p_text = _fontName;
+		}
+		// font size (pt)
+		_fontPoint = _c.conf.fontPoint;
 		auto point = basicSpinner(fontComp, 1, 256);
 		point.p_selection = _fontPoint;
 		point.widgetSelected ~= {
 			_fontPoint = point.p_selection;
+			_c.conf.fontPoint = _fontPoint;
 			statusChangedReceivers.raiseEvent();
 		};
+		// font style
 		auto styleTools = basicToolBar(fontComp);
 		ToolItem bold, italic;
+		_bold = _c.conf.bold;
+		_italic = _c.conf.italic;
 		bold = basicToolItem(styleTools, _c.text.menu.bold, cimg(_c.image.bold), {
 			_bold = bold.p_selection;
+			_c.conf.bold = _bold;
 			statusChangedReceivers.raiseEvent();
 		}, SWT.CHECK);
+		bold.p_selection = _bold;
 		italic = basicToolItem(styleTools, _c.text.menu.italic, cimg(_c.image.italic), {
 			_italic = italic.p_selection;
+			_c.conf.italic = _italic;
 			statusChangedReceivers.raiseEvent();
 		}, SWT.CHECK);
+		italic.p_selection = _italic;
 
 		// The text box.
 		Text text;
