@@ -2849,6 +2849,7 @@ class PaintArea : Canvas, Undoable {
 					break;
 				}
 			}
+			clearCache(true);
 			return pixel;
 		}
 		switch (e.button) {
