@@ -13,6 +13,7 @@ private import util.utils;
 private import dharl.combinationdialog;
 private import dharl.common;
 private import dharl.dialogs;
+private import dharl.textdrawingtools;
 
 private import dharl.image.dpx;
 private import dharl.image.edg;
@@ -94,7 +95,14 @@ class MainPanel : Composite {
 	/// Table of ToolItem from PaintMode.
 	private ToolItem[PaintMode] _modeItems;
 	/// ToolItem of range selection mode.
-	private ToolItem _toolOfRangeSelection;
+	private ToolItem _toolOfRangeSelection = null;
+	/// ToolItem of text drawing mode.
+	private ToolItem _toolOfTextDrawing = null;
+	/// It will be true while updating the mode menu.
+	private bool _updateModeMenu = false;
+
+	/// Tool window for text drawing.
+	private TextDrawingTools _textDrawingTools = null;
 
 	/// Tool bar for tones.
 	private ToolBar _tones = null;
@@ -260,6 +268,8 @@ class MainPanel : Composite {
 		// Selection tool.
 		if (_c.conf.tool == 0) {
 			_paintArea.rangeSelection = true;
+		} else if (_c.conf.tool == EnumMembers!PaintMode.length + 1) {
+			_paintArea.textDrawing = true;
 		} else {
 			_paintArea.rangeSelection = false;
 			foreach (i, mode; EnumMembers!PaintMode) {
@@ -269,7 +279,7 @@ class MainPanel : Composite {
 				}
 			}
 		}
-		refreshModeMenu();
+		updateModeMenu();
 
 		// Selection tone.
 		auto toneIndex = cast(int)_c.conf.tone - 1;
@@ -383,7 +393,7 @@ class MainPanel : Composite {
 				// Send on paintArea to imageList item.
 				auto item = _imageList.item(sel);
 				bool pushed = _um.store(item.image, {
-					_paintArea.fixPaste();
+					_paintArea.fixPasteOrText();
 					if (item.pushImage(_paintArea.image)) {
 						_pushBase = _paintArea.image.storeData;
 						_currentName = item.dataTo!PImageParams.name;
@@ -418,6 +428,7 @@ class MainPanel : Composite {
 		};
 		_paintArea.statusChangedReceivers ~= {
 			statusChangedReceivers.raiseEvent();
+			textDrawingTools.visible = _toolOfTextDrawing.p_selection;
 		};
 		_paintArea.selectChangedReceivers ~= (int x, int y, int w, int h) {
 			statusChangedReceivers.raiseEvent();
@@ -456,6 +467,15 @@ class MainPanel : Composite {
 			_paintPreview.redraw();
 		};
 		_imageList.removeReceivers ~= &canCloseImage;
+
+		// Tool window.
+		typeof(this.p_shell.shellActivated ~= {}) info;
+		info = this.p_shell.shellActivated ~= {
+			if (_paintArea.textDrawing) {
+				textDrawingTools.visible = true;
+			}
+			info.remove();
+		};
 	}
 
 	/// If doesn't initialized throws exception.
@@ -604,15 +624,19 @@ class MainPanel : Composite {
 		void createModeItem(string text, Image img, PaintMode mode) {
 			auto toolValue = mToolBar.p_itemCount;
 			auto mt = basicToolItem(mToolBar, text, img, {
+				_updateModeMenu = true;
+				scope (exit) _updateModeMenu = false;
 				_paintArea.mode = mode;
-				if (!_paintArea.rangeSelection) {
-					_c.conf.tool = toolValue;
+				if (!_paintArea.rangeSelection && !_paintArea.textDrawing) {
+					_c.conf.tool = toolValue - 1;
 				}
 			}, SWT.RADIO);
 			_modeItems[mode] = mt;
 		}
 		// Selection mode.
 		_toolOfRangeSelection = basicToolItem(mToolBar, _c.text.menu.selection, cimg(_c.image.selection), {
+			_updateModeMenu = true;
+			scope (exit) _updateModeMenu = false;
 			_paintArea.rangeSelection = _toolOfRangeSelection.p_selection;
 			if (_paintArea.rangeSelection) {
 				_c.conf.tool = 0;
@@ -628,7 +652,20 @@ class MainPanel : Composite {
 		createModeItem(_c.text.menu.rectFill, cimg(_c.image.rectFill), PaintMode.RectFill);
 		createModeItem(_c.text.menu.fillArea, cimg(_c.image.fillArea), PaintMode.Fill);
 
-		statusChangedReceivers ~= &refreshModeMenu;
+		// Text drawing mode.
+		auto textDrawValue = mToolBar.p_itemCount;
+		_toolOfTextDrawing = basicToolItem(mToolBar, _c.text.menu.textDrawing, cimg(_c.image.textDrawing), {
+			_updateModeMenu = true;
+			scope (exit) _updateModeMenu = false;
+			_paintArea.textDrawing = _toolOfTextDrawing.p_selection;
+			if (_paintArea.textDrawing) {
+				_c.conf.tool = textDrawValue;
+				_paintArea.inputtedText = textDrawingTools.inputtedText;
+				_paintArea.drawingFont = textDrawingTools.drawingFont;
+			}
+		}, SWT.RADIO);
+
+		statusChangedReceivers ~= &updateModeMenu;
 
 		createSeparator();
 
@@ -705,14 +742,29 @@ class MainPanel : Composite {
 		}
 		statusChangedReceivers ~= &updateGrid;
 	}
+	/// Tools for text drawing.
+	@property
+	private TextDrawingTools textDrawingTools() {
+		if (_textDrawingTools) return _textDrawingTools;
+		_textDrawingTools = new TextDrawingTools(this.p_shell, _c);
+		_textDrawingTools.statusChangedReceivers ~= {
+			_paintArea.inputtedText = _textDrawingTools.inputtedText;
+			_paintArea.drawingFont = _textDrawingTools.drawingFont;
+		};
+		return _textDrawingTools;
+	}
 	/// Updates mode toolbar and configration.
-	private void refreshModeMenu() {
+	private void updateModeMenu() {
 		.enforce(_toolOfRangeSelection);
+		.enforce(_toolOfTextDrawing);
 		.enforce(_paintArea);
+		if (_updateModeMenu) return;
 		bool range = _paintArea.rangeSelection;
 		_toolOfRangeSelection.p_selection = range;
+		bool textDrawing = _paintArea.textDrawing;
+		_toolOfTextDrawing.p_selection = textDrawing;
 		foreach (mode, item; _modeItems) {
-			item.p_selection = !range && _paintArea.mode == mode;
+			item.p_selection = !range && !textDrawing && _paintArea.mode == mode;
 		}
 	}
 	/// Updates tones toolbar.

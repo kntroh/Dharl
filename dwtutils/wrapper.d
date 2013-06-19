@@ -96,6 +96,7 @@ mixin GetSetWrapper!("HeaderVisible"); /// ditto
 mixin GetSetWrapper!("Height"); /// ditto
 mixin GetSetWrapper!("HorizontalBar"); /// ditto
 mixin GetSetWrapper!("Image"); /// ditto
+mixin GetSetWrapper!("ImageData"); /// ditto
 mixin GetSetWrapper!("ImageIndent"); /// ditto
 mixin GetSetWrapper!("Increment"); /// ditto
 mixin GetSetWrapper!("ItemCount"); /// ditto
@@ -123,6 +124,7 @@ mixin GetSetWrapper!("Size"); /// ditto
 mixin GetSetWrapper!("Style"); /// ditto
 mixin GetSetWrapper!("SupportedTypes"); /// ditto
 mixin GetSetWrapper!("Text", systemReturnCodeToN, nToSystemReturnCode);
+mixin GetSetWrapper!("TextAntialias"); /// ditto
 mixin GetSetWrapper!("TextLimit"); /// ditto
 mixin GetSetWrapper!("Thumb"); /// ditto
 mixin GetSetWrapper!("ToolTipText", systemReturnCodeToN, nToSystemReturnCode); /// ditto

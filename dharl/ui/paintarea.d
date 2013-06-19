@@ -81,6 +81,8 @@ class PaintArea : Canvas, Undoable {
 
 	/// Range selection mode.
 	private bool _rangeSel = false;
+	/// Text drawing mode.
+	private bool _textDraw = false;
 	/// Selection range.
 	private Rectangle _iSelRange;
 	/// Range of moving.
@@ -99,6 +101,13 @@ class PaintArea : Canvas, Undoable {
 
 	/// Doesn't send select changed event with same value continuously. 
 	private Rectangle _iOldCursorArea = null;
+
+	/// The text image for text drawing.
+	private ImageData _iTextImage = null;
+	/// The inputted text for text drawing.
+	private string _inputtedText = "";
+	/// The font for text drawing.
+	private FontData _drawingFont = null;
 
 	/// Paint mode.
 	private PaintMode _mode = PaintMode.FreePath;
@@ -480,7 +489,7 @@ class PaintArea : Canvas, Undoable {
 		auto ls = layers.dup.sort().uniq().array();
 		if (_layers == ls) return;
 
-		fixPaste();
+		fixPasteOrText();
 		_layers = ls;
 		clearCache(false);
 		redrawCursorArea();
@@ -849,11 +858,82 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		if (_rangeSel == v) return;
-		fixPaste();
+		fixPasteOrText();
 		redrawCursorArea();
 		_rangeSel = v;
+		_textDraw &= !v;
 		_mouseDown = -1;
 		resetSelectedRange();
+
+		clearCache(false);
+		redrawCursorArea();
+		drawReceivers.raiseEvent();
+		statusChangedReceivers.raiseEvent();
+	}
+
+	/// Text drawing mode.
+	@property
+	const
+	bool textDrawing() {
+		checkInit();
+		return _textDraw;
+	}
+	/// ditto
+	@property
+	void textDrawing(bool v) {
+		checkWidget();
+		checkInit();
+		if (_textDraw == v) return;
+		fixPasteOrText();
+		redrawCursorArea();
+		_textDraw = v;
+		_rangeSel &= !v;
+		_mouseDown = -1;
+		resetSelectedRange();
+
+		clearCache(false);
+		redrawCursorArea();
+		drawReceivers.raiseEvent();
+		statusChangedReceivers.raiseEvent();
+	}
+
+	/// The inputted text for text drawing.
+	@property
+	const
+	string inputtedText() {
+		checkInit();
+		return _inputtedText;
+	}
+	/// ditto
+	@property
+	void inputtedText(string v) {
+		checkWidget();
+		checkInit();
+
+		_inputtedText = v;
+		updateText();
+
+		clearCache(false);
+		redrawCursorArea();
+		drawReceivers.raiseEvent();
+		statusChangedReceivers.raiseEvent();
+	}
+	/// The font for text drawing.
+	/// The default value is null.
+	@property
+	FontData drawingFont() {
+		checkWidget();
+		checkInit();
+		return _drawingFont;
+	}
+	/// ditto
+	@property
+	void drawingFont(FontData v) {
+		checkWidget();
+		checkInit();
+
+		_drawingFont = v;
+		updateText();
 
 		clearCache(false);
 		redrawCursorArea();
@@ -875,7 +955,7 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		this.p_cursor = cursor(v);
 		if (_mode == v) return;
-		fixPaste();
+		fixPasteOrText();
 		redrawCursorArea();
 		_mode = v;
 		_mouseDown = -1;
@@ -978,7 +1058,7 @@ class PaintArea : Canvas, Undoable {
 		if (dropperMode && _cursorDropper) {
 			return _cursorDropper;
 		}
-		if (rangeSelection && _cursorSelRange) {
+		if ((rangeSelection || textDrawing) && _cursorSelRange) {
 			return _cursorSelRange;
 		}
 		return cursor(this.mode);
@@ -1116,7 +1196,7 @@ class PaintArea : Canvas, Undoable {
 		auto data = cast(ImageData)cb.getContents(ImageTransfer.getInstance());
 		if (!data) return;
 
-		fixPaste();
+		fixPasteOrText();
 		if (_um) _um.store(this);
 		rangeSelection = true;
 		auto imageData = new ImageData(data.width, data.height, 8, _image.copyPalette());
@@ -1197,17 +1277,58 @@ class PaintArea : Canvas, Undoable {
 		redrawCursorArea();
 	}
 
-	/// Paste from source layer to image.
-	void fixPaste() {
+	/// Updates text image for text drawing.
+	private void updateText() {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
-		if (!_pasteLayer) return;
+		if (_iSelRange.p_empty) return;
 
-		fixPasteImpl(_enabledBackColor, _backPixel);
+		auto d = this.p_display;
+
+		int iw = _iTextImage ? _iTextImage.width : 0;
+		int ih = _iTextImage ? _iTextImage.height : 0;
+		if (iw < _iSelRange.width || ih < _iSelRange.height) {
+			iw = .max(_image.width, _iSelRange.width * 2);
+			ih = .max(_image.height, _iSelRange.height * 2);
+			auto colors = [new RGB(0, 0, 0), new RGB(255, 255, 255)];
+			auto palette = new PaletteData(colors);
+			_iTextImage = new ImageData(iw, ih, 1, palette);
+		}
+		auto image = new Image(d, _iTextImage);
+		scope (exit) image.dispose();
+		auto gc = new GC(image);
+		scope (exit) gc.dispose();
+
+		gc.p_font = _drawingFont ? (new Font(d, _drawingFont)) : this.p_font;
+		scope (exit) {
+			if (_drawingFont) gc.p_font.dispose();
+		}
+		gc.p_textAntialias = SWT.OFF;
+		gc.p_foreground = d.getSystemColor(SWT.COLOR_WHITE);
+		gc.p_background = d.getSystemColor(SWT.COLOR_BLACK);
+
+		gc.fillRectangle(0, 0, iw, ih);
+		gc.drawText(inputtedText, 0, 0);
+
+		_iTextImage = image.p_imageData;
+		clearCache(false);
+	}
+
+	/// Paste from source layer to image, or draws to image from inputted text.
+	void fixPasteOrText() {
+		checkWidget();
+		checkInit();
+		if (_image.empty) return;
+
+		if (_pasteLayer) {
+			fixPaste(_enabledBackColor, _backPixel);
+		} else if (_textDraw) {
+			fixTextDrawing();
+		}
 	}
 	/// ditto
-	private void fixPasteImpl(bool enabledBackColor, int backPixel) {
+	private void fixPaste(bool enabledBackColor, int backPixel) {
 		iFillRect((int ix, int iy) {
 			iSetPixels(ix, iy, backPixel);
 		}, _iMoveRange);
@@ -1226,6 +1347,28 @@ class PaintArea : Canvas, Undoable {
 		redrawCursorArea();
 		resetPasteParams();
 	}
+	/// ditto
+	private void fixTextDrawing() {
+		if (!_iTextImage) return;
+		foreach (l; _layers) {
+			if (!_image.layer(l).visible) continue;
+			foreach (itx; 0 .. _iSelRange.width) {
+				foreach (ity; 0 .. _iSelRange.height) {
+					int ix = itx + _iSelRange.x;
+					int iy = ity + _iSelRange.y;
+					int pixel = _iTextImage.getPixel(itx, ity);
+					if (pixel != 0) {
+						// The _pixel and a pixel on the textImage is different.
+						iSetPixel(ix, iy, _pixel, l, false);
+					}
+				}
+			}
+		}
+		_iTextImage = null;
+		redrawCursorArea();
+		resetSelectedRange();
+	}
+
 	/// Cancels paste operation.
 	void cancelPaste() {
 		checkWidget();
@@ -1258,7 +1401,7 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
-		fixPaste();
+		fixPasteOrText();
 		rangeSelection = true;
 		_iSelRange.x = 0;
 		_iSelRange.y = 0;
@@ -1427,7 +1570,7 @@ class PaintArea : Canvas, Undoable {
 			}, 0, 0, _pasteLayer.width, _pasteLayer.height);
 			clearCache(false);
 			redrawCursorArea();
-		} else if (_iSelRange.p_empty) {
+		} else if (!_rangeSel || _iSelRange.p_empty) {
 			if (_um) _um.store(this);
 			clearCache(false);
 			iFillRect((int ix, int iy) {
@@ -1461,7 +1604,7 @@ class PaintArea : Canvas, Undoable {
 			func(&iPGetPixels, &iPSetPixels, 0, 0, _pasteLayer.width, _pasteLayer.height);
 			clearCache(false);
 			redrawCursorArea();
-		} else if (_iSelRange.p_empty) {
+		} else if (!_rangeSel || _iSelRange.p_empty) {
 			if (_um) _um.store(this);
 			clearCache(false);
 			auto pget = (int x, int y) => iGetPixels2(x, y, allLayers);
@@ -1523,7 +1666,7 @@ class PaintArea : Canvas, Undoable {
 				_pasteLayer.width, _pasteLayer.height, back);
 			clearCache(false);
 			redrawCursorArea();
-		} else if (_iSelRange.p_empty) {
+		} else if (!_rangeSel || _iSelRange.p_empty) {
 			if (_um) _um.store(this);
 			clearCache(false);
 			auto back = new int[_layers.length];
@@ -1551,14 +1694,13 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		if (_pasteLayer) {
 			return CRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
-		} else {
+		} else if (_rangeSel) {
 			auto iSelRange = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
 			if (!iSelRange.p_empty) {
 				return iSelRange;
-			} else {
-				return CRect(0, 0, _image.width, _image.height);
 			}
 		}
+		return CRect(0, 0, _image.width, _image.height);
 	}
 	/// Resizes paint area.
 	void resizePaintArea(int w, int h, bool scaling) {
@@ -1621,7 +1763,7 @@ class PaintArea : Canvas, Undoable {
 			redrawCursorArea();
 		} else {
 			auto iSelRange = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
-			if (!iSelRange.p_empty) {
+			if (_rangeSel && !iSelRange.p_empty) {
 				int ix = iSelRange.x;
 				int iy = iSelRange.y;
 				iw = iSelRange.width;
@@ -1711,12 +1853,12 @@ class PaintArea : Canvas, Undoable {
 	private Rectangle iCursorArea() {
 		checkWidget();
 		checkInit();
-		if (_pasteLayer || _rangeSel) {
+		if (_pasteLayer || _rangeSel || _textDraw) {
 			int ix = _iSelRange.x;
 			int iy = _iSelRange.y;
 			int iw = _iSelRange.width;
 			int ih = _iSelRange.height;
-			if (_pasteLayer) {
+			if (_pasteLayer || _textDraw) {
 				return CRect(ix, iy, iw, ih);
 			} else {
 				return iInImageRect(ix, iy, iw, ih);
@@ -1727,7 +1869,7 @@ class PaintArea : Canvas, Undoable {
 				return CRect(0, 0, 0, 0);
 			}
 			int ix, iy, iw, ih;
-			int ics = _rangeSel ? 0 : iCurSize - 1;
+			int ics = iCurSize - 1;
 			if (_iCurFrom.x != _iCurTo.x || _iCurFrom.y != _iCurTo.y) {
 				ix = min(_iCurFrom.x, _iCurTo.x) - ics;
 				iy = min(_iCurFrom.y, _iCurTo.y) - ics;
@@ -1907,7 +2049,7 @@ class PaintArea : Canvas, Undoable {
 		e = false;
 		s = false;
 		w = false;
-		if (!_rangeSel || _iSelRange.p_empty) return;
+		if (!(_rangeSel || _textDraw) || _iSelRange.p_empty) return;
 		auto cRect = itoc(_iSelRange);
 		int csx = cRect.x;
 		int csy = cRect.y;
@@ -2172,8 +2314,25 @@ class PaintArea : Canvas, Undoable {
 					if (selLayer[i]) pLayerIndex++;
 				}
 				pushPasteLayer(data, pLayerIndex, layer);
+			} else if (_textDraw) {
+				// Draws inputted text.
+				if (_iTextImage) {
+					foreach (itx; 0 .. _iSelRange.width) {
+						foreach (ity; 0 .. _iSelRange.height) {
+							int ix = itx + _iSelRange.x;
+							int iy = ity + _iSelRange.y;
+							if (iInImage(ix, iy) && iCanDraw(ix, iy, layer)) {
+								int pixel = _iTextImage.getPixel(itx, ity);
+								if (pixel != 0) {
+									// The _pixel and a pixel on the textImage is different.
+									data.setPixel(ix, iy, _pixel);
+								}
+							}
+						}
+					}
+				}
 			} else if (!_rangeSel && 1 == _mouseDown) {
-				/// Draws cursor in drawing.
+				// Draws cursor in drawing.
 				if (_mode is PaintMode.FreePath) {
 					// Unnecessary. After painted.
 				} else {
@@ -2342,7 +2501,7 @@ class PaintArea : Canvas, Undoable {
 			}
 		}
 
-		if ((_pasteLayer || _rangeSel) && !_iSelRange.p_empty) {
+		if ((_pasteLayer || _rangeSel || _textDraw) && !_iSelRange.p_empty) {
 			// If selection area, draw focus line.
 			auto cca = cCursorArea();
 			auto color1 = d.getSystemColor(SWT.COLOR_BLACK);
@@ -2448,23 +2607,27 @@ class PaintArea : Canvas, Undoable {
 			int iOldY = _iCurTo.y;
 			_iCurTo.x = ix;
 			_iCurTo.y = iy;
-			if (_rangeSel) {
+			if (_rangeSel || _textDraw) {
 				// Resizes selection range.
 				if (_catchN || _catchE || _catchS || _catchW) {
-					static void catchCommon(ref int isx, ref int isw, bool catchE, bool catchW,
+					void catchCommon(ref int isx, ref int isw, bool catchE, bool catchW,
 							int iCatchX, int iCurToX, int iOldX, int iOldW, int imgWidth) {
 						if (!catchE && !catchW) return;
 						int irx = iCatchX - iCurToX;
 						if (catchW) {
 							isx = iOldX - irx;
 							isx = min(isx, iOldX + iOldW);
-							isx = max(isx, 0);
+							if (!_textDraw) {
+								isx = max(isx, 0);
+							}
 							irx = iOldX - isx;
 						} else {
 							irx = -irx;
 						}
 						isw = iOldW + irx;
-						isw = min(isw, imgWidth - isx);
+						if (!_textDraw) {
+							isw = min(isw, imgWidth - isx);
+						}
 						isw = max(isw, 0);
 					}
 					catchCommon(_iSelRange.x, _iSelRange.width, _catchE, _catchW,
@@ -2480,6 +2643,9 @@ class PaintArea : Canvas, Undoable {
 					cursor = cursorNow;
 				}
 				iScroll(ix, iy);
+				if (_textDraw) {
+					updateText();
+				}
 				raiseSelectChangedEvent();
 			} else if (_mode is PaintMode.FreePath) {
 				// Only FreePath paints before mouse up.
@@ -2506,7 +2672,7 @@ class PaintArea : Canvas, Undoable {
 				this.p_cursor = iCursorNow(ix, iy);
 				return;
 			}
-			if (_rangeSel) {
+			if (_rangeSel || _textDraw) {
 				// Set cursor according to state.
 				bool no, ea, so, we;
 				cIsCatchedFocus(e.x, e.y, no, ea, so, we);
@@ -2553,14 +2719,14 @@ class PaintArea : Canvas, Undoable {
 					_iPCatchY = cytoiy(e.y) - _iSelRange.y;
 					return;
 				}
-				fixPaste();
+				fixPasteOrText();
 			}
 			redrawCursorArea();
 			_iCurFrom.x = cxtoix(e.x);
 			_iCurFrom.y = cytoiy(e.y);
 			_iCurTo.x = _iCurFrom.x;
 			_iCurTo.y = _iCurFrom.y;
-			if (_rangeSel) {
+			if (_rangeSel || _textDraw) {
 				bool no, ea, so, we;
 				cIsCatchedFocus(e.x, e.y, no, ea, so, we);
 				if (no || ea || so || we) {
@@ -2578,7 +2744,7 @@ class PaintArea : Canvas, Undoable {
 					return;
 				}
 				auto ca = cCursorArea;
-				if (ca.contains(e.x, e.y)) {
+				if (_rangeSel && ca.contains(e.x, e.y)) {
 					// Starts move of selection range.
 					_moving = false;
 					auto ia = iCursorArea;
@@ -2590,6 +2756,10 @@ class PaintArea : Canvas, Undoable {
 					initPasteLayer(ia.x, ia.y);
 					_iPCatchX = cxtoix(e.x) - _iSelRange.x;
 					_iPCatchY = cytoiy(e.y) - _iSelRange.y;
+					return;
+				}
+				if (_textDraw) {
+					fixPasteOrText();
 					return;
 				}
 				_iSelRange.x = _iCurFrom.x;
@@ -2681,7 +2851,7 @@ class PaintArea : Canvas, Undoable {
 			scope (exit) this.p_cursor = iCursorNow(cxtoix(e.x), cytoiy(e.y));
 			_mouseDown = -1;
 			if (_pasteLayer) return;
-			if (_rangeSel) {
+			if (_rangeSel || _textDraw) {
 				// Don't draws.
 				return;
 			}
@@ -2837,7 +3007,7 @@ class PaintArea : Canvas, Undoable {
 			_iMoveRange.y = st.iMoveY;
 			_iMoveRange.width = st.iMoveW;
 			_iMoveRange.height = st.iMoveH;
-			fixPasteImpl(st.enabledBackColor, st.backPixel);
+			fixPaste(st.enabledBackColor, st.backPixel);
 		}
 		clearCache(false);
 		redraw();

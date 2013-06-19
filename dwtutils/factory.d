@@ -38,6 +38,13 @@ Shell basicShell(Shell parent, string title, Image image = null, Layout layout =
 	sh.p_layout = layout;
 	return sh;
 }
+/// Creates tool window style shell.
+Shell toolShell(Shell parent, string title, bool resize = true, bool close = true, Layout layout = null) {
+	int style = SWT.TITLE | SWT.TOOL;
+	if (resize) style |= SWT.RESIZE;
+	if (close) style |= SWT.CLOSE;
+	return basicShell(parent, title, null, layout, style);
+}
 
 /// Creates basic style composite.
 Composite basicComposite(Composite parent, Layout layout = null, int style = SWT.NONE) {
@@ -295,6 +302,19 @@ Text basicText(Composite parent, void delegate() modify, string text = "", int s
 /// ditto
 Text basicText(Composite parent, string text = "", int style = SWT.BORDER) {
 	return basicText(parent, cast(void delegate(Event))null, text, style);
+}
+
+/// Creates multi line Text.
+Text multiLineText(Composite parent, void delegate(Event) modify, string text = "", int style = SWT.BORDER) {
+	return basicText(parent, modify, text, style | SWT.MULTI | SWT.V_SCROLL);
+}
+/// ditto
+Text multiLineText(Composite parent, void delegate() modify, string text = "", int style = SWT.BORDER) {
+	return basicText(parent, modify, text, style | SWT.MULTI | SWT.V_SCROLL);
+}
+/// ditto
+Text multiLineText(Composite parent, string text = "", int style = SWT.BORDER) {
+	return basicText(parent, text, style | SWT.MULTI | SWT.V_SCROLL);
 }
 
 /// Creates basic style button.

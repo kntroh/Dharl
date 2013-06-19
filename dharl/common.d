@@ -141,6 +141,10 @@ class DImages {
 	const DImage ovalFill = importImage!("oval_fill.png"); /// ditto
 	const DImage rectFill = importImage!("rect_fill.png"); /// ditto
 	const DImage fillArea = importImage!("fill_area.png"); /// ditto
+	const DImage textDrawing = importImage!("text_drawing.png"); /// ditto
+
+	const DImage bold = importImage!("bold.png"); /// ditto
+	const DImage italic = importImage!("italic.png"); /// ditto
 
 	const DImage noTone = importImage!("no_tone.png"); /// ditto
 
@@ -226,6 +230,8 @@ Usage:
 	mixin MsgProp!("fSaveImageTypeDharl", "Dharl Image (*.dhr)"); /// ditto
 	mixin MsgProp!("fSaveImageTypeBitmap", "%d-bit (%d colors) Bitmap Image (*.bmp)"); /// ditto
 	mixin MsgProp!("fSaveImageTypePNG", "%d-bit (%d colors) PNG Image (*.png)"); /// ditto
+
+	mixin MsgProp!("textDrawing", "Text Drawing"); /// ditto
 
 	mixin MsgProp!("noTone", "(No Tone)"); /// ditto
 
@@ -321,6 +327,10 @@ struct DMenuText {
 	mixin MsgProp!("ovalFill", "O&val (Fill)\tCtrl+6"); /// ditto
 	mixin MsgProp!("rectFill", "R&ectangle (Fill)\tCtrl+7"); /// ditto
 	mixin MsgProp!("fillArea", "F&ill Area\tCtrl+8"); /// ditto
+	mixin MsgProp!("textDrawing", "&Text Drawing\tCtrl+9"); /// ditto
+
+	mixin MsgProp!("bold", "&Bold"); /// ditto
+	mixin MsgProp!("italic", "&Italic"); /// ditto
 
 	mixin MsgProp!("palette", "&Palette"); /// ditto
 	mixin MsgProp!("createGradation", "Create &Gradation"); /// ditto
@@ -423,6 +433,9 @@ class DConfig {
 	mixin Prop!("zoom", uint, 1);
 	/// Line width.
 	mixin Prop!("lineWidth", uint, 1);
+
+	/// Bounds of tool window for text drawing.
+	mixin Prop!("textDrawingTools", WindowParameter, WindowParameter(int.min, int.min, 200, 50));
 
 	/// Palette state.
 	mixin Prop!("enabledBackColor", bool, false);

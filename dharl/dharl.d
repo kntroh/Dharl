@@ -311,7 +311,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	});
 
 	MenuItem[PaintMode] modeItems;
-	MenuItem tSel;
+	MenuItem tSel, tTextDrawing;
 
 
 	/* ---- Edit menu -------------------------------------------------- */
@@ -397,6 +397,9 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tOvalFill = createModeItem(c.text.menu.ovalFill, cimg(c.image.ovalFill), PaintMode.OvalFill);
 	auto tRectFill = createModeItem(c.text.menu.rectFill, cimg(c.image.rectFill), PaintMode.RectFill);
 	auto tFill = createModeItem(c.text.menu.fillArea, cimg(c.image.fillArea), PaintMode.Fill);
+	tTextDrawing = basicMenuItem(mMode, c.text.menu.textDrawing, cimg(c.image.textDrawing), {
+		mainPanel.paintArea.textDrawing = tTextDrawing.p_selection;
+	}, SWT.RADIO, mainPanel.paintArea.textDrawing);
 
 
 	/* ---- Paletete menu ---------------------------------------------- */
@@ -529,8 +532,10 @@ private MainPanel initialize(DCommon c, Shell shell) {
 
 		bool range = mainPanel.paintArea.rangeSelection;
 		tSel.p_selection = range;
+		bool textDrawing = mainPanel.paintArea.textDrawing;
+		tTextDrawing.p_selection = textDrawing;
 		foreach (mode, item; modeItems) {
-			item.p_selection = !range && mainPanel.paintArea.mode == mode;
+			item.p_selection = !range && !textDrawing && mainPanel.paintArea.mode == mode;
 		}
 		tMask.p_selection = mainPanel.maskMode;
 		mBack.p_selection = mainPanel.paintArea.enabledBackColor;
