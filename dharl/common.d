@@ -133,6 +133,7 @@ class DImages {
 	const DImage copyPalette = importImage!("copy_palette.png"); /// ditto
 	const DImage paletteTransfer = importImage!("palette_transfer.png"); /// ditto
 
+	const DImage freeSelection = importImage!("free_selection.png"); /// ditto
 	const DImage selection = importImage!("selection.png"); /// ditto
 	const DImage freePath = importImage!("free_path.png"); /// ditto
 	const DImage straight = importImage!("straight.png"); /// ditto
@@ -319,8 +320,9 @@ struct DMenuText {
 
 	mixin MsgProp!("mode", "&Mode"); /// ditto
 	mixin MsgProp!("enabledBackColor", "Background Color is &Transparent\tCtrl+P"); /// ditto
+	mixin MsgProp!("freeSelection", "&Free Selection\tCtrl+0"); /// ditto
 	mixin MsgProp!("selection", "&Selection\tCtrl+1"); /// ditto
-	mixin MsgProp!("freePath", "&Free Path\tCtrl+2"); /// ditto
+	mixin MsgProp!("freePath", "Free &Path\tCtrl+2"); /// ditto
 	mixin MsgProp!("straight", "&Straight\tCtrl+3"); /// ditto
 	mixin MsgProp!("ovalLine", "&Oval\tCtrl+4"); /// ditto
 	mixin MsgProp!("rectLine", "&Rectangle\tCtrl+5"); /// ditto

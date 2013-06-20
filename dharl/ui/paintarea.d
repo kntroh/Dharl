@@ -10,6 +10,7 @@ private import util.types;
 private import util.undomanager;
 private import util.utils;
 
+private import dharl.image.imageutils;
 private import dharl.image.mlimage;
 
 private import dharl.ui.dwtutils;
@@ -24,6 +25,13 @@ private import std.string;
 private import org.eclipse.swt.all;
 
 private import java.lang.all : System;
+
+/// Mode of range selection.
+enum SelectMode {
+	notSelection, /// Not selection mode.
+	rect, /// Shape of selection range is rectangle.
+	lasso, /// Shape of selection range is free.
+}
 
 /// This class has a image by division layers,
 /// Edit from user to each layer is accepted. 
@@ -79,8 +87,8 @@ class PaintArea : Canvas, Undoable {
 	/// Cursor size.
 	private uint _iCurSize = 1;
 
-	/// Range selection mode.
-	private bool _rangeSel = false;
+	/// Selection mode.
+	private SelectMode _rangeSel = SelectMode.notSelection;
 	/// Text drawing mode.
 	private bool _textDraw = false;
 	/// Selection range.
@@ -153,6 +161,13 @@ class PaintArea : Canvas, Undoable {
 	private string _statusTextXY = "%s, %s";
 	/// ditto
 	private string _statusTextRange = "%s, %s to %s, %s (%s x %s)";
+
+	/// Work line of free selection.
+	private int[] _cLassoPolyline;
+	/// Range of free selection.
+	private int[] _iLassoPolygon;
+	/// Region of free selection.
+	private Region _iLassoRegion = null;
 
 	/// The only constructor.
 	this (Composite parent, int style) {
@@ -542,7 +557,7 @@ class PaintArea : Canvas, Undoable {
 	Rectangle selectedArea() {
 		checkWidget();
 		checkInit();
-		if (empty || !_rangeSel) return CRect(0, 0, 0, 0);
+		if (empty || _rangeSel is SelectMode.notSelection) return CRect(0, 0, 0, 0);
 		return iCursorArea;
 	}
 
@@ -850,20 +865,20 @@ class PaintArea : Canvas, Undoable {
 	/// Range selection mode.
 	@property
 	const
-	bool rangeSelection() {
+	SelectMode rangeSelection() {
 		checkInit();
 		return _rangeSel;
 	}
 	/// ditto
 	@property
-	void rangeSelection(bool v) {
+	void rangeSelection(SelectMode v) {
 		checkWidget();
 		checkInit();
 		if (_rangeSel == v) return;
 		fixPasteOrText();
 		redrawCursorArea();
 		_rangeSel = v;
-		_textDraw &= !v;
+		_textDraw &= v is SelectMode.notSelection;
 		_mouseDown = -1;
 		resetSelectedRange();
 
@@ -889,7 +904,7 @@ class PaintArea : Canvas, Undoable {
 		fixPasteOrText();
 		redrawCursorArea();
 		_textDraw = v;
-		_rangeSel &= !v;
+		if (v) _rangeSel = SelectMode.notSelection;
 		_mouseDown = -1;
 		resetSelectedRange();
 
@@ -1060,28 +1075,34 @@ class PaintArea : Canvas, Undoable {
 		if (dropperMode && _cursorDropper) {
 			return _cursorDropper;
 		}
-		if ((rangeSelection || textDrawing) && _cursorSelRange) {
+		if ((rangeSelection !is SelectMode.notSelection || textDrawing) && _cursorSelRange) {
 			return _cursorSelRange;
 		}
 		return cursor(this.mode);
 	}
 	/// ditto
 	private Cursor iCursorNow(int ix, int iy) {
-		if (rangeSelection || textDrawing) {
-			// cursor according to state.
+		if (rangeSelection !is SelectMode.notSelection || textDrawing) {
 			auto d = this.p_display;
-			bool no, ea, so, we;
-			cIsCatchedFocus(ixtocx(ix), iytocy(iy), no, ea, so, we);
-			if ((no && ea) || (so && we)) {
-				return d.getSystemCursor(SWT.CURSOR_SIZENESW);
-			} else if ((no && we) || (ea && so)) {
-				return d.getSystemCursor(SWT.CURSOR_SIZENWSE);
-			} else if (no || so) {
-				return d.getSystemCursor(SWT.CURSOR_SIZENS);
-			} else if (ea || we) {
-				return d.getSystemCursor(SWT.CURSOR_SIZEWE);
-			} else if (iCursorArea.contains(ix, iy)) {
-				return d.getSystemCursor(SWT.CURSOR_HAND);
+			if (rangeSelection is SelectMode.lasso) {
+				if (_iLassoRegion && _iLassoRegion.contains(ix, iy)) {
+					return d.getSystemCursor(SWT.CURSOR_HAND);
+				}
+			} else {
+				// cursor according to state.
+				bool no, ea, so, we;
+				cIsCatchedFocus(ixtocx(ix), iytocy(iy), no, ea, so, we);
+				if ((no && ea) || (so && we)) {
+					return d.getSystemCursor(SWT.CURSOR_SIZENESW);
+				} else if ((no && we) || (ea && so)) {
+					return d.getSystemCursor(SWT.CURSOR_SIZENWSE);
+				} else if (no || so) {
+					return d.getSystemCursor(SWT.CURSOR_SIZENS);
+				} else if (ea || we) {
+					return d.getSystemCursor(SWT.CURSOR_SIZEWE);
+				} else if (iCursorArea.contains(ix, iy)) {
+					return d.getSystemCursor(SWT.CURSOR_HAND);
+				}
 			}
 		}
 		return cursorNow;
@@ -1124,7 +1145,13 @@ class PaintArea : Canvas, Undoable {
 
 		auto ia = selectedArea;
 
-		if (0 == ia.width && 0 == ia.height) {
+		if (rangeSelection is SelectMode.lasso) {
+			// x, y
+			auto cLoc = toControl(d.p_cursorLocation);
+			int ix1 = cxtoix(cLoc.x);
+			int iy1 = cytoiy(cLoc.y);
+			_status.p_message = statusTextXY.format(ix1, iy1);
+		} else if (0 == ia.width && 0 == ia.height) {
 			// no selection
 			auto cLoc = toControl(d.p_cursorLocation);
 			int ix1 = cxtoix(cLoc.x);
@@ -1167,7 +1194,7 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
-		if (!_rangeSel) return;
+		if (rangeSelection is SelectMode.notSelection) return;
 		auto ia = iCursorArea;
 		if (0 == ia.width || 0 == ia.height) return;
 		copy();
@@ -1180,7 +1207,7 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
-		if (!_rangeSel) return;
+		if (rangeSelection is SelectMode.notSelection) return;
 		auto ia = iCursorArea;
 		if (0 == ia.width || 0 == ia.height) return;
 
@@ -1188,11 +1215,29 @@ class PaintArea : Canvas, Undoable {
 		auto cb = new Clipboard(d);
 		scope (exit) cb.dispose();
 
-		Object data;
+		ImageData data;
 		if (_pasteLayer) {
 			data = _pasteLayer.createImageData(8);
+			if (_iLassoRegion) {
+				foreach (ix; 0 .. _pasteLayer.width) {
+					foreach (iy; 0 .. _pasteLayer.height) {
+						if (!_iLassoRegion.contains(ix + _iMoveRange.x, iy + _iMoveRange.y)) {
+							data.setPixel(ix, iy, _backPixel);
+						}
+					}
+				}
+			}
 		} else {
 			data = _image.createImageData(ia, 8, _layers);
+			if (_iLassoRegion) {
+				foreach (ix; ia.x .. ia.x + ia.width) {
+					foreach (iy; ia.y .. ia.y + ia.height) {
+						if (!_iLassoRegion.contains(ix, iy)) {
+							data.setPixel(ix - ia.x, iy - ia.y, _backPixel);
+						}
+					}
+				}
+			}
 		}
 		auto it = cast(Transfer)ImageTransfer.getInstance();
 		cb.setContents([data], [it]);
@@ -1214,7 +1259,7 @@ class PaintArea : Canvas, Undoable {
 
 		fixPasteOrText();
 		if (_um) _um.store(this);
-		rangeSelection = true;
+		rangeSelection = SelectMode.rect;
 		auto imageData = new ImageData(data.width, data.height, 8, _image.copyPalette());
 
 		auto colors = new CRGB[imageData.palette.colors.length];
@@ -1266,10 +1311,12 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
-		if (!_rangeSel) return;
+		if (rangeSelection is SelectMode.notSelection) return;
 		if (_pasteLayer) {
 			iFillRect((int ix, int iy) {
-				iSetPixels(ix, iy, _backPixel);
+				if (!_iLassoRegion || _iLassoRegion.contains(ix, iy)) {
+					iSetPixels(ix, iy, _backPixel);
+				}
 			}, _iMoveRange);
 			cancelPaste();
 			return;
@@ -1287,7 +1334,9 @@ class PaintArea : Canvas, Undoable {
 		enforce(!_image.empty);
 		auto ia = iCursorArea;
 		iFillRect((int ix, int iy) {
-			iSetPixels(ix, iy, _backPixel);
+			if (!_iLassoRegion || _iLassoRegion.contains(ix, iy)) {
+				iSetPixels(ix, iy, _backPixel);
+			}
 		}, ia);
 		clearCache(false);
 		redrawCursorArea();
@@ -1346,13 +1395,20 @@ class PaintArea : Canvas, Undoable {
 	/// ditto
 	private void fixPaste(bool enabledBackColor, int backPixel) {
 		iFillRect((int ix, int iy) {
-			iSetPixels(ix, iy, backPixel);
+			if (!_iLassoRegion || _iLassoRegion.contains(ix, iy)) {
+				iSetPixels(ix, iy, backPixel);
+			}
 		}, _iMoveRange);
 		foreach (l; _layers) {
 			if (!_image.layer(l).visible) continue;
 			auto pll = _pasteLayer.layer(l % _pasteLayer.layerCount).image;
 			foreach (ix; 0 .. _pasteLayer.width) {
 				foreach (iy; 0 .. _pasteLayer.height) {
+					if (_iLassoRegion) {
+						auto ilrx = ix + _iMoveRange.x;
+						auto ilry = iy + _iMoveRange.y;
+						if (!_iLassoRegion.contains(ilrx, ilry)) continue;
+					}
 					int pixel = pll.getPixel(ix, iy);
 					if (!enabledBackColor || pixel != backPixel) {
 						iSetPixel(_iSelRange.x + ix, _iSelRange.y + iy, pixel, l, false);
@@ -1417,13 +1473,13 @@ class PaintArea : Canvas, Undoable {
 	}
 
 	/// Selects entire image.
-	/// Sets true to rangeSelection.
+	/// Sets SelectMode.rect to rangeSelection.
 	void selectAll() {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
 		fixPasteOrText();
-		rangeSelection = true;
+		rangeSelection = SelectMode.rect;
 		_iSelRange.x = 0;
 		_iSelRange.y = 0;
 		_iSelRange.width = _image.width;
@@ -1585,13 +1641,14 @@ class PaintArea : Canvas, Undoable {
 		}
 		if (_pasteLayer) {
 			iFillRect((int ix, int iy) {
+				if (_iLassoRegion && !_iLassoRegion.contains(ix + _iMoveRange.x, iy + _iMoveRange.y)) return;
 				auto ps = iPGetPixels(ix, iy);
 				chg(ps);
 				iPSetPixels(ix, iy, ps);
 			}, 0, 0, _pasteLayer.width, _pasteLayer.height);
 			clearCache(false);
 			redrawCursorArea();
-		} else if (!_rangeSel || _iSelRange.p_empty) {
+		} else if (rangeSelection is SelectMode.notSelection || _iSelRange.p_empty) {
 			if (_um) _um.store(this);
 			clearCache(false);
 			iFillRect((int ix, int iy) {
@@ -1604,6 +1661,7 @@ class PaintArea : Canvas, Undoable {
 			clearCache(false);
 			auto ir = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
 			iFillRect((int ix, int iy) {
+				if (_iLassoRegion && !_iLassoRegion.contains(ix, iy)) return;
 				auto ps = iGetPixels2(ix, iy, allLayers);
 				chg(ps);
 				iSetPixels2(ix, iy, allLayers, ps);
@@ -1621,11 +1679,12 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
+		if (rangeSelection is SelectMode.lasso) return;
 		if (_pasteLayer) {
 			func(&iPGetPixels, &iPSetPixels, 0, 0, _pasteLayer.width, _pasteLayer.height);
 			clearCache(false);
 			redrawCursorArea();
-		} else if (!_rangeSel || _iSelRange.p_empty) {
+		} else if (rangeSelection is SelectMode.notSelection || _iSelRange.p_empty) {
 			if (_um) _um.store(this);
 			clearCache(false);
 			auto pget = (int x, int y) => iGetPixels2(x, y, allLayers);
@@ -1680,6 +1739,7 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
+		if (rangeSelection is SelectMode.lasso) return;
 		if (_pasteLayer) {
 			auto back = new int[_pasteLayer.layerCount];
 			back[] = backgroundPixel;
@@ -1687,7 +1747,7 @@ class PaintArea : Canvas, Undoable {
 				_pasteLayer.width, _pasteLayer.height, back);
 			clearCache(false);
 			redrawCursorArea();
-		} else if (!_rangeSel || _iSelRange.p_empty) {
+		} else if (rangeSelection is SelectMode.notSelection || _iSelRange.p_empty) {
 			if (_um) _um.store(this);
 			clearCache(false);
 			auto back = new int[_layers.length];
@@ -1715,7 +1775,7 @@ class PaintArea : Canvas, Undoable {
 		checkInit();
 		if (_pasteLayer) {
 			return CRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
-		} else if (_rangeSel) {
+		} else if (rangeSelection !is SelectMode.notSelection) {
 			auto iSelRange = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
 			if (!iSelRange.p_empty) {
 				return iSelRange;
@@ -1747,6 +1807,7 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
+		if (rangeSelection is SelectMode.lasso) return;
 
 		auto iRArea = resizeArea();
 		int iNewW = newW;
@@ -1784,7 +1845,7 @@ class PaintArea : Canvas, Undoable {
 			redrawCursorArea();
 		} else {
 			auto iSelRange = iInImageRect(_iSelRange.x, _iSelRange.y, _iSelRange.width, _iSelRange.height);
-			if (_rangeSel && !iSelRange.p_empty) {
+			if (rangeSelection !is SelectMode.notSelection && !iSelRange.p_empty) {
 				int ix = iSelRange.x;
 				int iy = iSelRange.y;
 				iw = iSelRange.width;
@@ -1874,7 +1935,7 @@ class PaintArea : Canvas, Undoable {
 	private Rectangle iCursorArea() {
 		checkWidget();
 		checkInit();
-		if (_pasteLayer || _rangeSel || _textDraw) {
+		if (_pasteLayer || rangeSelection !is SelectMode.notSelection || textDrawing) {
 			int ix = _iSelRange.x;
 			int iy = _iSelRange.y;
 			int iw = _iSelRange.width;
@@ -1931,6 +1992,10 @@ class PaintArea : Canvas, Undoable {
 		_iSelRange.y = 0;
 		_iSelRange.width = 0;
 		_iSelRange.height = 0;
+		_cLassoPolyline = [];
+		_iLassoPolygon = [];
+		if (_iLassoRegion) _iLassoRegion.dispose();
+		_iLassoRegion = null;
 		resetCatchParams();
 		clearCache(false);
 		raiseSelectChangedEvent();
@@ -2071,7 +2136,8 @@ class PaintArea : Canvas, Undoable {
 		e = false;
 		s = false;
 		w = false;
-		if (!(_rangeSel || _textDraw) || _iSelRange.p_empty) return;
+		if (!(rangeSelection !is SelectMode.notSelection || textDrawing) || _iSelRange.p_empty) return;
+		if (rangeSelection is SelectMode.lasso) return;
 		auto cRect = itoc(_iSelRange);
 		int csx = cRect.x;
 		int csy = cRect.y;
@@ -2225,7 +2291,9 @@ class PaintArea : Canvas, Undoable {
 		if (!_iMoveRange.p_empty) {
 			foreach (ix; _iMoveRange.x .. _iMoveRange.x + _iMoveRange.width) {
 				foreach (iy; _iMoveRange.y .. _iMoveRange.y + _iMoveRange.height) {
-					dest.setPixel(ix, iy, _backPixel);
+					if (!_iLassoRegion || _iLassoRegion.contains(ix, iy)) {
+						dest.setPixel(ix, iy, _backPixel);
+					}
 				}
 			}
 		}
@@ -2241,6 +2309,13 @@ class PaintArea : Canvas, Undoable {
 		auto l = _pasteLayer.layer(pLayerIndex).image;
 		foreach (ix; iRect.x .. iRect.x + iRect.width) {
 			foreach (iy; iRect.y .. iRect.y + iRect.height) {
+				if (_iLassoRegion) {
+					int ilrx = ix - iRect.x + _iMoveRange.x;
+					int ilry = iy - iRect.y + _iMoveRange.y;
+					if (!_iLassoRegion.contains(ilrx, ilry)) {
+						continue;
+					}
+				}
 				int pixel = l.getPixel(ix - ipx, iy - ipy);
 				if (!ebc || _backPixel != pixel) {
 					if (!iMask(ix, iy, layer)) {
@@ -2321,7 +2396,7 @@ class PaintArea : Canvas, Undoable {
 			foreach (ix; iRX .. iRW) {
 				foreach (iy; iRY .. iRH) {
 					// Fill background pixel to area before move.
-					if (selLayer[layer] && _iMoveRange.contains(ix, iy)) {
+					if (!_iMoveRange.p_empty && selLayer[layer] && (_iLassoRegion ? _iLassoRegion.contains(ix, iy) : _iMoveRange.contains(ix, iy))) {
 						data.setPixel(ix, iy, tPixel);
 						continue;
 					}
@@ -2353,7 +2428,7 @@ class PaintArea : Canvas, Undoable {
 						}
 					}
 				}
-			} else if (!_rangeSel && 1 == _mouseDown) {
+			} else if (rangeSelection is SelectMode.notSelection && 1 == _mouseDown) {
 				// Draws cursor in drawing.
 				if (_mode is PaintMode.FreePath) {
 					// Unnecessary. After painted.
@@ -2378,6 +2453,7 @@ class PaintArea : Canvas, Undoable {
 	private void onDispose(Event e) {
 		clearCache(false);
 		if (_shadeCache) _shadeCache.dispose();
+		if (_iLassoRegion) _iLassoRegion.dispose();
 	}
 
 	private void onResize(Event e) {
@@ -2523,11 +2599,41 @@ class PaintArea : Canvas, Undoable {
 			}
 		}
 
-		if ((_pasteLayer || _rangeSel || _textDraw) && !_iSelRange.p_empty) {
+		auto color1 = d.getSystemColor(SWT.COLOR_BLACK);
+		auto color2 = d.getSystemColor(SWT.COLOR_WHITE);
+		if (rangeSelection is SelectMode.lasso) {
+			// work line of free selection
+			if (_cLassoPolyline.length) {
+				.drawColorfulPolyline(e.gc, color1, color2, _cLassoPolyline);
+			}
+			// range of free selection
+			auto iLassoPolygon = _iLassoPolygon;
+			if (_pasteLayer) {
+				// moved
+				iLassoPolygon = iLassoPolygon.dup;
+				foreach (i, ref iVal; iLassoPolygon) {
+					if (i & 1) {
+						iVal = iVal - _iMoveRange.y + _iSelRange.y;
+					} else {
+						iVal = iVal - _iMoveRange.x + _iSelRange.x;
+					}
+				}
+			}
+			auto cTop = cImageTop;
+			auto cLeft = cImageLeft;
+			foreach (cPolygon; zoomPolygon(iLassoPolygon, zoom)) {
+				foreach (i, ref cVal; cPolygon) {
+					if (i & 1) {
+						cVal += cTop;
+					} else {
+						cVal += cLeft;
+					}
+				}
+				.drawColorfulPolyline(e.gc, color1, color2, cPolygon);
+			}
+		} else if ((_pasteLayer || rangeSelection !is SelectMode.notSelection || textDrawing) && !_iSelRange.p_empty) {
 			// If selection area, draw focus line.
 			auto cca = cCursorArea();
-			auto color1 = d.getSystemColor(SWT.COLOR_BLACK);
-			auto color2 = d.getSystemColor(SWT.COLOR_WHITE);
 			.drawColorfulFocus(e.gc, color1, color2, cca.x, cca.y, cca.width - 1, cca.height - 1);
 		} else {
 			// Draws cursor.
@@ -2644,7 +2750,7 @@ class PaintArea : Canvas, Undoable {
 			int iOldY = _iCurTo.y;
 			_iCurTo.x = ix;
 			_iCurTo.y = iy;
-			if (_rangeSel || _textDraw) {
+			if (rangeSelection !is SelectMode.notSelection || textDrawing) {
 				// Resizes selection range.
 				if (_catchN || _catchE || _catchS || _catchW) {
 					void catchCommon(ref int isx, ref int isw, bool catchE, bool catchW,
@@ -2671,6 +2777,23 @@ class PaintArea : Canvas, Undoable {
 						_iCatchX, _iCurTo.x, _iOldSelRange.x, _iOldSelRange.width, _image.width);
 					catchCommon(_iSelRange.y, _iSelRange.height, _catchS, _catchN,
 						_iCatchY, _iCurTo.y, _iOldSelRange.y, _iOldSelRange.height, _image.height);
+				} else if (rangeSelection is SelectMode.lasso) {
+					// Selects range (lasso).
+					if (ix < _iSelRange.x) {
+						_iSelRange.width += _iSelRange.x - ix;
+						_iSelRange.x = ix;
+					} else if (_iSelRange.x + _iSelRange.width <= ix) {
+						_iSelRange.width = ix - _iSelRange.x + 1;
+					}
+					if (iy < _iSelRange.y) {
+						_iSelRange.height += _iSelRange.y - iy;
+						_iSelRange.y = iy;
+					} else if (_iSelRange.y + _iSelRange.height <= iy) {
+						_iSelRange.height = iy - _iSelRange.y + 1;
+					}
+					_cLassoPolyline ~= [e.x, e.y];
+					redrawCursorArea();
+					cursor = cursorNow;
 				} else {
 					// Selects range.
 					_iSelRange.x = min(_iCurFrom.x, _iCurTo.x);
@@ -2710,7 +2833,7 @@ class PaintArea : Canvas, Undoable {
 				return;
 			}
 			this.p_cursor = iCursorNow(ix, iy);
-			if (_rangeSel || _textDraw) {
+			if (rangeSelection !is SelectMode.notSelection || textDrawing) {
 				return;
 			}
 			if (_iCurFrom.x == ix && _iCurFrom.y == iy) {
@@ -2745,11 +2868,13 @@ class PaintArea : Canvas, Undoable {
 				fixPasteOrText();
 			}
 			redrawCursorArea();
-			_iCurFrom.x = cxtoix(e.x);
-			_iCurFrom.y = cytoiy(e.y);
+			auto ix = cxtoix(e.x);
+			auto iy = cytoiy(e.y);
+			_iCurFrom.x = ix;
+			_iCurFrom.y = iy;
 			_iCurTo.x = _iCurFrom.x;
 			_iCurTo.y = _iCurFrom.y;
-			if (_rangeSel || _textDraw) {
+			if (rangeSelection !is SelectMode.notSelection || textDrawing) {
 				bool no, ea, so, we;
 				cIsCatchedFocus(e.x, e.y, no, ea, so, we);
 				if (no || ea || so || we) {
@@ -2767,7 +2892,7 @@ class PaintArea : Canvas, Undoable {
 					return;
 				}
 				auto ca = cCursorArea;
-				if (_rangeSel && ca.contains(e.x, e.y)) {
+				if (rangeSelection !is SelectMode.notSelection && (_iLassoRegion ? _iLassoRegion.contains(ix, iy) : ca.contains(e.x, e.y))) {
 					// Starts move of selection range.
 					_moving = false;
 					auto ia = iCursorArea;
@@ -2796,6 +2921,15 @@ class PaintArea : Canvas, Undoable {
 				_iSelRange.y = _iCurFrom.y;
 				_iSelRange.width = 0;
 				_iSelRange.height = 0;
+
+				_cLassoPolyline = [];
+				_iLassoPolygon = [];
+				if (_iLassoRegion) _iLassoRegion.dispose();
+				_iLassoRegion = null;
+				if (rangeSelection is SelectMode.lasso) {
+					_cLassoPolyline = [e.x, e.y];
+				}
+
 				raiseSelectChangedEvent();
 			} else {
 				int ifx = _iCurFrom.x;
@@ -2803,8 +2937,6 @@ class PaintArea : Canvas, Undoable {
 				// Starts drawing.
 				// Only FreePath and Fill paints before mouse up.
 				if (_mode is PaintMode.FreePath) {
-					int ix = cxtoix(e.x);
-					int iy = cytoiy(e.y);
 					bool first = true;
 					pointsOfPath((int ix, int iy) {
 						if (iInImage(ix, iy)) {
@@ -2883,7 +3015,32 @@ class PaintArea : Canvas, Undoable {
 			_mouseDown = -1;
 			_movingTextArea = false;
 			if (_pasteLayer) return;
-			if (_rangeSel || _textDraw) {
+			if (rangeSelection !is SelectMode.notSelection || textDrawing) {
+				if (rangeSelection is SelectMode.lasso && 2 < _cLassoPolyline.length) {
+					// Sets range of free selection.
+					auto cTop = cImageTop;
+					auto cLeft = cImageLeft;
+					foreach (i, ref cVal; _cLassoPolyline) {
+						if (i & 1) {
+							cVal -= cTop;
+						} else {
+							cVal -= cLeft;
+						}
+					}
+					_iLassoPolygon = smallerPolygon(_cLassoPolyline, zoom);
+					foreach (i, ref iVal; _iLassoPolygon) {
+						if (i & 1) {
+							iVal = .max(0, .min(_image.height, iVal));
+						} else {
+							iVal = .max(0, .min(_image.width, iVal));
+						}
+					}
+					if (_iLassoRegion) _iLassoRegion.dispose();
+					_iLassoRegion = new Region(this.p_display);
+					_iLassoRegion.add(_iLassoPolygon);
+					_cLassoPolyline = [];
+					redrawCursorArea();
+				}
 				// Don't draws.
 				return;
 			}
@@ -3001,6 +3158,8 @@ class PaintArea : Canvas, Undoable {
 		int iMoveW = 0;
 		/// ditto
 		int iMoveH = 0;
+		/// Lasso region data (points).
+		int[] iLassoRegion = null;
 		/// Is enabled background color?
 		bool enabledBackColor = false;
 		/// Background pixel.
@@ -3019,6 +3178,7 @@ class PaintArea : Canvas, Undoable {
 			data.iMoveY = _iMoveRange.y;
 			data.iMoveW = _iMoveRange.width;
 			data.iMoveH = _iMoveRange.height;
+			data.iLassoRegion = _iLassoRegion ? _iLassoPolygon : [];
 			data.enabledBackColor = _enabledBackColor;
 			data.backPixel = _backPixel;
 		}
@@ -3039,6 +3199,13 @@ class PaintArea : Canvas, Undoable {
 			_iMoveRange.y = st.iMoveY;
 			_iMoveRange.width = st.iMoveW;
 			_iMoveRange.height = st.iMoveH;
+			if (_iLassoRegion) _iLassoRegion.dispose();
+			if (st.iLassoRegion.length) {
+				_iLassoRegion = new Region(this.p_display);
+				_iLassoRegion.add(st.iLassoRegion);
+			} else {
+				_iLassoRegion = null;
+			}
 			fixPaste(st.enabledBackColor, st.backPixel);
 		}
 		clearCache(false);

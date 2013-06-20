@@ -27,8 +27,9 @@
   <uniteLayers>下のレイヤに結合(&amp;U)</uniteLayers>
   <mode>描画(&amp;M)</mode>
   <enabledBackColor>移動などで背景色を無視する(&amp;T)	Ctrl+P</enabledBackColor>
-  <selection>選択モード(&amp;S)	Ctrl+1</selection>
-  <freePath>自由線(&amp;F)	Ctrl+2</freePath>
+  <freeSelection>自由選択(&amp;F)	Ctrl+0</freeSelection>
+  <selection>矩形選択(&amp;S)	Ctrl+1</selection>
+  <freePath>自由線(&ampPF)	Ctrl+2</freePath>
   <straight>直線(&amp;S)	Ctrl+3</straight>
   <ovalLine>楕円(&amp;O)	Ctrl+4</ovalLine>
   <rectLine>矩形(&amp;R)	Ctrl+5</rectLine>

@@ -18,9 +18,10 @@ private import dharl.mainpanel;
 private import dharl.image.mlimage;
 private import dharl.image.susie;
 
-private import dharl.ui.uicommon;
 private import dharl.ui.dwtutils;
+private import dharl.ui.paintarea;
 private import dharl.ui.simpletextdialog;
+private import dharl.ui.uicommon;
 
 private import std.algorithm;
 private import std.array;
@@ -311,7 +312,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	});
 
 	MenuItem[PaintMode] modeItems;
-	MenuItem tSel, tTextDrawing;
+	MenuItem tLSel, tSel, tTextDrawing;
 
 
 	/* ---- Edit menu -------------------------------------------------- */
@@ -380,9 +381,17 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		mainPanel.paintArea.enabledBackColor = mBack.p_selection;
 	}, SWT.CHECK);
 	separator(mMode);
-	tSel = basicMenuItem(mMode, c.text.menu.selection, cimg(c.image.selection), {
-		mainPanel.paintArea.rangeSelection = tSel.p_selection;
-	}, SWT.RADIO, mainPanel.paintArea.rangeSelection);
+	auto updSel = {
+		if (tLSel.p_selection) {
+			mainPanel.paintArea.rangeSelection = SelectMode.lasso;
+		} else if (tSel.p_selection) {
+			mainPanel.paintArea.rangeSelection = SelectMode.rect;
+		} else {
+			mainPanel.paintArea.rangeSelection = SelectMode.notSelection;
+		}
+	};
+	tLSel = basicMenuItem(mMode, c.text.menu.freeSelection, cimg(c.image.freeSelection), updSel, SWT.RADIO, mainPanel.paintArea.rangeSelection is SelectMode.lasso);
+	tSel = basicMenuItem(mMode, c.text.menu.selection, cimg(c.image.selection), updSel, SWT.RADIO, mainPanel.paintArea.rangeSelection is SelectMode.rect);
 	MenuItem createModeItem(string text, Image img, PaintMode mode) {
 		auto result = basicMenuItem(mMode, text, img, {
 			mainPanel.paintArea.mode = mode;
@@ -530,12 +539,13 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		mMainGrid.p_selection = mainPanel.paintArea.grid1;
 		mSubGrid.p_selection = mainPanel.paintArea.grid2;
 
-		bool range = mainPanel.paintArea.rangeSelection;
-		tSel.p_selection = range;
+		auto selMode = mainPanel.paintArea.rangeSelection;
+		tLSel.p_selection = selMode is SelectMode.lasso;
+		tSel.p_selection = selMode is SelectMode.rect;
 		bool textDrawing = mainPanel.paintArea.textDrawing;
 		tTextDrawing.p_selection = textDrawing;
 		foreach (mode, item; modeItems) {
-			item.p_selection = !range && !textDrawing && mainPanel.paintArea.mode == mode;
+			item.p_selection = selMode is SelectMode.notSelection && !textDrawing && mainPanel.paintArea.mode == mode;
 		}
 		tMask.p_selection = mainPanel.maskMode;
 		mBack.p_selection = mainPanel.paintArea.enabledBackColor;

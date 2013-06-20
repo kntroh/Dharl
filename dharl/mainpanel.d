@@ -94,8 +94,10 @@ class MainPanel : Composite {
 
 	/// Table of ToolItem from PaintMode.
 	private ToolItem[PaintMode] _modeItems;
-	/// ToolItem of range selection mode.
-	private ToolItem _toolOfRangeSelection = null;
+	/// ToolItem of selection mode.
+	private ToolItem _toolOfSelectFree = null;
+	/// ditto
+	private ToolItem _toolOfSelectRect = null;
 	/// ToolItem of text drawing mode.
 	private ToolItem _toolOfTextDrawing = null;
 	/// It will be true while updating the mode menu.
@@ -267,11 +269,13 @@ class MainPanel : Composite {
 
 		// Selection tool.
 		if (_c.conf.tool == 0) {
-			_paintArea.rangeSelection = true;
-		} else if (_c.conf.tool == EnumMembers!PaintMode.length + 1) {
+			_paintArea.rangeSelection = SelectMode.lasso;
+		} else if (_c.conf.tool == 1) {
+			_paintArea.rangeSelection = SelectMode.rect;
+		} else if (_c.conf.tool == EnumMembers!PaintMode.length + 2) {
 			_paintArea.textDrawing = true;
 		} else {
-			_paintArea.rangeSelection = false;
+			_paintArea.rangeSelection = SelectMode.notSelection;
 			foreach (i, mode; EnumMembers!PaintMode) {
 				if (_c.conf.tool == i + 1) {
 					_paintArea.mode = mode;
@@ -622,26 +626,33 @@ class MainPanel : Composite {
 		auto mToolBar = basicToolBar(comp, SWT.WRAP | SWT.FLAT);
 		mToolBar.p_layoutData = GD(GridData.FILL_HORIZONTAL).wHint(0).hSpan(2);
 		void createModeItem(string text, Image img, PaintMode mode) {
-			auto toolValue = mToolBar.p_itemCount;
+			auto toolValue = mToolBar.p_itemCount - 1;
 			auto mt = basicToolItem(mToolBar, text, img, {
 				_updateModeMenu = true;
 				scope (exit) _updateModeMenu = false;
 				_paintArea.mode = mode;
-				if (!_paintArea.rangeSelection && !_paintArea.textDrawing) {
-					_c.conf.tool = toolValue - 1;
+				if (_paintArea.rangeSelection is SelectMode.notSelection && !_paintArea.textDrawing) {
+					_c.conf.tool = toolValue;
 				}
 			}, SWT.RADIO);
 			_modeItems[mode] = mt;
 		}
 		// Selection mode.
-		_toolOfRangeSelection = basicToolItem(mToolBar, _c.text.menu.selection, cimg(_c.image.selection), {
+		auto updSel = {
 			_updateModeMenu = true;
 			scope (exit) _updateModeMenu = false;
-			_paintArea.rangeSelection = _toolOfRangeSelection.p_selection;
-			if (_paintArea.rangeSelection) {
+			if (_toolOfSelectFree.p_selection) {
+				_paintArea.rangeSelection = SelectMode.lasso;
 				_c.conf.tool = 0;
+			} else if (_toolOfSelectRect.p_selection) {
+				_paintArea.rangeSelection = SelectMode.rect;
+				_c.conf.tool = 1;
+			} else {
+				_paintArea.rangeSelection = SelectMode.notSelection;
 			}
-		}, SWT.RADIO);
+		};
+		_toolOfSelectFree = basicToolItem(mToolBar, _c.text.menu.freeSelection, cimg(_c.image.freeSelection), updSel, SWT.RADIO);
+		_toolOfSelectRect = basicToolItem(mToolBar, _c.text.menu.selection, cimg(_c.image.selection), updSel, SWT.RADIO);
 
 		// Paint mode.
 		createModeItem(_c.text.menu.freePath, cimg(_c.image.freePath), PaintMode.FreePath);
@@ -755,16 +766,18 @@ class MainPanel : Composite {
 	}
 	/// Updates mode toolbar and configration.
 	private void updateModeMenu() {
-		.enforce(_toolOfRangeSelection);
+		.enforce(_toolOfSelectFree);
+		.enforce(_toolOfSelectRect);
 		.enforce(_toolOfTextDrawing);
 		.enforce(_paintArea);
 		if (_updateModeMenu) return;
-		bool range = _paintArea.rangeSelection;
-		_toolOfRangeSelection.p_selection = range;
+		auto selMode = _paintArea.rangeSelection;
+		_toolOfSelectFree.p_selection = selMode is SelectMode.lasso;
+		_toolOfSelectRect.p_selection = selMode is SelectMode.rect;
 		bool textDrawing = _paintArea.textDrawing;
 		_toolOfTextDrawing.p_selection = textDrawing;
 		foreach (mode, item; _modeItems) {
-			item.p_selection = !range && !textDrawing && _paintArea.mode == mode;
+			item.p_selection = selMode is SelectMode.notSelection && !textDrawing && _paintArea.mode == mode;
 		}
 	}
 	/// Updates tones toolbar.
