@@ -246,7 +246,7 @@ Color standOutColor(Display d, in RGB rgb) {
 
 /// Draws alternately different color lines,
 /// to raise the visibility.
-void drawColorfulFocus(GC gc, Color color1, Color color2, int x, int y, int w, int h) {
+private void drawColorfulLines(GC gc, Color color1, Color color2, void delegate() draw) {
 	auto fore = gc.p_foreground;
 	scope (exit) gc.p_foreground = fore;
 	int oldStyle = gc.p_lineStyle;
@@ -256,17 +256,29 @@ void drawColorfulFocus(GC gc, Color color1, Color color2, int x, int y, int w, i
 
 	gc.p_lineStyle = SWT.LINE_SOLID;
 	gc.p_foreground = color1;
-	gc.drawRectangle(x, y, w, h);
+	draw();
 
 	gc.p_lineStyle = SWT.LINE_DASH;
 	int[] cLineDash = [2, 3];
 	gc.p_lineDash = cLineDash;
 	gc.p_foreground = color2;
-	gc.drawRectangle(x, y, w, h);
+	draw();
+}
+/// ditto
+void drawColorfulPolyline(GC gc, Color color1, Color color2, int[] points) {
+	drawColorfulLines(gc, color1, color2, () => gc.drawPolyline(points));
+}
+/// ditto
+void drawColorfulPolygon(GC gc, Color color1, Color color2, int[] points) {
+	drawColorfulLines(gc, color1, color2, () => gc.drawPolygon(points));
+}
+/// ditto
+void drawColorfulFocus(GC gc, Color color1, Color color2, int x, int y, int w, int h) {
+	drawColorfulLines(gc, color1, color2, () => gc.drawRectangle(x, y, w, h));
 }
 /// ditto
 void drawColorfulFocus(GC gc, Color color1, Color color2, Rectangle rect) {
-	drawColorfulFocus(gc, color1, color2, rect.x, rect.y, rect.width, rect.height);
+	drawColorfulLines(gc, color1, color2, () => gc.drawRectangle(rect));
 }
 
 /// Shading to client area.
