@@ -108,6 +108,8 @@ class PaintArea : Canvas, Undoable {
 	private string _inputtedText = "";
 	/// The font for text drawing.
 	private FontData _drawingFont = null;
+	/// When text area moving, it is true.
+	private bool _movingTextArea = false;
 
 	/// Paint mode.
 	private PaintMode _mode = PaintMode.FreePath;
@@ -1065,8 +1067,22 @@ class PaintArea : Canvas, Undoable {
 	}
 	/// ditto
 	private Cursor iCursorNow(int ix, int iy) {
-		if (rangeSelection && iCursorArea.contains(ix, iy)) {
-			return this.p_display.getSystemCursor(SWT.CURSOR_HAND);
+		if (rangeSelection || textDrawing) {
+			// cursor according to state.
+			auto d = this.p_display;
+			bool no, ea, so, we;
+			cIsCatchedFocus(ixtocx(ix), iytocy(iy), no, ea, so, we);
+			if ((no && ea) || (so && we)) {
+				return d.getSystemCursor(SWT.CURSOR_SIZENESW);
+			} else if ((no && we) || (ea && so)) {
+				return d.getSystemCursor(SWT.CURSOR_SIZENWSE);
+			} else if (no || so) {
+				return d.getSystemCursor(SWT.CURSOR_SIZENS);
+			} else if (ea || we) {
+				return d.getSystemCursor(SWT.CURSOR_SIZEWE);
+			} else if (iCursorArea.contains(ix, iy)) {
+				return d.getSystemCursor(SWT.CURSOR_HAND);
+			}
 		}
 		return cursorNow;
 	}
@@ -1910,6 +1926,7 @@ class PaintArea : Canvas, Undoable {
 
 	/// Resets area of drawing range.
 	private void resetSelectedRange() {
+		_movingTextArea = false;
 		_iSelRange.x = 0;
 		_iSelRange.y = 0;
 		_iSelRange.width = 0;
@@ -2602,12 +2619,27 @@ class PaintArea : Canvas, Undoable {
 				}
 				return;
 			}
+			if (_textDraw && _movingTextArea) {
+				int isx = ix - _iPCatchX;
+				int isy = iy - _iPCatchY;
+				if (_iSelRange.x != isx || _iSelRange.y != isy) {
+					redrawCursorArea();
+					_iSelRange.x = isx;
+					_iSelRange.y = isy;
+					clearCache(true);
+					redrawCursorArea();
+					drawReceivers.raiseEvent();
+				}
+				return;
+			}
+
 			if (_iCurTo.x == ix && _iCurTo.y == iy) {
 				return;
 			}
 			scope (exit) this.p_cursor = cursor;
 			clearCache(false);
 			redrawCursorArea();
+
 			int iOldX = _iCurTo.x;
 			int iOldY = _iCurTo.y;
 			_iCurTo.x = ix;
@@ -2677,24 +2709,10 @@ class PaintArea : Canvas, Undoable {
 				this.p_cursor = iCursorNow(ix, iy);
 				return;
 			}
+			this.p_cursor = iCursorNow(ix, iy);
 			if (_rangeSel || _textDraw) {
-				// Set cursor according to state.
-				bool no, ea, so, we;
-				cIsCatchedFocus(e.x, e.y, no, ea, so, we);
-				if ((no && ea) || (so && we)) {
-					this.p_cursor = d.getSystemCursor(SWT.CURSOR_SIZENESW);
-				} else if ((no && we) || (ea && so)) {
-					this.p_cursor = d.getSystemCursor(SWT.CURSOR_SIZENWSE);
-				} else if (no || so) {
-					this.p_cursor = d.getSystemCursor(SWT.CURSOR_SIZENS);
-				} else if (ea || we) {
-					this.p_cursor = d.getSystemCursor(SWT.CURSOR_SIZEWE);
-				} else {
-					this.p_cursor = iCursorNow(ix, iy);
-				}
 				return;
 			}
-			this.p_cursor = iCursorNow(ix, iy);
 			if (_iCurFrom.x == ix && _iCurFrom.y == iy) {
 				return;
 			}
@@ -2759,6 +2777,13 @@ class PaintArea : Canvas, Undoable {
 					_iMoveRange.width = ia.width;
 					_iMoveRange.height = ia.height;
 					initPasteLayer(ia.x, ia.y);
+					_iPCatchX = cxtoix(e.x) - _iSelRange.x;
+					_iPCatchY = cytoiy(e.y) - _iSelRange.y;
+					return;
+				}
+				if (_textDraw && ca.contains(e.x, e.y)) {
+					// Starts move of text area.
+					_movingTextArea = true;
 					_iPCatchX = cxtoix(e.x) - _iSelRange.x;
 					_iPCatchY = cytoiy(e.y) - _iSelRange.y;
 					return;
@@ -2856,6 +2881,7 @@ class PaintArea : Canvas, Undoable {
 		case 1:
 			scope (exit) this.p_cursor = iCursorNow(cxtoix(e.x), cytoiy(e.y));
 			_mouseDown = -1;
+			_movingTextArea = false;
 			if (_pasteLayer) return;
 			if (_rangeSel || _textDraw) {
 				// Don't draws.
