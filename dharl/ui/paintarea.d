@@ -1088,8 +1088,14 @@ class PaintArea : Canvas, Undoable {
 		if (rangeSelection !is SelectMode.notSelection || textDrawing) {
 			auto d = this.p_display;
 			if (rangeSelection is SelectMode.lasso) {
-				if (_iLassoRegion && _iLassoRegion.contains(ix, iy)) {
-					return d.getSystemCursor(SWT.CURSOR_HAND);
+				if (_iLassoRegion) {
+					if (_pasteLayer) {
+						ix = ix - _iSelRange.x + _iMoveRange.x;
+						iy = iy - _iSelRange.y + _iMoveRange.y;
+					}
+					if (_iLassoRegion.contains(ix, iy)) {
+						return d.getSystemCursor(SWT.CURSOR_HAND);
+					}
 				}
 			} else {
 				// cursor according to state.
@@ -2317,8 +2323,8 @@ class PaintArea : Canvas, Undoable {
 		foreach (ix; iRect.x .. iRect.x + iRect.width) {
 			foreach (iy; iRect.y .. iRect.y + iRect.height) {
 				if (_iLassoRegion) {
-					int ilrx = ix - iRect.x + _iMoveRange.x;
-					int ilry = iy - iRect.y + _iMoveRange.y;
+					int ilrx = ix - _iSelRange.x + _iMoveRange.x;
+					int ilry = iy - _iSelRange.y + _iMoveRange.y;
 					if (!_iLassoRegion.contains(ilrx, ilry)) {
 						continue;
 					}
@@ -2865,9 +2871,10 @@ class PaintArea : Canvas, Undoable {
 			if (1 == _mouseDown) return;
 			scope (exit) this.p_cursor = iCursorNow(cxtoix(e.x), cytoiy(e.y));
 			_mouseDown = 1;
+			auto ix = cxtoix(e.x);
+			auto iy = cytoiy(e.y);
 			if (_pasteLayer) {
-				auto ca = cCursorArea;
-				if (ca.contains(e.x, e.y)) {
+				if (_iLassoRegion ? _iLassoRegion.contains(ix - _iSelRange.x + _iMoveRange.x, iy - _iSelRange.y + _iMoveRange.y) : cCursorArea.contains(e.x, e.y)) {
 					_iPCatchX = cxtoix(e.x) - _iSelRange.x;
 					_iPCatchY = cytoiy(e.y) - _iSelRange.y;
 					return;
@@ -2875,8 +2882,6 @@ class PaintArea : Canvas, Undoable {
 				fixPasteOrText();
 			}
 			redrawCursorArea();
-			auto ix = cxtoix(e.x);
-			auto iy = cytoiy(e.y);
 			_iCurFrom.x = ix;
 			_iCurFrom.y = iy;
 			_iCurTo.x = _iCurFrom.x;
