@@ -700,7 +700,7 @@ class MainPanel : Composite {
 			_paintArea.zoom = zoom.p_selection;
 		};
 		createLabel(_c.text.lineWidth);
-		auto lineWidth = basicSpinner(comp, 1, 16);
+		auto lineWidth = basicSpinner(comp, 1, PaintArea.CURSOR_SIZE_MAX);
 		_c.conf.lineWidth.refSelection(lineWidth);
 		lineWidth.p_listeners!(SWT.Selection) ~= {
 			_paintArea.cursorSize = lineWidth.p_selection;

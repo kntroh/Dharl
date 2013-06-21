@@ -36,7 +36,10 @@ enum SelectMode {
 /// This class has a image by division layers,
 /// Edit from user to each layer is accepted. 
 class PaintArea : Canvas, Undoable {
-	static const ZOOM_MAX = 32;
+	/// Maximum value of zoom in.
+	static immutable ZOOM_MAX = 32;
+	/// Maximum size of cursor.
+	static immutable CURSOR_SIZE_MAX = 16;
 
 	/// Receivers of draw event.
 	void delegate()[] drawReceivers;
@@ -3092,17 +3095,35 @@ class PaintArea : Canvas, Undoable {
 	private void onMouseWheel(Event e) {
 		checkWidget();
 		if (0 == e.count) return;
-		auto old = zoom;
 
-		if (e.count < 0) {
-			zoom = max(1, zoom / 2);
+		if (e.stateMask & SWT.SHIFT) {
+			// zoom up or zoom out
+			auto old = zoom;
+
+			if (e.count < 0) {
+				zoom = max(1, zoom / 2);
+			} else {
+				assert (0 < e.count);
+				zoom = min(cast(int)zoom * 2, ZOOM_MAX);
+			}
+
+			if (zoom != old) {
+				statusChangedReceivers.raiseEvent();
+			}
 		} else {
-			assert (0 < e.count);
-			zoom = min(cast(int)zoom * 2, ZOOM_MAX);
-		}
+			// changes cursor size
+			auto iCurSize = cursorSize;
 
-		if (zoom != old) {
-			statusChangedReceivers.raiseEvent();
+			if (e.count < 0) {
+				cursorSize = max(1, iCurSize - 1);
+			} else {
+				assert (0 < e.count);
+				cursorSize = min(iCurSize + 1, CURSOR_SIZE_MAX);
+			}
+
+			if (cursorSize != iCurSize) {
+				statusChangedReceivers.raiseEvent();
+			}
 		}
 		e.doit = false;
 	}
