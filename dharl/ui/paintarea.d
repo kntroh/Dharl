@@ -1397,11 +1397,14 @@ class PaintArea : Canvas, Undoable {
 	}
 	/// ditto
 	private void fixPaste(bool enabledBackColor, int backPixel) {
-		iFillRect((int ix, int iy) {
-			if (!_iLassoRegion || _iLassoRegion.contains(ix, iy)) {
-				iSetPixels(ix, iy, backPixel);
-			}
-		}, _iMoveRange);
+		if (!_iMoveRange.p_empty) {
+			iFillRect((int ix, int iy) {
+				if (!_iLassoRegion || _iLassoRegion.contains(ix, iy)) {
+					if(ix==0&&iy==0)cout(ix, iy);
+					iSetPixels(ix, iy, backPixel);
+				}
+			}, _iMoveRange);
+		}
 		foreach (l; _layers) {
 			if (!_image.layer(l).visible) continue;
 			auto pll = _pasteLayer.layer(l % _pasteLayer.layerCount).image;
@@ -2281,6 +2284,7 @@ class PaintArea : Canvas, Undoable {
 	}
 	/// ditto
 	private void iFillRect(void delegate(int ix, int iy) dlg, int ix, int iy, int iw, int ih) {
+		if (iw <= 0 || ih <= 0) return;
 		pointsOfPath(dlg, PaintMode.RectFill,
 			ix, iy, ix + iw - 1, iy + ih - 1, _image.width, _image.height, 1);
 	}
