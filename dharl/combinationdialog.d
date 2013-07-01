@@ -238,12 +238,19 @@ class CombinationDialog : DharlDialog {
 	private void combinationToolBar(Composite parent) {
 		auto combiTools = basicToolBar(parent);
 		_tAdd = basicToolItem(combiTools, c.text.menu.addCombination, .cimg(c.image.addCombination), {
-			int index = _combiList.p_selectionIndex + 1;
+			int selected = _combiList.p_selectionIndex;
+			int index = selected + 1;
 			string name = "%s_%s".format(_name.stripExtension(), index + 1);
 			_combiList.add(name, index);
 			auto visible = new bool[_image.layerCount];
-			visible[] = false;
-			auto combi = Combination(name, visible, 0);
+			int selectedPalette = 0;
+			if (selected == -1) {
+				visible[] = false;
+			} else {
+				visible[] = _combiData[selected].visible;
+				selectedPalette = _combiData[selected].selectedPalette;
+			}
+			auto combi = Combination(name, visible, selectedPalette);
 			_combiData.insertInPlace(index, combi);
 			auto pi = new PImageItem(_preview, SWT.NONE, index);
 			pi.p_text = combi.name;
