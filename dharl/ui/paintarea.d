@@ -3105,7 +3105,7 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		if (0 == e.count) return;
 
-		if (e.stateMask & SWT.SHIFT) {
+		if (e.stateMask & SWT.CTRL) {
 			// zoom up or zoom out
 			auto old = zoom;
 
