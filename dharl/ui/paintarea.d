@@ -3009,8 +3009,9 @@ class PaintArea : Canvas, Undoable {
 			int iy = cytoiy(e.y);
 
 			// Selects most upper opacity pixel
-			int pixel = iGetPixel(ix, iy, _image.layerCount - 1);
-			foreach (l; 0 .. _image.layerCount - 1) {
+			int pixel = _image.layer(_layers[$ - 1]).image.transparentPixel;
+			if (pixel == -1) pixel = iGetPixel(ix, iy, _layers[$ - 1]);
+			foreach (l; 0 .. _image.layerCount) {
 				if (!_image.layer(l).visible) continue;
 				auto p = iGetPixel(ix, iy, l);
 				if (_image.layer(l).image.transparentPixel != p) {
