@@ -3918,6 +3918,7 @@ class LayerList : Canvas {
 			img.layer(l).visible = !img.layer(l).visible;
 			_paintArea.redraw();
 			_paintArea.drawReceivers.raiseEvent();
+			return;
 		}
 
 		auto info = _paintArea.selectedInfo;
