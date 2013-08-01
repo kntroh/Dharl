@@ -565,16 +565,7 @@ class MLImage : Undoable {
 
 		bool changed = false;
 
-		/// If number of layers don't match, adjust layers number.
-		if (src.layerCount < _layers.length) {
-			removeLayers(0, _layers.length - src.layerCount);
-			changed = true;
-		} else if (src.layerCount > _layers.length) {
-			auto names = new string[src.layerCount - _layers.length];
-			names[] = "";
-			addLayers(0, names);
-			changed = true;
-		}
+		changed |= adjustLayerNumber(src);
 		changed |= pushPalette(src);
 		foreach (li; 0 .. src.layerCount) {
 			auto sl = src.layer(li);
@@ -621,13 +612,7 @@ class MLImage : Undoable {
 
 		bool changed = false;
 
-		/// If number of layers don't match, adjust layers number.
-		if (src.layerCount > _layers.length) {
-			auto names = new string[src.layerCount - _layers.length];
-			names[] = "";
-			addLayers(0, names);
-			changed = true;
-		}
+		changed |= adjustLayerNumber(src);
 		changed |= pushPalette(src);
 		foreach (li; 0 .. src.layerCount) {
 			auto sl = src.layer(li);
@@ -658,6 +643,19 @@ class MLImage : Undoable {
 		changed |= pushCombinations(src._combi);
 
 		return changed;
+	}
+	/// If number of layers don't match, adjust layers number.
+	private bool adjustLayerNumber(in MLImage src) {
+		if (src.layerCount < _layers.length) {
+			removeLayers(0, _layers.length - src.layerCount);
+			return true;
+		} else if (src.layerCount > _layers.length) {
+			auto names = new string[src.layerCount - _layers.length];
+			names[] = "";
+			addLayers(0, names);
+			return true;
+		}
+		return false;
 	}
 	/// Push palettes data.
 	private bool pushPalette(in MLImage src) {
