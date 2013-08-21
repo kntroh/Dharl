@@ -909,7 +909,7 @@ void turn(T)(real deg, T delegate(int x, int y) pget, void delegate(int x, int y
 				int yy = sy + ay;
 				auto yyw = yy * w;
 				if (sx <= xx && ax < w && sy <= yy && ay < h) {
-					pset(sx + x, sy + y, base[yyw + xx]);
+					pset(sx + x, sy + y, (yyw + xx < base.length) ? base[yyw + xx] : backgroundPixel);
 				}
 			}
 		}
