@@ -98,6 +98,7 @@ mixin GetSetWrapper!("HorizontalBar"); /// ditto
 mixin GetSetWrapper!("Image"); /// ditto
 mixin GetSetWrapper!("ImageData"); /// ditto
 mixin GetSetWrapper!("ImageIndent"); /// ditto
+mixin GetSetWrapper!("Images"); /// ditto
 mixin GetSetWrapper!("Increment"); /// ditto
 mixin GetSetWrapper!("ItemCount"); /// ditto
 mixin GetSetWrapper!("Items"); /// ditto

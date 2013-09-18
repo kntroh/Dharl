@@ -27,14 +27,14 @@ Point CPoint(int x, int y) {
 }
 
 /// Creates basic style shell.
-Shell basicShell(string title, Image image = null, Layout layout = null, int style = SWT.SHELL_TRIM) {
-	return basicShell(null, title, image, layout, style);
+Shell basicShell(string title, Image[] images = [], Layout layout = null, int style = SWT.SHELL_TRIM) {
+	return basicShell(null, title, images, layout, style);
 }
 /// ditto
-Shell basicShell(Shell parent, string title, Image image = null, Layout layout = null, int style = SWT.SHELL_TRIM) {
+Shell basicShell(Shell parent, string title, Image[] images = [], Layout layout = null, int style = SWT.SHELL_TRIM) {
 	auto sh = new Shell(parent, style);
 	sh.p_text = title;
-	sh.p_image = image;
+	sh.p_images = images;
 	sh.p_layout = layout;
 	return sh;
 }
@@ -43,7 +43,7 @@ Shell toolShell(Shell parent, string title, bool resize = true, bool close = tru
 	int style = SWT.TITLE | SWT.TOOL;
 	if (resize) style |= SWT.RESIZE;
 	if (close) style |= SWT.CLOSE;
-	return basicShell(parent, title, null, layout, style);
+	return basicShell(parent, title, [], layout, style);
 }
 
 /// Creates basic style composite.

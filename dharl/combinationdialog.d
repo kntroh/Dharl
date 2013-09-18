@@ -74,7 +74,7 @@ class CombinationDialog : DharlDialog {
 		_name = name;
 		auto title  = c.text.fEditCombinationDialog.value.format(name);
 		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
-		super (c, parent, title, .cimg(c.image.editCombination), true, true, false, buttons);
+		super (c, parent, title, [.cimg(c.image.editCombination)], true, true, false, buttons);
 	}
 
 	/// Combination data.

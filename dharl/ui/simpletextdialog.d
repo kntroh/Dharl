@@ -23,7 +23,7 @@ class SimpleTextDialog : BasicDialog {
 	private string _messageTemp = "";
 
 	/// The only constructor.
-	this (Shell parent, string title, Image icon, in DialogState state = DialogState.init) {
+	this (Shell parent, string title, Image[] icon, in DialogState state = DialogState.init) {
 		super (parent, title, icon, DBtn.Ok, state);
 	}
 

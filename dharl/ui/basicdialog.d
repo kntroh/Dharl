@@ -56,7 +56,7 @@ abstract class BasicDialog {
 	private Button[DBtn] _buttons;
 
 	/// The only constructor.
-	this (Shell parent, string title, Image image, DBtn buttons, in DialogState state = DialogState.init) {
+	this (Shell parent, string title, Image[] images, DBtn buttons, in DialogState state = DialogState.init) {
 		if (!buttons) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
@@ -74,7 +74,7 @@ abstract class BasicDialog {
 		// Creates dialog shell and controls area.
 		int style = state.resizable ? SWT.SHELL_TRIM : SWT.DIALOG_TRIM;
 		if (state.modal) style |= SWT.APPLICATION_MODAL;
-		_shl = basicShell(parent, title, image, GL.window, style);
+		_shl = basicShell(parent, title, images, GL.window, style);
 		_shl.p_layout = GL.window(1, true).zero;
 
 		_area = basicComposite(_shl);

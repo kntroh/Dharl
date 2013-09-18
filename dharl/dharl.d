@@ -113,7 +113,7 @@ void main(string[] args) {
 		string message = c.text.usage.value.format(VERSION, supportFormats, imageTypes.join("\n"));
 		.coutf(message);
 
-		auto dialog = new SimpleTextDialog(null, c.text.appName, .cimg(c.image.dharl), dialogStateFrom(c));
+		auto dialog = new SimpleTextDialog(null, c.text.appName, .cmimg(c.image.dharl), dialogStateFrom(c));
 		dialog.p_message = message;
 		dialog.open();
 		dialog.p_display.startApplication(&dialog.isDisposed);
@@ -162,7 +162,7 @@ void main(string[] args) {
 	}
 
 	// Creates window and controls.
-	auto shell = basicShell(c.text.appName, .cimg(c.image.dharl), GL.window);
+	auto shell = basicShell(c.text.appName, .cmimg(c.image.dharl), GL.window);
 	shell.initMouseWheel();
 	auto display = shell.p_display;
 	auto mainPanel = initialize(c, shell);

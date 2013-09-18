@@ -45,9 +45,9 @@ abstract class DharlDialog : BasicDialog {
 	private DCommon _c;
 
 	/// The only constructor.
-	this (DCommon c, Shell parent, string title, Image image, bool modal, bool resizable, bool keyOperation, DBtn buttons) {
+	this (DCommon c, Shell parent, string title, Image[] images, bool modal, bool resizable, bool keyOperation, DBtn buttons) {
 		_c = c;
-		super (parent, title, image, buttons, dialogStateFrom(c, modal, resizable, keyOperation));
+		super (parent, title, images, buttons, dialogStateFrom(c, modal, resizable, keyOperation));
 	}
 
 	/// Common functions and texts of application.
@@ -71,7 +71,7 @@ class ConfigDialog : DharlDialog {
 		auto title  = c.text.fConfigDialog.value.format(c.text.appName);
 		auto image  = .cimg(c.image.configuration);
 		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
-		super (c, parent, title, image, true, false, true, buttons);
+		super (c, parent, title, [image], true, false, true, buttons);
 	}
 
 	protected override void setup(Composite area) {
@@ -179,7 +179,7 @@ class ResizeDialog : DharlDialog {
 		}
 
 		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
-		super (c, parent, title, image, true, false, true, buttons);
+		super (c, parent, title, [image], true, false, true, buttons);
 	}
 	/// Sets size before change.
 	void init(int baseWidth, int baseHeight) {
@@ -352,7 +352,7 @@ class TurnDialog : DharlDialog {
 		auto title = c.text.fTurn.value.format(c.text.appName);
 		auto image = .cimg(c.image.turn);
 		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
-		super (c, parent, title, image, true, false, true, buttons);
+		super (c, parent, title, [image], true, false, true, buttons);
 	}
 	/// Sets size before change.
 	void init(int dgree) {
@@ -412,7 +412,7 @@ class AboutDialog : DharlDialog {
 		auto title = c.text.fAbout.value.format(c.text.appName);
 		auto image = .cimg(c.image.about);
 		auto buttons = DBtn.Ok;
-		super (c, parent, title, image, true, false, true, buttons);
+		super (c, parent, title, [image], true, false, true, buttons);
 	}
 
 	protected override void setup(Composite area) {
@@ -456,7 +456,7 @@ class PaletteOperationDialog : DharlDialog {
 		auto title = c.text.fPaletteOperation.value.format(c.text.appName);
 		auto image = .cimg(c.image.paletteOperation);
 		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
-		super (c, parent, title, image, true, true, true, buttons);
+		super (c, parent, title, [image], true, true, true, buttons);
 	}
 
 	/// Sets items of palette list.
@@ -626,7 +626,7 @@ class PaletteTransferDialog : DharlDialog {
 		auto title = c.text.fPaletteTransfer.value.format(c.text.appName);
 		auto image = .cimg(c.image.paletteTransfer);
 		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
-		super (c, parent, title, image, true, true, true, buttons);
+		super (c, parent, title, [image], true, true, true, buttons);
 	}
 
 	/// Sets items of palette list.

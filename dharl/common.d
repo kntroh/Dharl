@@ -83,7 +83,7 @@ private DImage importImage(string File)() {
 /// All images ID and data in the application.
 class DImages {
 	/// Application icon.
-	const DImage dharl = importImage!("dharl.png");
+	const DImage dharl = importImage!("dharl.ico");
 	/// Application logo.
 	const DImage dharlLogo = importImage!("dharl_logo.png");
 

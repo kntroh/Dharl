@@ -21,6 +21,11 @@ Image cimg(in DImage dimg) {
 	return cimgImpl!Image(dimg, CursorSpot.init);
 }
 
+/// Creates multiple images from dimg.
+Image[] cmimg(in DImage dimg) {
+	return cimgImpl!(Image[])(dimg, CursorSpot.init);
+}
+
 /// Creates cursor from dimg.
 Cursor ccur(in DImage dimg, CursorSpot hotspot) {
 	return cimgImpl!Cursor(dimg, hotspot);
@@ -48,8 +53,16 @@ private T cimgImpl(T)(in DImage dimg, CursorSpot hotspot) {
 	// Disposes all images and clears table.
 	void clear() {
 		if (!table) return;
-		foreach (id, img; table) {
-			img.dispose();
+		static if (is(T:Image[])) {
+			foreach (id, imgs; table) {
+				foreach (img; imgs) {
+					img.dispose();
+				}
+			}
+		} else {
+			foreach (id, img; table) {
+				img.dispose();
+			}
 		}
 		table = null;
 	}
@@ -70,19 +83,26 @@ private T cimgImpl(T)(in DImage dimg, CursorSpot hotspot) {
 	if (p) return *p;
 	// Creates image from bytes.
 	auto inp = new ByteArrayInputStream(cast(byte[])dimg.data);
-	auto data = new ImageData(inp);
-	data.transparentPixel = 0;
-	static if (is(T:Image)) {
-		auto img = new T(d, data);
-	} else static if (is(T:Cursor)) {
+	static if (is(T:Image[])) {
 		T img;
-		final switch (hotspot) {
-		case CursorSpot.TopLeft:
-			img = new T(d, data, 0, 0);
-			break;
-		case CursorSpot.Center:
-			img = new T(d, data, data.width / 2, data.height / 2);
-			break;
+		foreach (data; (new ImageLoader).load(inp)) {
+			img ~= new Image(d, data);
+		}
+	} else {
+		auto data = new ImageData(inp);
+		data.transparentPixel = 0;
+		static if (is(T:Image)) {
+			auto img = new T(d, data);
+		} else static if (is(T:Cursor)) {
+			T img;
+			final switch (hotspot) {
+			case CursorSpot.TopLeft:
+				img = new T(d, data, 0, 0);
+				break;
+			case CursorSpot.Center:
+				img = new T(d, data, data.width / 2, data.height / 2);
+				break;
+			}
 		}
 	}
 	table[dimg.id] = img;
