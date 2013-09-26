@@ -3220,10 +3220,8 @@ class PaintArea : Canvas, Undoable {
 		auto st = cast(StoreData)data;
 		enforce(st);
 		_image.restore(st.image, mode);
+		_layers = st.layers.dup;
 		if (st.pasteLayer) {
-			auto layers = _layers;
-			scope (exit) _layers = layers;
-			_layers = st.layers;
 			_pasteLayer = st.pasteLayer.createMLImage();
 			initPasteLayer(st.iPasteX, st.iPasteY);
 			_iMoveRange.x = st.iMoveX;
