@@ -1,23 +1,29 @@
 
-+++ Dharl - The Pixel Art Editor +++
+Dharl - The Pixel Art Editor
+============================
 
-+ What's this? +
+What's this?
+------------
 
 The Dharl is a low feature pixel art editor. It is a free software.
-The Dharl designed based on the design of the `キャラクタレイザー1999` that once existed on Japan.
 
-+ Usage +
+The Dharl designed based on the design of the "キャラクタレイザー1999" that once existed on Japan.
+
+
+Usage
+-----
 
 The window of the Dharl is divided into two areas roughly.
 
-+--------+--------+
-|        |        |
-| Paint  | Image  |
-|   Area |   List |
-|        |        |
-+--------+--------+
+    +--------+--------+
+    |        |        |
+    | Paint  | Image  |
+    |   Area |   List |
+    |        |        |
+    +--------+--------+
 
 The Paint Area is equipped the drawable area and tools for your painting operation.
+
 The Image List is viewer of some images. You can pop image from the Image List to the Paint Area, and you can push image of the Paint Area to the List.
 
 Your work flow is as follows for example:
@@ -29,16 +35,15 @@ Your work flow is as follows for example:
  5. Saves the image with Ctrl+S.
 
 
-+ Build Process +
+Build Process
+-------------
 
-Require dmd 2.063 and DWT2 (https://github.com/d-widget-toolkit/dwt) to build of the Dharl.
+Require dmd 2.063 and [DWT2](https://github.com/d-widget-toolkit/dwt) to build of the Dharl.
 
 Build the Dharl with this command:
----
-rdmd build
----
+
+    rdmd build
 
 If want to build the release version:
----
-rdmd build release
----
+
+    rdmd build release
