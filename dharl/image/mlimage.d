@@ -1301,7 +1301,7 @@ class MLImage : Undoable {
 	}
 
 	/// Creates clone of combi to dest.
-	private bool cloneCombi(ref Combination[] dest, in Combination[] combi, in size_t[] layer = null) {
+	private static bool cloneCombi(ref Combination[] dest, in Combination[] combi, in size_t[] layer = null) {
 		bool changed = false;
 
 		if (dest is null) {
@@ -1411,6 +1411,7 @@ class MLImage : Undoable {
 			data.visible[i] = l.visible;
 		}
 		cloneCombi(data.combi, _combi);
+		assert (data.combi.length == _combi.length);
 		return data;
 	}
 	override void restore(Object data, UndoMode mode) {
@@ -1424,13 +1425,12 @@ class MLImage : Undoable {
 				rgb = new RGB(c.r, c.g, c.b);
 			}
 		}
-		selectedPalette = st.selectedPalette;
 		_layers.length = st.layers.length;
 		foreach (i, ref l; _layers) {
 			if (_iw != st.width || _ih != st.height) {
-				l.image = new ImageData(st.width, st.height, 8, _palette[selectedPalette]);
+				l.image = new ImageData(st.width, st.height, 8, _palette[_selPalette]);
 			} else if (!l.image) {
-				l.image = new ImageData(st.width, st.height, 8, _palette[selectedPalette]);
+				l.image = new ImageData(st.width, st.height, 8, _palette[_selPalette]);
 			}
 			l.image.data = st.layers[i].dup;
 			l.image.transparentPixel = st.transparentPixel[i];
@@ -1441,6 +1441,8 @@ class MLImage : Undoable {
 		_iw = st.width;
 		_ih = st.height;
 		cloneCombi(_combi, st.combi);
+		assert (_combi.length == st.combi.length);
+		selectedPalette = st.selectedPalette;
 		restoreReceivers.raiseEvent(mode);
 		if (resize) resizeReceivers.raiseEvent();
 	}
