@@ -47,6 +47,8 @@ class PImageList : Canvas {
 	private int _drag = -1;
 	/// Selected index of when start of drag.
 	private int _dragStart = -1;
+	/// Stores the index to it when mouse down on a close button.
+	private int _closeStart = -1;
 
 	/// Cache of wallpaper.
 	private Image _shadeCache = null;
@@ -487,22 +489,13 @@ class PImageList : Canvas {
 		foreach (index, img; _images) {
 			if (!(this.p_style & SWT.READ_ONLY)) {
 				if (1 == e.button) {
-					// close
+					// close start
 					rect.x = img._bounds.x + img._cBounds2.x;
 					rect.y = img._bounds.y + img._cBounds2.y;
 					rect.width = img._cBounds2.width;
 					rect.height = img._cBounds2.height;
 					if (rect.contains(e.x, e.y)) {
-						bool doit = removeReceivers.raiseEvent(index);
-						if (doit) {
-							size_t selected = _selected;
-							img.dispose();
-							removedReceivers.raiseEvent();
-							if (selected == index) {
-								raiseSelectionEvent(e);
-							}
-						}
-						break;
+						_closeStart = index;
 					}
 
 					// drag start
@@ -533,8 +526,32 @@ class PImageList : Canvas {
 	/// ditto
 	private void onMouseUp(Event e) {
 		checkWidget();
+
+		if (1 == e.button && -1 != _closeStart && !(this.p_style & SWT.READ_ONLY)) {
+			// close
+			size_t index = _closeStart;
+			auto img = _images[index];
+			auto rect = CRectangle(0, 0, 0, 0);
+			rect.x = img._bounds.x + img._cBounds2.x;
+			rect.y = img._bounds.y + img._cBounds2.y;
+			rect.width = img._cBounds2.width;
+			rect.height = img._cBounds2.height;
+			if (rect.contains(e.x, e.y)) {
+				bool doit = removeReceivers.raiseEvent(index);
+				if (doit) {
+					size_t selected = _selected;
+					img.dispose();
+					removedReceivers.raiseEvent();
+					if (selected == index) {
+						raiseSelectionEvent(e);
+					}
+				}
+			}
+		}
+
 		_drag = -1;
 		_dragStart = -1;
+		_closeStart = -1;
 	}
 	/// ditto
 	private void onMouseWheel(Event e) {
@@ -573,12 +590,13 @@ class PImageList : Canvas {
 			} else {
 				toIndex = _dragStart;
 			}
-			if (_drag == toIndex) return;
-			move(_drag, toIndex);
-			movedReceivers.raiseEvent(cast(size_t)_drag, toIndex);
-			_drag = toIndex;
-			raiseSelectionEvent(e);
-			return;
+			if (_drag != toIndex) {
+				move(_drag, toIndex);
+				movedReceivers.raiseEvent(cast(size_t)_drag, toIndex);
+				_drag = toIndex;
+				_closeStart = -1;
+				raiseSelectionEvent(e);
+			}
 		}
 
 		auto iRect = CRectangle(0, 0, 0, 0);
@@ -590,30 +608,32 @@ class PImageList : Canvas {
 		}
 		string toolTip = "";
 		foreach (img; _images) {
-			if (!img._selectedPiece.p_empty) {
-				initRect(img, img._iBounds);
-				void set(int x, int y) {
-					if (img._selectedPiece.x != x || img._selectedPiece.y != y) {
-						img.redrawPieceFrame();
-						img._selectedPiece.x = x;
-						img._selectedPiece.y = y;
-						img.redrawPieceFrame();
+			if (-1 == _drag) {
+				if (!img._selectedPiece.p_empty) {
+					initRect(img, img._iBounds);
+					void set(int x, int y) {
+						if (img._selectedPiece.x != x || img._selectedPiece.y != y) {
+							img.redrawPieceFrame();
+							img._selectedPiece.x = x;
+							img._selectedPiece.y = y;
+							img.redrawPieceFrame();
+						}
+					}
+					if (iRect.contains(e.x, e.y)) {
+						int pw = _pieceSize.x;
+						int ph = _pieceSize.y;
+						int psx = (e.x - iRect.x) / pw * pw;
+						int psy = (e.y - iRect.y) / ph * ph;
+						set(psx, psy);
+					} else if (-1 != img._selectedPiece.x) {
+						// Mouse pointer is out of img.
+						set(-1, -1);
 					}
 				}
+				initRect(img, img._dragBounds);
 				if (iRect.contains(e.x, e.y)) {
-					int pw = _pieceSize.x;
-					int ph = _pieceSize.y;
-					int psx = (e.x - iRect.x) / pw * pw;
-					int psy = (e.y - iRect.y) / ph * ph;
-					set(psx, psy);
-				} else if (-1 != img._selectedPiece.x) {
-					// Mouse pointer is out of img.
-					set(-1, -1);
+					toolTip = img.toolTip;
 				}
-			}
-			initRect(img, img._dragBounds);
-			if (iRect.contains(e.x, e.y)) {
-				toolTip = img.toolTip;
 			}
 			if (!(this.p_style & SWT.READ_ONLY)) {
 				initRect(img, img._cBounds2);
