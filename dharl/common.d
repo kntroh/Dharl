@@ -83,95 +83,95 @@ private DImage importImage(string File)() {
 /// All images ID and data in the application.
 class DImages {
 	/// Application icon.
-	const DImage dharl = importImage!("dharl.ico");
+	static const DImage dharl = importImage!("dharl.ico");
 	/// Application logo.
-	const DImage dharlLogo = importImage!("dharl_logo.png");
+	static const DImage dharlLogo = importImage!("dharl_logo.png");
 
 	/// Image file icon.
-	const DImage imageFile = importImage!("image_file.png");
+	static const DImage imageFile = importImage!("image_file.png");
 
 	/// Image data for cursors.
-	const DImage cursorPen = importImage!("cursor_pen.png");
-	const DImage cursorDropper = importImage!("cursor_dropper.png"); /// ditto
-	const DImage cursorBucket = importImage!("cursor_bucket.png"); /// ditto
-	const DImage cursorCross = importImage!("cursor_cross.png"); /// ditto
+	static const DImage cursorPen = importImage!("cursor_pen.png");
+	static const DImage cursorDropper = importImage!("cursor_dropper.png"); /// ditto
+	static const DImage cursorBucket = importImage!("cursor_bucket.png"); /// ditto
+	static const DImage cursorCross = importImage!("cursor_cross.png"); /// ditto
 
 	/// Image data for toolbars and menus.
-	const DImage up = importImage!("up.png"); /// ditto
-	const DImage down = importImage!("down.png"); /// ditto
+	static const DImage up = importImage!("up.png"); /// ditto
+	static const DImage down = importImage!("down.png"); /// ditto
 
-	const DImage createNewImage = importImage!("create_new_image.png");
-	const DImage openImage = importImage!("open_image.png"); /// ditto
-	const DImage saveOverwrite = importImage!("save_overwrite.png"); /// ditto
-	const DImage saveWithName = importImage!("save_with_name.png"); /// ditto
-	const DImage saveAll = importImage!("save_all.png"); /// ditto
-	const DImage closeImage = importImage!("close_image.png"); /// ditto
-	const DImage exit = importImage!("exit.png"); /// ditto
+	static const DImage createNewImage = importImage!("create_new_image.png");
+	static const DImage openImage = importImage!("open_image.png"); /// ditto
+	static const DImage saveOverwrite = importImage!("save_overwrite.png"); /// ditto
+	static const DImage saveWithName = importImage!("save_with_name.png"); /// ditto
+	static const DImage saveAll = importImage!("save_all.png"); /// ditto
+	static const DImage closeImage = importImage!("close_image.png"); /// ditto
+	static const DImage exit = importImage!("exit.png"); /// ditto
 
-	const DImage undo = importImage!("undo.png"); /// ditto
-	const DImage redo = importImage!("redo.png"); /// ditto
-	const DImage cut = importImage!("cut.png"); /// ditto
-	const DImage copy = importImage!("copy.png"); /// ditto
-	const DImage paste = importImage!("paste.png"); /// ditto
-	const DImage del = importImage!("del.png"); /// ditto
-	const DImage selectAll = importImage!("select_all.png"); /// ditto
-	const DImage addLayer = importImage!("add_layer.png"); /// ditto
-	const DImage removeLayer = importImage!("remove_layer.png"); /// ditto
-	const DImage uniteLayers = importImage!("unite_layers.png"); /// ditto
-	const DImage resizeCanvas = importImage!("resize_canvas.png"); /// ditto
+	static const DImage undo = importImage!("undo.png"); /// ditto
+	static const DImage redo = importImage!("redo.png"); /// ditto
+	static const DImage cut = importImage!("cut.png"); /// ditto
+	static const DImage copy = importImage!("copy.png"); /// ditto
+	static const DImage paste = importImage!("paste.png"); /// ditto
+	static const DImage del = importImage!("del.png"); /// ditto
+	static const DImage selectAll = importImage!("select_all.png"); /// ditto
+	static const DImage addLayer = importImage!("add_layer.png"); /// ditto
+	static const DImage removeLayer = importImage!("remove_layer.png"); /// ditto
+	static const DImage uniteLayers = importImage!("unite_layers.png"); /// ditto
+	static const DImage resizeCanvas = importImage!("resize_canvas.png"); /// ditto
 
-	const DImage mainGrid = importImage!("main_grid.png"); /// ditto
-	const DImage subGrid = importImage!("sub_grid.png"); /// ditto
+	static const DImage mainGrid = importImage!("main_grid.png"); /// ditto
+	static const DImage subGrid = importImage!("sub_grid.png"); /// ditto
 
-	const DImage createGradation = importImage!("create_gradation.png"); /// ditto
-	const DImage enabledBackColor = importImage!("enabled_back_color.png"); /// ditto
-	const DImage maskMode = importImage!("mask_mode.png"); /// ditto
-	const DImage paletteOperation = importImage!("palette_operation.png"); /// ditto
-	const DImage palette = importImage!("palette.png"); /// ditto
-	const DImage addPalette = importImage!("add_palette.png"); /// ditto
-	const DImage removePalette = importImage!("remove_palette.png"); /// ditto
-	const DImage copyPalette = importImage!("copy_palette.png"); /// ditto
-	const DImage paletteTransfer = importImage!("palette_transfer.png"); /// ditto
+	static const DImage createGradation = importImage!("create_gradation.png"); /// ditto
+	static const DImage enabledBackColor = importImage!("enabled_back_color.png"); /// ditto
+	static const DImage maskMode = importImage!("mask_mode.png"); /// ditto
+	static const DImage paletteOperation = importImage!("palette_operation.png"); /// ditto
+	static const DImage palette = importImage!("palette.png"); /// ditto
+	static const DImage addPalette = importImage!("add_palette.png"); /// ditto
+	static const DImage removePalette = importImage!("remove_palette.png"); /// ditto
+	static const DImage copyPalette = importImage!("copy_palette.png"); /// ditto
+	static const DImage paletteTransfer = importImage!("palette_transfer.png"); /// ditto
 
-	const DImage freeSelection = importImage!("free_selection.png"); /// ditto
-	const DImage selection = importImage!("selection.png"); /// ditto
-	const DImage freePath = importImage!("free_path.png"); /// ditto
-	const DImage straight = importImage!("straight.png"); /// ditto
-	const DImage ovalLine = importImage!("oval_line.png"); /// ditto
-	const DImage rectLine = importImage!("rect_line.png"); /// ditto
-	const DImage ovalFill = importImage!("oval_fill.png"); /// ditto
-	const DImage rectFill = importImage!("rect_fill.png"); /// ditto
-	const DImage fillArea = importImage!("fill_area.png"); /// ditto
-	const DImage textDrawing = importImage!("text_drawing.png"); /// ditto
+	static const DImage freeSelection = importImage!("free_selection.png"); /// ditto
+	static const DImage selection = importImage!("selection.png"); /// ditto
+	static const DImage freePath = importImage!("free_path.png"); /// ditto
+	static const DImage straight = importImage!("straight.png"); /// ditto
+	static const DImage ovalLine = importImage!("oval_line.png"); /// ditto
+	static const DImage rectLine = importImage!("rect_line.png"); /// ditto
+	static const DImage ovalFill = importImage!("oval_fill.png"); /// ditto
+	static const DImage rectFill = importImage!("rect_fill.png"); /// ditto
+	static const DImage fillArea = importImage!("fill_area.png"); /// ditto
+	static const DImage textDrawing = importImage!("text_drawing.png"); /// ditto
 
-	const DImage bold = importImage!("bold.png"); /// ditto
-	const DImage italic = importImage!("italic.png"); /// ditto
+	static const DImage bold = importImage!("bold.png"); /// ditto
+	static const DImage italic = importImage!("italic.png"); /// ditto
 
-	const DImage noTone = importImage!("no_tone.png"); /// ditto
+	static const DImage noTone = importImage!("no_tone.png"); /// ditto
 
-	const DImage resize = importImage!("resize.png"); /// ditto
-	const DImage mirrorHorizontal = importImage!("mirror_horizontal.png"); /// ditto
-	const DImage mirrorVertical = importImage!("mirror_vertical.png"); /// ditto
-	const DImage flipHorizontal = importImage!("flip_horizontal.png"); /// ditto
-	const DImage flipVertical = importImage!("flip_vertical.png"); /// ditto
-	const DImage rotateRight = importImage!("rotate_right.png"); /// ditto
-	const DImage rotateLeft = importImage!("rotate_left.png"); /// ditto
-	const DImage rotateUp = importImage!("rotate_up.png"); /// ditto
-	const DImage rotateDown = importImage!("rotate_down.png"); /// ditto
-	const DImage turn90 = importImage!("turn_90.png"); /// ditto
-	const DImage turn180 = importImage!("turn_180.png"); /// ditto
-	const DImage turn270 = importImage!("turn_270.png"); /// ditto
-	const DImage turn = importImage!("turn.png"); /// ditto
-	const DImage increaseBrightness = importImage!("increase_brightness.png"); /// ditto
-	const DImage decreaseBrightness = importImage!("decrease_brightness.png"); /// ditto
+	static const DImage resize = importImage!("resize.png"); /// ditto
+	static const DImage mirrorHorizontal = importImage!("mirror_horizontal.png"); /// ditto
+	static const DImage mirrorVertical = importImage!("mirror_vertical.png"); /// ditto
+	static const DImage flipHorizontal = importImage!("flip_horizontal.png"); /// ditto
+	static const DImage flipVertical = importImage!("flip_vertical.png"); /// ditto
+	static const DImage rotateRight = importImage!("rotate_right.png"); /// ditto
+	static const DImage rotateLeft = importImage!("rotate_left.png"); /// ditto
+	static const DImage rotateUp = importImage!("rotate_up.png"); /// ditto
+	static const DImage rotateDown = importImage!("rotate_down.png"); /// ditto
+	static const DImage turn90 = importImage!("turn_90.png"); /// ditto
+	static const DImage turn180 = importImage!("turn_180.png"); /// ditto
+	static const DImage turn270 = importImage!("turn_270.png"); /// ditto
+	static const DImage turn = importImage!("turn.png"); /// ditto
+	static const DImage increaseBrightness = importImage!("increase_brightness.png"); /// ditto
+	static const DImage decreaseBrightness = importImage!("decrease_brightness.png"); /// ditto
 
-	const DImage editCombination = importImage!("edit_combination.png"); /// ditto
-	const DImage addCombination = importImage!("add_combination.png"); /// ditto
-	const DImage removeCombination = importImage!("remove_combination.png"); /// ditto
+	static const DImage editCombination = importImage!("edit_combination.png"); /// ditto
+	static const DImage addCombination = importImage!("add_combination.png"); /// ditto
+	static const DImage removeCombination = importImage!("remove_combination.png"); /// ditto
 
-	const DImage configuration = importImage!("configuration.png"); /// ditto
+	static const DImage configuration = importImage!("configuration.png"); /// ditto
 
-	const DImage about = importImage!("about.png"); /// ditto
+	static const DImage about = importImage!("about.png"); /// ditto
 }
 
 /// All messages and texts in the application.

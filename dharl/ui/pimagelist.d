@@ -31,7 +31,7 @@ class PImageList : Canvas {
 	void delegate(PImageItem item)[] itemResizedReceivers;
 
 	/// Image spacing.
-	private immutable SPACING = 5;
+	private static immutable SPACING = 5;
 
 	/// Size of a selectable piece.
 	private Point _pieceSize = null;

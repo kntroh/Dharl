@@ -242,8 +242,8 @@ class MLImage : Undoable {
 			auto member = new ArchiveMember;
 			member.name = name;
 			member.time = time;
-			member.compressionMethod = 8;
-			member.externalAttributes = MEMBER_IS_FILE;
+			member.compressionMethod = CompressionMethod.deflate;
+			member.fileAttributes = MEMBER_IS_FILE;
 			member.internalAttributes = 1;
 			member.flags |= UNICODE_FILENAME;
 			member.expandedData = data;
