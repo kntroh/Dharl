@@ -175,7 +175,8 @@ class PaintArea : Canvas, Undoable {
 	/// The only constructor.
 	this (Composite parent, int style) {
 		super (parent, style | SWT.H_SCROLL | SWT.V_SCROLL | SWT.NO_BACKGROUND);
-		_id = format("%x-%d", &this, Clock.currTime().stdTime);
+		auto p = this;
+		_id = format("%x-%d", cast(size_t)&p, Clock.currTime().stdTime);
 
 		_image = new MLImage;
 		_image.resizeReceivers ~= &resizeReceiver;
