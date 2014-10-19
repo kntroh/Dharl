@@ -147,7 +147,7 @@ void main(string[] args) {
 		if (reply is null) {
 			return MSG_EXECUTE;
 		} else if (MSG_GET_ARGUMENT == reply) {
-			if (sentArg < args.length) {
+			if (sentArg < argFiles.length) {
 				auto msg = MSG_ARGUMENT ~ argFiles[sentArg];
 				sentArg++;
 				return msg;
