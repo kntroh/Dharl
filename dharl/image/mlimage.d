@@ -588,35 +588,43 @@ class MLImage : Undoable {
 			_layers[li].visible = sl.visible;
 			tl.transparentPixel = sl.image.transparentPixel;
 
-			foreach (iy; 0 .. _ih) {
-				int sly = srcY + iy;
-				auto tStart = iy * tl.bytesPerLine;
+			if (srcX == 0 && srcY == 0 && width == src.width && height == src.height && tl.bytesPerLine == sl.image.bytesPerLine) {
+				assert (tl.data.length == sl.image.data.length);
+				if (changed || tl.data != sl.image.data) {
+					tl.data[] = sl.image.data;
+					changed = true;
+				}
+			} else {
+				foreach (iy; 0 .. _ih) {
+					int sly = srcY + iy;
+					auto tStart = iy * tl.bytesPerLine;
 
-				if (0 <= sly && sly < src.height) {
-					auto sStart = srcX + (sly * sl.image.bytesPerLine);
-					auto pw = _iw;
+					if (0 <= sly && sly < src.height) {
+						auto sStart = srcX + (sly * sl.image.bytesPerLine);
+						auto pw = _iw;
 
-					if (src.width - srcX < _iw) {
-						// Out of source image (right).
-						auto s = tStart + (src.width - srcX);
-						auto w = _iw - (src.width - srcX);
-						if (changed || tl.data[s .. s + w] != backgroundPixels[0 .. w]) {
-							tl.data[s .. s + w] = backgroundPixels[0 .. w];
+						if (src.width - srcX < _iw) {
+							// Out of source image (right).
+							auto s = tStart + (src.width - srcX);
+							auto w = _iw - (src.width - srcX);
+							if (changed || tl.data[s .. s + w] != backgroundPixels[0 .. w]) {
+								tl.data[s .. s + w] = backgroundPixels[0 .. w];
+								changed = true;
+							}
+							pw -= w;
+						}
+						// A MLImage is 8-bit depth always.
+						// Therefore, Can copy bytes directly.
+						if (0 < pw && (changed || tl.data[tStart .. tStart + pw] != sl.image.data[sStart .. sStart + pw])) {
+							tl.data[tStart .. tStart + pw] = sl.image.data[sStart .. sStart + pw];
 							changed = true;
 						}
-						pw -= w;
-					}
-					// A MLImage is 8-bit depth always.
-					// Therefore, Can copy bytes directly.
-					if (0 < pw && (changed || tl.data[tStart .. tStart + pw] != sl.image.data[sStart .. sStart + pw])) {
-						tl.data[tStart .. tStart + pw] = sl.image.data[sStart .. sStart + pw];
-						changed = true;
-					}
-				} else {
-					// Out of source image (Y).
-					if (changed || tl.data[tStart .. tStart + _iw] != backgroundPixels) {
-						tl.data[tStart .. tStart + _iw] = backgroundPixels;
-						changed = true;
+					} else {
+						// Out of source image (Y).
+						if (changed || tl.data[tStart .. tStart + _iw] != backgroundPixels) {
+							tl.data[tStart .. tStart + _iw] = backgroundPixels;
+							changed = true;
+						}
 					}
 				}
 			}
@@ -657,14 +665,22 @@ class MLImage : Undoable {
 			_layers[li].visible = sl.visible;
 			auto l = sl.image;
 			tl.transparentPixel = l.transparentPixel;
-			foreach (iy; 0 .. .min(src.height, height - destY)) {
-				// A MLImage is 8-bit depth always.
-				// Therefore, Can copy bytes directly.
-				auto sStart = iy * l.bytesPerLine;
-				auto tStart = (destY + iy) * tl.bytesPerLine + destX;
-				if (changed || tl.data[tStart .. tStart + copyW] != l.data[sStart .. sStart + copyW]) {
-					tl.data[tStart .. tStart + copyW] = l.data[sStart .. sStart + copyW];
+			if (destX == 0 && destY == 0 && width == src.width && height == src.height && tl.bytesPerLine == l.bytesPerLine) {
+				assert (tl.data.length == l.data.length);
+				if (changed || tl.data != l.data) {
+					tl.data[] = l.data;
 					changed = true;
+				}
+			} else {
+				foreach (iy; 0 .. .min(src.height, height - destY)) {
+					// A MLImage is 8-bit depth always.
+					// Therefore, Can copy bytes directly.
+					auto sStart = iy * l.bytesPerLine;
+					auto tStart = (destY + iy) * tl.bytesPerLine + destX;
+					if (changed || tl.data[tStart .. tStart + copyW] != l.data[sStart .. sStart + copyW]) {
+						tl.data[tStart .. tStart + copyW] = l.data[sStart .. sStart + copyW];
+						changed = true;
+					}
 				}
 			}
 		}
