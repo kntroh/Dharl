@@ -153,7 +153,7 @@ void exec(string[] cmd ...) {
 	string line = cmd.join(" ");
 	writeln(line);
 	auto timer = StopWatch(AutoStart.yes);
-	enforce(0 == executeShell(line).status, new Exception(line));
+	enforce(0 == spawnShell(line).wait(), new Exception(line));
 	timer.stop();
 	writefln("%d msecs", timer.peek().msecs);
 }
