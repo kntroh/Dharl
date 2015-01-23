@@ -146,15 +146,6 @@ version (Windows) {
 		return .text(pathBuf[0 .. .wcslen(pathBuf.ptr)]);
 	}
 
-	/// Gets executing module file path.
-	string moduleFileName(string args0) {
-		wchar[MAX_PATH] pathBuf;
-		if (GetModuleFileNameW(null, pathBuf.ptr, pathBuf.length)) {
-			return .text(pathBuf[0 .. .wcslen(pathBuf.ptr)]);
-		}
-		return args0.isAbsolute() ? args0 : args0.absolutePath();
-	}
-
 } else version (Posix) {
 
 	private static import core.sys.posix.dlfcn;
@@ -193,19 +184,6 @@ version (Windows) {
 	/// Gets default application data directory from the environment.
 	string appData(string defaultValue, bool freeLibrary) {
 		return .to!string(getpwuid(getuid()).pw_dir);
-	}
-
-	/// Gets executing module file path.
-	string moduleFileName(string args0) {
-		version (linux) {
-			char[MAX_PATH] buf;
-			buf[] = '\0';
-			if (-1 != .readlink("/proc/self/exe", buf.ptr, buf.sizeof)) {
-				auto result = buf[0 .. .strlen(buf.ptr)];
-				return result.assumeUnique();
-			}
-		}
-		return args0.isAbsolute() ? args0 : args0.absolutePath();
 	}
 
 } else static assert (0);

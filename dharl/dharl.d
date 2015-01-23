@@ -50,7 +50,7 @@ private immutable MSG_QUIT         = "quit";
 
 /// Entry point of program.
 void main(string[] args) {
-	string exe = .moduleFileName(args[0]);
+	string exe = .thisExePath();
 	.coutf("Execute: %s", exe);
 	.errorLog = "%s.log".format(exe);
 
@@ -122,7 +122,7 @@ void main(string[] args) {
 	}
 
 	// Files in startup arguments.
-	string[] argFiles;;
+	string[] argFiles;
 	foreach (i, arg; args[1 .. $]) {
 		foreach (file; arg.glob()) {
 			argFiles ~= file;
