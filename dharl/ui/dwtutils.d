@@ -92,24 +92,47 @@ void refWindow(ref WindowParameter param, Shell shell) {
 		y = (SWT.DEFAULT == y) ? (y + (ph - h) / 2) : (py + y);
 	}
 
-	shell.p_bounds = CRect(x, y, w, h);
-	shell.p_maximized = param.maximized;
-	shell.p_minimized = param.minimized;
+	// Move into inside of display.
+	auto d = shell.p_display;
+	auto ca = d.p_clientArea;
+	w = .min(ca.width, w);
+	h = .min(ca.height, h);
+	if (ca.width < x + w) x = ca.width - w;
+	if (ca.height < y + h) y = ca.height - h;
+	if (x < ca.x) x = ca.x;
+	if (y < ca.y) y = ca.y;
 
-	shell.p_listeners!(SWT.Dispose) ~= (Event e) {
-		auto b = shell.p_bounds;
-		auto parent = shell.p_parent;
-		if (parent) {
-			// relative position
-			pBounds = parent.p_bounds;
-			param.x = b.x - pBounds.x;
-			param.y = b.y - pBounds.y;
-		} else {
-			param.x = b.x;
-			param.y = b.y;
+	// Save initial parameters.
+	param.x = x;
+	param.y = y;
+	param.width = w;
+	param.height = h;
+
+	// Set parameters.
+	shell.p_bounds = CRect(x, y, w, h);
+	if (shell.p_maximized != param.maximized) shell.p_maximized = param.maximized;
+	if (shell.p_minimized != param.minimized) shell.p_minimized = param.minimized;
+
+	void saveParams() {
+		if (!shell.p_maximized && !shell.p_minimized) {
+			auto b = shell.p_bounds;
+			auto parent = shell.p_parent;
+			if (parent) {
+				// relative position
+				pBounds = parent.p_bounds;
+				param.x = b.x - pBounds.x;
+				param.y = b.y - pBounds.y;
+			} else {
+				param.x = b.x;
+				param.y = b.y;
+			}
+			param.width  = b.width;
+			param.height = b.height;
 		}
-		param.width  = b.width;
-		param.height = b.height;
+	}
+	shell.p_listeners!(SWT.Resize) ~= &saveParams;
+	shell.p_listeners!(SWT.Move) ~= &saveParams;
+	shell.p_listeners!(SWT.Dispose) ~= (Event e) {
 		param.maximized = shell.p_maximized;
 		param.minimized = shell.p_minimized;
 	};
