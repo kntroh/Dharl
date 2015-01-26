@@ -109,9 +109,9 @@ void refWindow(ref WindowParameter param, Shell shell) {
 	param.height = h;
 
 	// Set parameters.
-	shell.p_bounds = CRect(x, y, w, h);
 	if (shell.p_maximized != param.maximized) shell.p_maximized = param.maximized;
 	if (shell.p_minimized != param.minimized) shell.p_minimized = param.minimized;
+	shell.p_bounds = CRect(x, y, w, h);
 
 	void saveParams() {
 		if (!shell.p_maximized && !shell.p_minimized) {

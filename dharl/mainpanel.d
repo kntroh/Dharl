@@ -184,6 +184,7 @@ class MainPanel : Composite {
 			// Splitter of paint area and palette.
 			auto ppSplitter = basicVSplitter(splitter, false);
 			_c.conf.layout0_sashPosPaint_Palette.value.refSelection(ppSplitter);
+			splitter.resizable = ppSplitter;
 
 			// Creates composites.
 			// Paint area.

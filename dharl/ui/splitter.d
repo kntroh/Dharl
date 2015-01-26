@@ -61,17 +61,30 @@ class Splitter : Composite {
 		// Handle sash moved event.
 		_sash.p_listeners!(SWT.Selection) ~= (Event e) {
 			checkWidget();
+			auto children = this.p_children;
+			if (2 > children.length) return;
+			auto ca = this.p_clientArea;
 
-			if (SWT.VERTICAL == splitStyle) {
-				this.p_selection = e.y;
-			} else {
-				this.p_selection = e.x;
-			}
+			auto a = children[0];
+			auto b = children[1];
 
+			auto bw = this.p_borderWidth;
 			if (SWT.VERTICAL == splitStyle) {
-				e.y = this.p_selection;
+				if (_resizable is a) {
+					this.p_selection = ca.height - bw - e.y;
+					e.y = ca.height - bw - this.p_selection; // overwrite with adjusted value
+				} else {
+					this.p_selection = e.y;
+					e.y = this.p_selection; // overwrite with adjusted value
+				}
 			} else {
-				e.x = this.p_selection;
+				if (_resizable is a) {
+					this.p_selection = ca.width - bw - e.x;
+					e.x = ca.width - bw - this.p_selection; // overwrite with adjusted value
+				} else {
+					this.p_selection = e.x;
+					e.x = this.p_selection; // overwrite with adjusted value
+				}
 			}
 
 			raiseSelectionEvent(e);
@@ -102,18 +115,10 @@ class Splitter : Composite {
 				this.p_selection = SWT.DEFAULT;
 			}
 
-			scope (exit) raiseSelectionEvent(e);
+			// Adjust sash position.
+			this.p_selection = this.p_selection;
 
-			if (_resizable is a) {
-				if (-1 == oldSize) return;
-				if (!a.p_visible) return;
-
-				// Resizes top or left control.
-				this.p_selection = this.p_selection + (newSize - oldSize);
-			} else {
-				// Adjust sash position.
-				this.p_selection = this.p_selection;
-			}
+			raiseSelectionEvent(e);
 		};
 	}
 
@@ -162,6 +167,7 @@ class Splitter : Composite {
 	private int splitStyle() { return _splitStyle; }
 
 	/// The split position.
+	/// A value is equals width (or height) of the resizable.
 	/// If value is less 0, value goes to half client area size.
 	void setSelection(int value) {
 		checkWidget();
@@ -185,9 +191,6 @@ class Splitter : Composite {
 		auto children = this.p_children;
 		if (2 > children.length) return;
 
-		auto a = children[0];
-		auto b = children[1];
-
 		int rightOrBottom;
 		if (SWT.VERTICAL == splitStyle) {
 			rightOrBottom = ca.height;
@@ -198,6 +201,14 @@ class Splitter : Composite {
 
 		if (SWT.MAX & this.p_style) {
 			// maximize when space is small
+			Control a, b;
+			if (_resizable is children[0]) {
+				a = children[1];
+				b = children[0];
+			} else {
+				a = children[0];
+				b = children[1];
+			}
 			if (_selection - bw < dragMinimum) {
 				_selection = bw;
 				a.p_visible = false;
@@ -212,22 +223,11 @@ class Splitter : Composite {
 			}
 		} else {
 			// ensure minimal space
-			void left() {
-				if (_selection - bw < dragMinimum) {
-					_selection = bw + dragMinimum;
-				}
+			if (_selection - bw < dragMinimum) {
+				_selection = bw + dragMinimum;
 			}
-			void right() {
-				if (rightOrBottom - bw - _selection < dragMinimum) {
-					_selection = rightOrBottom - bw - dragMinimum;
-				}
-			}
-			if (_resizable is a) {
-				right();
-				left();
-			} else {
-				left();
-				right();
+			if (rightOrBottom - bw - _selection < dragMinimum) {
+				_selection = rightOrBottom - bw - dragMinimum;
 			}
 		}
 
@@ -244,10 +244,26 @@ class Splitter : Composite {
 	@property
 	void resizable(Control c) {
 		checkWidget();
-		if (this !is c.p_parent) {
+		if (c && this !is c.p_parent) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
+		bool resizeRight1 = false, resizeRight2 = false;
+		auto children = this.p_children;
+		if (2 <= children.length) {
+			auto a = children[0];
+			resizeRight1 = _resizable is a;
+			resizeRight2 = c is a;
+		}
+
 		_resizable = c;
+
+		if (resizeRight1 != resizeRight2) {
+			// adjusts sash position
+			auto ca = this.p_clientArea;
+			auto size = SWT.VERTICAL == splitStyle ? ca.height : ca.width;
+			size -= this.p_borderWidth * 2;
+			this.p_selection = size - sashWidth - this.p_selection;
+		}
 	}
 	/// ditto
 	@property
@@ -343,13 +359,17 @@ class Splitter : Composite {
 			auto b = children[1];
 
 			auto bw = composite.p_borderWidth;
+			auto selection = this.outer.p_selection;
 			if (SWT.VERTICAL == splitStyle) {
+				if (_resizable is a) {
+					selection = ca.height - bw - selection;
+				}
 				_oldSize = ca.height;
 
 				int y = bw;
 				if (a.p_visible) {
-					a.setBounds(0, y, ca.width, _selection);
-					y += this.outer.p_selection;
+					a.setBounds(0, y, ca.width, selection);
+					y += selection;
 				}
 				if (b.p_visible) {
 					_sash.setBounds(0, y, ca.width, sashWidth);
@@ -360,12 +380,15 @@ class Splitter : Composite {
 					_sash.setBounds(0, y, ca.width, sashWidth);
 				}
 			} else {
+				if (_resizable is a) {
+					selection = ca.width - bw - selection;
+				}
 				_oldSize = ca.width;
 
 				int x = bw;
 				if (a.p_visible) {
-					a.setBounds(x, 0, _selection, ca.height);
-					x += this.outer.p_selection;
+					a.setBounds(x, 0, selection, ca.height);
+					x += selection;
 				}
 				if (b.p_visible) {
 					_sash.setBounds(x, 0, sashWidth, ca.height);
