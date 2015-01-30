@@ -68,22 +68,20 @@ class Splitter : Composite {
 			auto bw = this.p_borderWidth;
 			if (SWT.VERTICAL == splitStyle) {
 				if (_resizable is a) {
-					this.p_selection = ca.height - bw - e.y;
+					this.p_selection = adjustSelection(ca.height - bw - e.y);
 					e.y = ca.height - bw - this.p_selection; // overwrite with adjusted value
 				} else {
-					this.p_selection = e.y;
+					this.p_selection = adjustSelection(e.y);
 					e.y = this.p_selection; // overwrite with adjusted value
 				}
-				e.y = adjustSelection(e.y);
 			} else {
 				if (_resizable is a) {
-					this.p_selection = ca.width - bw - e.x;
+					this.p_selection = adjustSelection(ca.width - bw - e.x);
 					e.x = ca.width - bw - this.p_selection; // overwrite with adjusted value
 				} else {
-					this.p_selection = e.x;
+					this.p_selection = adjustSelection(e.x);
 					e.x = this.p_selection; // overwrite with adjusted value
 				}
-				e.x = adjustSelection(e.x);
 			}
 
 			raiseSelectionEvent(e);
