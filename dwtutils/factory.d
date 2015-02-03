@@ -8,6 +8,7 @@ module dwtutils.factory;
 private import dwtutils.utils;
 private import dwtutils.wrapper;
 
+private import std.array;
 private import std.exception;
 private import std.conv;
 private import std.ascii;
@@ -233,8 +234,7 @@ Tuple!(ToolItem, "toolItem", Menu, "menu") dropDownToolItem(ToolBar parent, stri
 
 /// Common function for tool item.
 private void initToolItem(ToolItem toolItem, string text, Image image) {
-	int tab = text.indexOf("\t");
-	if (-1 != tab) text = text[0 .. tab];
+	text = text.replace("\t", "\n");
 	if (image) {
 		toolItem.p_toolTipText = text;
 		toolItem.p_image = image;
