@@ -15,12 +15,14 @@ private import dharl.ui.paintarea;
 private import std.algorithm;
 private import std.conv;
 
+private import java.lang.System;
+
 private import org.eclipse.swt.all;
 
 /// List of layers for PaintArea.
 class LayerList : Canvas {
 	/// Height of a layer view of one.
-	private static const LAYER_H = 60;
+	private static immutable LAYER_H = 60;
 
 	/// Show layers of this paintArea.
 	private PaintArea _paintArea = null;
@@ -370,7 +372,7 @@ class LayerList : Canvas {
 					e.gc.drawImage(img, ib.x, ib.y, ib.width, ib.height, 1, y + 1, w - 1, LAYER_H - 1);
 				} else {
 					int iy = y;
-					if (ib.height < LAYER_H) y += (LAYER_H - ib.height) / 2;
+					if (ib.height < LAYER_H) iy += (LAYER_H - ib.height) / 2;
 					e.gc.drawImage(img, ib.x + 1, iy + 1);
 				}
 

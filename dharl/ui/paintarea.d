@@ -18,14 +18,10 @@ private import dharl.ui.layerlist;
 
 private import std.algorithm;
 private import std.array;
-private import std.conv;
 private import std.datetime;
 private import std.exception;
-private import std.string;
 
 private import org.eclipse.swt.all;
-
-private import java.lang.all : System;
 
 /// Mode of range selection.
 enum SelectMode {
