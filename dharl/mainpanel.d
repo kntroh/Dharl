@@ -20,13 +20,14 @@ private import dharl.image.edg;
 private import dharl.image.mlimage;
 private import dharl.image.susie;
 
+private import dharl.ui.colorslider;
+private import dharl.ui.dwtutils;
+private import dharl.ui.layerlist;
 private import dharl.ui.paintarea;
 private import dharl.ui.paletteview;
-private import dharl.ui.colorslider;
 private import dharl.ui.pimagelist;
 private import dharl.ui.splitter;
 private import dharl.ui.uicommon;
-private import dharl.ui.dwtutils;
 
 private import std.algorithm;
 private import std.array;
