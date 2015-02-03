@@ -33,6 +33,7 @@ private import std.algorithm;
 private import std.array;
 private import std.exception;
 private import std.path;
+private import std.range;
 private import std.stream;
 private import std.string;
 private import std.traits;
@@ -103,6 +104,15 @@ class MainPanel : Composite {
 	private ToolItem _toolOfTextDrawing = null;
 	/// It will be true while updating the mode menu.
 	private bool _updateModeMenu = false;
+
+	/// ToolItem of the up layer function.
+	private ToolItem _tUpLayer = null;
+	/// ToolItem of the down layer function.
+	private ToolItem _tDownLayer = null;
+	/// ToolItem of the unite layer function.
+	private ToolItem _lUniteLayers = null;
+	/// ToolItem of the select all layers function.
+	private ToolItem _lSelectAllLayers = null;
 
 	/// Tool window for text drawing.
 	private TextDrawingTools _textDrawingTools = null;
@@ -327,21 +337,6 @@ class MainPanel : Composite {
 		_paintArea.restoreReceivers ~= (UndoMode mode) {
 			_paletteView.colors = _paintArea.palette;
 			_colorSlider.color = _paletteView.color(_paintArea.pixel);
-		};
-		_layerList.p_listeners!(SWT.Selection) ~= {
-			int tPixel = -1;
-			auto layers = _paintArea.selectedLayers;
-			if (layers.length) {
-				tPixel = _paintArea.image.layer(layers[0]).image.transparentPixel;
-				if (tPixel < 0) tPixel = -1;
-				foreach (l; layers[1 .. $]) {
-					if (_paintArea.image.layer(l).image.transparentPixel != tPixel) {
-						tPixel = -1;
-						break;
-					}
-				}
-			}
-			_paletteView.transparentPixel = tPixel;
 		};
 		_layerList.p_listeners!(SWT.MouseMove) ~= (Event e) {
 			string toolTip = "";
@@ -593,21 +588,44 @@ class MainPanel : Composite {
 		basicToolItem(lToolBar, _c.text.menu.addLayer, cimg(_c.image.addLayer), &addLayer);
 		basicToolItem(lToolBar, _c.text.menu.removeLayer, cimg(_c.image.removeLayer), &removeLayer);
 		separator(lToolBar);
-		auto tUpLayer = basicToolItem(lToolBar, _c.text.menu.up, cimg(_c.image.up), &upLayer);
-		auto tDownLayer = basicToolItem(lToolBar, _c.text.menu.down, cimg(_c.image.down), &downLayer);
+		_tUpLayer = basicToolItem(lToolBar, _c.text.menu.up, cimg(_c.image.up), &upLayer);
+		_tDownLayer = basicToolItem(lToolBar, _c.text.menu.down, cimg(_c.image.down), &downLayer);
 		separator(lToolBar);
-		auto lUniteLayers = basicToolItem(lToolBar, _c.text.menu.uniteLayers, cimg(_c.image.uniteLayers), &uniteLayers);
+		_lUniteLayers = basicToolItem(lToolBar, _c.text.menu.uniteLayers, cimg(_c.image.uniteLayers), &uniteLayers);
+		separator(lToolBar);
+		_lSelectAllLayers = basicToolItem(lToolBar, _c.text.menu.selectAllLayers, cimg(_c.image.selectAllLayers), &selectAllLayers);
 
 		// List of layers.
 		_layerList = new LayerList(parent, SWT.BORDER | SWT.DOUBLE_BUFFERED);
 		_layerList.p_layoutData = GD.fill(true, true);
 		_layerList.undoManager = _um;
-		_layerList.p_listeners!(SWT.Selection) ~= {
-			tUpLayer.p_enabled = canUpLayer;
-			tDownLayer.p_enabled = canDownLayer;
-			lUniteLayers.p_enabled = canUniteLayers;
-			statusChangedReceivers.raiseEvent();
-		};
+		_layerList.p_listeners!(SWT.Selection) ~= &selectedLayer;
+	}
+	/// Do necessary processing when selected layers.
+	private void selectedLayer() {
+		// Updates tool items.
+		_tUpLayer.p_enabled = canUpLayer;
+		_tDownLayer.p_enabled = canDownLayer;
+		_lUniteLayers.p_enabled = canUniteLayers;
+		_lSelectAllLayers.p_enabled = canSelectAllLayers;
+
+		// Updates the palette view.
+		int tPixel = -1;
+		auto layers = _paintArea.selectedLayers;
+		if (layers.length) {
+			tPixel = _paintArea.image.layer(layers[0]).image.transparentPixel;
+			if (tPixel < 0) tPixel = -1;
+			foreach (l; layers[1 .. $]) {
+				if (_paintArea.image.layer(l).image.transparentPixel != tPixel) {
+					tPixel = -1;
+					break;
+				}
+			}
+		}
+		_paletteView.transparentPixel = tPixel;
+
+		// Raises status changed event.
+		statusChangedReceivers.raiseEvent();
 	}
 
 	/// Creates paint mode toolbar.
@@ -1629,6 +1647,14 @@ class MainPanel : Composite {
 		}
 	}
 	/// ditto
+	void selectAllLayers() {
+		checkWidget();
+		checkInit();
+		if (!canSelectAllLayers) return;
+		_layerList.selectAll();
+		selectedLayer();
+	}
+	/// ditto
 	@property
 	const
 	bool canUniteLayers() {
@@ -1659,6 +1685,13 @@ class MainPanel : Composite {
 	bool canDownLayer() {
 		checkInit();
 		return _paintArea.image.layerCount != _paintArea.selectedLayers[$ - 1] + 1;
+	}
+	/// ditto
+	@property
+	const
+	bool canSelectAllLayers() {
+		checkInit();
+		return !.equal(.repeat(true, _paintArea.image.layerCount), _paintArea.selectedInfo);
 	}
 
 	/// Opens dialog for edit combinations of layers in MLImage.

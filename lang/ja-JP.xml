@@ -25,6 +25,7 @@
   <addLayer>レイヤの追加(&amp;L)</addLayer>
   <removeLayer>レイヤの削除(&amp;Y)</removeLayer>
   <uniteLayers>下のレイヤに結合(&amp;U)</uniteLayers>
+  <selectAllLayers>すべてのレイヤを選択(&amp;S)	Ctrl+Shift+A</selectAllLayers>
   <mode>描画(&amp;M)</mode>
   <enabledBackColor>移動などで背景色を無視する(&amp;T)	Ctrl+P</enabledBackColor>
   <freeSelection>自由選択(&amp;F)	Ctrl+0</freeSelection>

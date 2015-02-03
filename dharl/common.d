@@ -118,6 +118,7 @@ class DImages {
 	static const DImage addLayer = importImage!("add_layer.png"); /// ditto
 	static const DImage removeLayer = importImage!("remove_layer.png"); /// ditto
 	static const DImage uniteLayers = importImage!("unite_layers.png"); /// ditto
+	static const DImage selectAllLayers = importImage!("select_all_layers.png"); /// ditto
 	static const DImage resizeCanvas = importImage!("resize_canvas.png"); /// ditto
 
 	static const DImage mainGrid = importImage!("main_grid.png"); /// ditto
@@ -317,6 +318,7 @@ struct DMenuText {
 	mixin MsgProp!("addLayer", "Add &Layer"); /// ditto
 	mixin MsgProp!("removeLayer", "Remove La&yer"); /// ditto
 	mixin MsgProp!("uniteLayers", "&Unite Layers"); /// ditto
+	mixin MsgProp!("selectAllLayers", "Select All Layer&s\tCtrl+Shift+A"); /// ditto
 
 	mixin MsgProp!("mode", "&Mode"); /// ditto
 	mixin MsgProp!("enabledBackColor", "Background Color is &Transparent\tCtrl+P"); /// ditto

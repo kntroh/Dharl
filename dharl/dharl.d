@@ -360,6 +360,10 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tUniteLayers = basicMenuItem(mEdit, c.text.menu.uniteLayers, cimg(c.image.uniteLayers), {
 		mainPanel.uniteLayers();
 	});
+	separator(mEdit);
+	auto tSelectAllLayers = basicMenuItem(mEdit, c.text.menu.selectAllLayers, cimg(c.image.selectAllLayers), {
+		mainPanel.selectAllLayers();
+	});
 
 
 	/* ---- View menu -------------------------------------------------- */
@@ -559,6 +563,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		tUpLayer.p_enabled = mainPanel.canUpLayer;
 		tDownLayer.p_enabled = mainPanel.canDownLayer;
 		tUniteLayers.p_enabled = mainPanel.canUniteLayers;
+		tSelectAllLayers.p_enabled = mainPanel.canSelectAllLayers;
 
 		mCombi.p_enabled = mainPanel.canEditCombination;
 	}

@@ -13,6 +13,7 @@ private import dharl.ui.dwtutils;
 private import dharl.ui.paintarea;
 
 private import std.algorithm;
+private import std.array;
 private import std.conv;
 
 private import java.lang.System;
@@ -170,6 +171,16 @@ class LayerList : Canvas {
 	@property
 	const
 	const(PBounds)[] transparentPixelBoxBounds() { return _transparentPixelBounds; }
+
+	/// Selects all layers.
+	void selectAll() {
+		if (!_paintArea || _paintArea.image.empty) {
+			return;
+		}
+		checkWidget();
+
+		_paintArea.selectedInfo = .replicate([true], _paintArea.image.layerCount);
+	}
 
 	/// Scrolls to showing selection item.
 	void showSelection() {
