@@ -476,6 +476,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 		int layout = c.conf.layout;
 		dialog.appliedReceivers ~= {
 			if (layout != c.conf.layout) {
+				layout = c.conf.layout;
 				mainPanel.relayout();
 			}
 		};
