@@ -410,6 +410,7 @@ class MainPanel : Composite {
 				auto item = _imageList.item(sel);
 				auto image = item.image;
 				auto bounds = item.selectedPiece;
+				if (bounds.x < 0 && bounds.y < 0) return;
 				_paintArea.pushImage(image, bounds.x, bounds.y);
 
 				_paletteView.colors = _paintArea.palette;
