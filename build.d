@@ -122,7 +122,9 @@ version (Windows) {
 
 immutable FLAGS = [
 	"-op",
-	"-property",
+	// BUG: dmd 2.067.0
+	// std\array.d(1517): Error: not a property splitter(range, sep).array
+//	"-property",
 	"-c",
 ];
 immutable CRITICAL_FLAGS = [

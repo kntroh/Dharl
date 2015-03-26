@@ -73,6 +73,7 @@ string validFilename(string name, dchar c = '_') {
 version (Windows) {
 
 	private import std.utf;
+	private import core.stdc.wchar_;
 	private import core.sys.windows.windows;
 
 	/// This characters can't use to filename.
