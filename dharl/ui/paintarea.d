@@ -1817,7 +1817,6 @@ class PaintArea : Canvas, Undoable {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
-		if (rangeSelection is SelectMode.lasso) return;
 
 		auto iRArea = resizeArea();
 		int iNewW = newW;
@@ -1842,6 +1841,7 @@ class PaintArea : Canvas, Undoable {
 			}
 		}
 		if (_pasteLayer) {
+			if (rangeSelection is SelectMode.lasso) return;
 			redrawCursorArea();
 			iw = _pasteLayer.width;
 			ih = _pasteLayer.height;
