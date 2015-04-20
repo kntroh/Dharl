@@ -220,20 +220,6 @@ size_t qsearchLose(alias Less = "a < b", T)(in T[] array, in T val) {
 
 /**
 Omit longer path.
-Example:
----
-version (Windows) {
-	assert (omitPath(`C:\longlonglonglong\longlong\long\path.txt`, 30) == `C:\longlonglonglon...\path.txt`, omitPath(`C:\longlonglonglong\longlong\long\path.txt`, 30));
-	assert (omitPath(`C:\short\val.txt`, 15) == `C:\s...\val.txt`);
-	assert (omitPath(`C:\short\va.txt`, 15) == `C:\short\va.txt`);
-	assert (omitPath(`C:\short\val.txt`, 5) == `C:\...\val.txt`);
-} else {
-	assert (omitPath(`/longlonglonglong/longlong/long/path.txt`, 30) == `/longlonglonglong/.../path.txt`);
-	assert (omitPath(`/short/path`, 10) == `/s.../path`);
-	assert (omitPath(`/short/pat`, 10) == `/short/pat`);
-	assert (omitPath(`/short/path`, 5) == `/.../path`);
-}
----
 */
 C[] omitPath(C)(C[] path, size_t length, string omitString = "...") {
 	auto dpath = path.to!dstring();
@@ -242,23 +228,32 @@ C[] omitPath(C)(C[] path, size_t length, string omitString = "...") {
 		auto drive = dpath.driveName();
 		int rlen = drive.length + 1;
 		int flen = dpath.baseName().length + 1;
-		int plen = length - flen - rlen;
+		int plen = ((flen + rlen) < length) ? (length - flen - rlen) : 0;
 		if (plen < rlen) plen = rlen;
+		if (dpath.length <= plen + flen + domit.length) return path;
 		return (dpath[0 .. plen] ~ domit ~ dpath[$ - flen .. $]).to!(C[])();
 	} else {
 		return path;
 	}
-} unittest {
+}
+///
+unittest {
 	version (Windows) {
 		assert (omitPath(`C:\longlonglonglong\longlong\long\path.txt`, 30) == `C:\longlonglonglon...\path.txt`, omitPath(`C:\longlonglonglong\longlong\long\path.txt`, 30));
 		assert (omitPath(`C:\short\val.txt`, 15) == `C:\s...\val.txt`);
 		assert (omitPath(`C:\short\va.txt`, 15) == `C:\short\va.txt`);
 		assert (omitPath(`C:\short\val.txt`, 5) == `C:\...\val.txt`);
+		assert (omitPath(`C:\short\longlonglongfilename.txt`, 5) == `C:\...\longlonglongfilename.txt`);
+		assert (omitPath(`C:\sht\longlonglongfilename.txt`, 5) == `C:\sht\longlonglongfilename.txt`);
+		assert (omitPath(`C:\sh\longlonglongfilename.txt`, 5) == `C:\sh\longlonglongfilename.txt`);
 	} else {
 		assert (omitPath(`/longlonglonglong/longlong/long/path.txt`, 30) == `/longlonglonglong/.../path.txt`);
 		assert (omitPath(`/short/path`, 10) == `/s.../path`);
 		assert (omitPath(`/short/pat`, 10) == `/short/pat`);
 		assert (omitPath(`/short/path`, 5) == `/.../path`);
+		assert (omitPath(`/short/longlonglongfilename.txt`, 5) == `/.../longlonglongfilename.txt`);
+		assert (omitPath(`/sht/longlonglongfilename.txt`, 5) == `/sht/longlonglongfilename.txt`);
+		assert (omitPath(`/sh/longlonglongfilename.txt`, 5) == `/sh/longlonglongfilename.txt`);
 	}
 }
 
