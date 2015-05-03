@@ -164,14 +164,14 @@ void refSelection(C, V)(ref V value, C control) {
 /// And save index when disposed radios.
 void refRadioSelection(C, V)(ref V index, C[] radios) {
 	.enforce(radios.length);
-	int index2 = index.roundCast!int(0, radios.length - 1);
+	int index2 = index.roundCast!int(0, cast(int)radios.length - 1);
 	foreach (i, radio; radios) {
 		radio.p_selection = (i == index2);
 	}
 	radios[0].p_listeners!(SWT.Dispose) ~= (Event e) {
 		foreach (i, radio; radios) {
 			if (radio.p_selection) {
-				index = i;
+				index = cast(V)i;
 				break;
 			}
 		}
@@ -308,7 +308,7 @@ void drawColorfulFocus(GC gc, Color color1, Color color2, Rectangle rect) {
 void drawShade(GC gc, in Rectangle clientArea) {
 	static const cSHADE_INTERVAL = 8;
 	int cwh = clientArea.width + clientArea.height;
-	for (size_t c = 0; c < cwh; c += cSHADE_INTERVAL) {
+	for (int c = 0; c < cwh; c += cSHADE_INTERVAL) {
 		gc.drawLine(c, 0, 0, c);
 		gc.drawLine(c - clientArea.height, 0, c, clientArea.height);
 	}

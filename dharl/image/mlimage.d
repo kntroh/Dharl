@@ -42,7 +42,7 @@ struct Layer {
 struct Combination {
 	string name; /// Combination name.
 	bool[] visible; /// Visibility of layers.
-	size_t selectedPalette = 0; /// Index of selection palette.
+	uint selectedPalette = 0; /// Index of selection palette.
 
 	const
 	bool opEquals(ref const(Combination) s) {
@@ -75,7 +75,7 @@ class MLImage : Undoable {
 	/// Palettes. There is at least one. It is common in all layers.
 	private PaletteData[] _palette;
 	/// Index of selection palette.
-	private size_t _selPalette = 0;
+	private uint _selPalette = 0;
 
 	/// Image size. It is common in all layers.
 	private uint _iw = 0, _ih = 0;
@@ -128,9 +128,9 @@ class MLImage : Undoable {
 
 		// palettes
 		PaletteData[] palettes;
-		size_t selPalette = 0;
+		uint selPalette = 0;
 		parser.onStartTag["palettes"] = (ElementParser ep) {
-			selPalette = to!size_t(ep.tag.attr["selected"]);
+			selPalette = to!uint(ep.tag.attr["selected"]);
 			ep.onStartTag["palette"] = (ElementParser ep) {
 				RGB[] colors;
 				ep.onStartTag["color"] = (ElementParser ep) {
@@ -184,7 +184,7 @@ class MLImage : Undoable {
 			ep.onStartTag["combination"] = (ElementParser ep) {
 				Combination combi;
 				combi.name = ep.tag.attr["name"];
-				combi.selectedPalette = .to!size_t(ep.tag.attr.get("palette", "0"));
+				combi.selectedPalette = .to!uint(ep.tag.attr.get("palette", "0"));
 				if (palettes.length <= combi.selectedPalette) {
 					combi.selectedPalette = 0;
 				}
@@ -476,7 +476,7 @@ class MLImage : Undoable {
 	}
 
 	/// Resizes this image.
-	void resize(uint w, uint h, size_t backgroundPixel) {
+	void resize(uint w, uint h, int backgroundPixel) {
 		if (w == 0 || h == 0) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
@@ -1092,13 +1092,13 @@ class MLImage : Undoable {
 	/// Index of selection palette.
 	@property
 	const
-	size_t selectedPalette() {
+	uint selectedPalette() {
 		checkInit();
 		return _selPalette;
 	}
 	/// ditto
 	@property
-	void selectedPalette(size_t index) {
+	void selectedPalette(uint index) {
 		checkInit();
 		if (_palette.length <= index) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -1157,7 +1157,7 @@ class MLImage : Undoable {
 	}
 
 	/// Add or remove palette.
-	void setPalettes(in PaletteData[] palettes, size_t selectIndex) {
+	void setPalettes(in PaletteData[] palettes, uint selectIndex) {
 		if (!palettes) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
 		}
@@ -1391,7 +1391,7 @@ class MLImage : Undoable {
 		/// Data of palettes.
 		CRGB[256][] palettes;
 		/// Index of selection index.
-		size_t selectedPalette;
+		uint selectedPalette;
 		/// Transparent pixel of layers.
 		int[] transparentPixel;
 		/// Data of layers.

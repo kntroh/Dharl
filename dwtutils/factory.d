@@ -364,7 +364,7 @@ Button basicRadio(Composite parent, string text, void delegate() selection) {
 /// A decimal is not-correspond.
 Text basicNumber(Composite parent, int min, int max, int style = SWT.BORDER | SWT.RIGHT) {
 	auto tx = basicText(parent, to!string(min), style);
-	tx.p_textLimit = to!string(max).length;
+	tx.p_textLimit = cast(int)to!string(max).length;
 
 	// When inputting invalid value, old restores it.
 	string old = tx.p_text;

@@ -79,9 +79,9 @@ class LayerList : Canvas {
 		auto vs = this.p_verticalBar;
 		assert (vs);
 
-		int h = _paintArea.image.layerCount * (LAYER_H + 2);
+		auto h = _paintArea.image.layerCount * (LAYER_H + 2);
 
-		vs.setValues(vs.p_selection, 0, h, ca.height, ca.height / 10, ca.height / 2);
+		vs.setValues(vs.p_selection, 0, cast(int)h, ca.height, ca.height / 10, ca.height / 2);
 
 		redraw();
 	}
@@ -201,7 +201,7 @@ class LayerList : Canvas {
 		int up = int.max, down = int.max; // Scroll distance (minimum value).
 		foreach (l; 0 .. _paintArea.image.layerCount) {
 			if (!selLayer[l]) continue;
-			int lFrom = lh * l;
+			int lFrom = lh * cast(int)l;
 			int lTo = lFrom + lh;
 			if (vFrom <= lFrom && lTo <= vTo) {
 				// l is being shown.

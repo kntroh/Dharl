@@ -51,7 +51,7 @@ class PaintArea : Canvas, Undoable {
 	/// Receivers of area resized event.
 	void delegate(int w, int h)[] resizeReceivers;
 	/// Receivers of change mask event.
-	void delegate(size_t pixel)[] changedMaskReceivers;
+	void delegate(int pixel)[] changedMaskReceivers;
 
 	/// ID of this instance.
 	private string _id;
@@ -66,9 +66,9 @@ class PaintArea : Canvas, Undoable {
 	private int _iPCatchX, _iPCatchY;
 
 	/// Index of selection color.
-	private size_t _pixel = 0;
+	private int _pixel = 0;
 	/// Index of background color.
-	private size_t _backPixel = 1;
+	private int _backPixel = 1;
 
 	/// Index of color temporary for iGetPixels().
 	private int[] _pixelsTemp;
@@ -450,8 +450,8 @@ class PaintArea : Canvas, Undoable {
 		if (_um) _um.store(this);
 		_image.swapLayers(index1, index2);
 
-		int sel1 = _layers.countUntil(index1);
-		int sel2 = _layers.countUntil(index2);
+		auto sel1 = _layers.countUntil(index1);
+		auto sel2 = _layers.countUntil(index2);
 		if (sel1 != -1 && sel2 == -1) {
 			selectedLayers = _layers.remove!(SwapStrategy.stable)(sel1) ~ index2;
 		}
@@ -565,10 +565,10 @@ class PaintArea : Canvas, Undoable {
 	/// Selection pixel (Index of palette).
 	@property
 	const
-	size_t pixel() { return _pixel; }
+	int pixel() { return _pixel; }
 	/// ditto
 	@property
-	void pixel(size_t v) {
+	void pixel(int v) {
 		checkWidget();
 		checkInit();
 		if (_image.palette.colors.length <= v) {
@@ -583,10 +583,10 @@ class PaintArea : Canvas, Undoable {
 	/// Background pixel (Index of palette).
 	@property
 	const
-	size_t backgroundPixel() { return _backPixel; }
+	int backgroundPixel() { return _backPixel; }
 	/// ditto
 	@property
-	void backgroundPixel(size_t v) {
+	void backgroundPixel(int v) {
 		checkWidget();
 		checkInit();
 		if (_image.palette.colors.length <= v) {
@@ -807,7 +807,7 @@ class PaintArea : Canvas, Undoable {
 	}
 
 	/// Sets palettes.
-	void setPalettes(in PaletteData[] palettes, size_t selectedPalette) {
+	void setPalettes(in PaletteData[] palettes, uint selectedPalette) {
 		checkWidget();
 		checkInit();
 		_image.setPalettes(palettes, selectedPalette);
@@ -824,13 +824,13 @@ class PaintArea : Canvas, Undoable {
 	/// Index of selection palette.
 	@property
 	const
-	size_t selectedPalette() {
+	uint selectedPalette() {
 		checkInit();
 		return _image.selectedPalette;
 	}
 	/// ditto
 	@property
-	void selectedPalette(size_t index) {
+	void selectedPalette(uint index) {
 		checkWidget();
 		checkInit();
 		_image.selectedPalette = index;
@@ -1283,7 +1283,7 @@ class PaintArea : Canvas, Undoable {
 				c.r = cast(ubyte)rgb.red;
 				c.g = cast(ubyte)rgb.green;
 				c.b = cast(ubyte)rgb.blue;
-				int pixel = tree.searchLose(c);
+				int pixel = cast(int)tree.searchLose(c);
 				imageData.setPixel(idx, idy, pixel);
 			}
 		}
@@ -1646,7 +1646,7 @@ class PaintArea : Canvas, Undoable {
 				ubyte r = roundCast!ubyte(rgb.r + upDown);
 				ubyte g = roundCast!ubyte(rgb.g + upDown);
 				ubyte b = roundCast!ubyte(rgb.b + upDown);
-				p = tree.searchLose(CRGB(r, g, b));
+				p = cast(int)tree.searchLose(CRGB(r, g, b));
 			}
 		}
 		if (_pasteLayer) {
@@ -2238,7 +2238,7 @@ class PaintArea : Canvas, Undoable {
 		redraw(ixtocx(ix), iytocy(iy), itoc(1), itoc(1), false);
 	}
 	/// ditto
-	private void iSetPixel(int ix, int iy, int pixel, int layer, bool force) {
+	private void iSetPixel(int ix, int iy, int pixel, size_t layer, bool force) {
 		checkWidget();
 		checkInit();
 		if (_image.empty) return;
@@ -3074,7 +3074,7 @@ class PaintArea : Canvas, Undoable {
 		case 2:
 			// Sets mask color.
 			if (cInImage(e.x, e.y)) {
-				size_t pixel = dropper();
+				int pixel = dropper();
 				_mask[pixel] = !_mask[pixel];
 				changedMaskReceivers.raiseEvent(pixel);
 			}

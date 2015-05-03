@@ -164,7 +164,7 @@ class PImageList : Canvas {
 			rect.width = img._iBounds.width;
 			rect.height = img._iBounds.height;
 			if (rect.contains(x, y)) {
-				return i;
+				return cast(int)i;
 			}
 		}
 		return -1;
@@ -181,7 +181,7 @@ class PImageList : Canvas {
 			rect.width = img._dragBounds.width;
 			rect.height = img._dragBounds.height;
 			if (rect.contains(x, y)) {
-				return i;
+				return cast(int)i;
 			}
 		}
 		return -1;
@@ -194,7 +194,7 @@ class PImageList : Canvas {
 		auto rect = CRect(0, 0, 0, 0);
 
 		size_t rowStart = 0;
-		size_t maxH = 0;
+		int maxH = 0;
 		foreach (i, img; _images) {
 			maxH = max(maxH, img._bounds.height);
 			if (i + 1 == _images.length || img._bounds.y != _images[i + 1]._bounds.y) {
@@ -309,22 +309,22 @@ class PImageList : Canvas {
 			foreach (i; fromIndex .. toIndex) {
 				_images[i] = _images[i + 1];
 				_images[i].calcBounds();
-				if (i + 1 == selectedIndex) newSel = i;
+				if (i + 1 == selectedIndex) newSel = cast(int)i;
 			}
 			_images[toIndex] = item;
 			item.calcBounds();
-			if (fromIndex == selectedIndex) newSel = toIndex;
+			if (fromIndex == selectedIndex) newSel = cast(int)toIndex;
 		} else {
 			assert (toIndex < fromIndex);
 			auto item = _images[fromIndex];
 			foreach_reverse (i; toIndex .. fromIndex) {
 				_images[i + 1] = _images[i];
 				_images[i + 1].calcBounds();
-				if (i == selectedIndex) newSel = i + 1;
+				if (i == selectedIndex) newSel = cast(int)i + 1;
 			}
 			_images[toIndex] = item;
 			item.calcBounds();
-			if (fromIndex == selectedIndex) newSel = toIndex;
+			if (fromIndex == selectedIndex) newSel = cast(int)toIndex;
 		}
 
 		redraw();
@@ -399,7 +399,7 @@ class PImageList : Canvas {
 			if (-1 == selectedIndex) {
 				selectedIndex = 0;
 			} else if (0 == selectedIndex) {
-				selectedIndex = _images.length - 1;
+				selectedIndex = cast(int)_images.length - 1;
 			} else {
 				selectedIndex = selectedIndex - 1;
 			}
@@ -495,7 +495,7 @@ class PImageList : Canvas {
 					rect.width = img._cBounds2.width;
 					rect.height = img._cBounds2.height;
 					if (rect.contains(e.x, e.y)) {
-						_closeStart = index;
+						_closeStart = cast(int)index;
 					}
 
 					// drag start
@@ -504,9 +504,9 @@ class PImageList : Canvas {
 					rect.width = img._dragBounds.width;
 					rect.height = img._dragBounds.height;
 					if (rect.contains(e.x, e.y)) {
-						selectedIndex = index;
-						_drag = index;
-						_dragStart = index;
+						selectedIndex = cast(int)index;
+						_drag = selectedIndex;
+						_dragStart = selectedIndex;
 						raiseSelectionEvent(e);
 						break;
 					}
@@ -515,7 +515,7 @@ class PImageList : Canvas {
 			// change selection
 			if (img._bounds.contains(e.x, e.y)) {
 				if (_selected != index) {
-					selectedIndex = index;
+					selectedIndex = cast(int)index;
 
 					raiseSelectionEvent(e);
 				}
@@ -558,9 +558,9 @@ class PImageList : Canvas {
 		checkWidget();
 		if (0 == e.count) return;
 
-		int sel =  selectedIndex;
+		int sel = selectedIndex;
 		if (-1 == sel) {
-			selectedIndex = indexOfLose(e.x, e.y);
+			selectedIndex = cast(int)indexOfLose(e.x, e.y);
 		} else if (e.count > 0) {
 			// up
 			if (0 < sel) selectedIndex = sel - 1;
@@ -593,7 +593,7 @@ class PImageList : Canvas {
 			if (_drag != toIndex) {
 				move(_drag, toIndex);
 				movedReceivers.raiseEvent(cast(size_t)_drag, toIndex);
-				_drag = toIndex;
+				_drag = cast(int)toIndex;
 				_closeStart = -1;
 				raiseSelectionEvent(e);
 			}
@@ -725,7 +725,7 @@ class PImageItem : Item {
 		_selectedPiece = CRectangle(-1, -1, parent._pieceSize.x - 1, parent._pieceSize.y - 1);
 
 		if (-1 == index) {
-			index = parent.imageCount;
+			index = cast(int)parent.imageCount;
 		}
 		parent._images.length += 1;
 		foreach_reverse (i; index .. parent._images.length - 1) {
@@ -885,7 +885,7 @@ class PImageItem : Item {
 		redrawImage();
 	}
 	/// Sets palettes.
-	void setPalettes(in PaletteData[] palettes, size_t selectedPalette) {
+	void setPalettes(in PaletteData[] palettes, uint selectedPalette) {
 		_image.setPalettes(palettes, selectedPalette);
 		redrawImage();
 	}
@@ -903,13 +903,13 @@ class PImageItem : Item {
 	}
 	/// ditto
 	@property
-	void selectedPalette(size_t index) {
+	void selectedPalette(uint index) {
 		_image.selectedPalette = index;
 		redrawImage();
 	}
 
 	/// Resizes image.
-	void resize(uint w, uint h, size_t backgroundPixel) {
+	void resize(uint w, uint h, int backgroundPixel) {
 		checkWidget();
 		_image.resize(w, h, backgroundPixel);
 		calcBounds();
@@ -1144,7 +1144,7 @@ class PImageItem : Item {
 	/// Removes image of this item from the list.
 	private void onDispose(Event e) {
 		checkWidget();
-		int index = _parent._images.countUntil!"a is b"(this);
+		auto index = _parent._images.countUntil!"a is b"(this);
 		assert (-1 != index);
 		_parent._images = _parent._images.remove(index);
 		if (index <= _parent._selected) {

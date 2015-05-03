@@ -192,7 +192,7 @@ class Editor {
 		assert (!_text);
 		_text = new Text(_parent, SWT.NONE);
 		_text.p_text = text;
-		_text.setSelection(0, text.length);
+		_text.setSelection(0, cast(int)text.length);
 		auto vBar = _parent.p_verticalBar;
 		auto hBar = _parent.p_horizontalBar;
 		if (vBar) {
@@ -396,7 +396,7 @@ void bindMenu(MenuItem menu, ToolItem tool) {
 
 /// Gets a accelerator key from text.
 int acceleratorKey(string text) {
-	int i = std.string.indexOf(text, "\t");
+	auto i = std.string.indexOf(text, "\t");
 	if (-1 == i || text.length <= i + 1) {
 		return 0;
 	}

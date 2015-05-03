@@ -121,12 +121,12 @@ class PaletteView : Canvas, Undoable {
 	/// Selection pixels.
 	@property
 	const
-	size_t pixel1() {
+	int pixel1() {
 		return _pixel1;
 	}
 	/// ditto
 	@property
-	void pixel1(size_t index) {
+	void pixel1(int index) {
 		checkWidget();
 		if (_colors.length <= index) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -140,12 +140,12 @@ class PaletteView : Canvas, Undoable {
 	/// ditto
 	@property
 	const
-	size_t pixel2() {
+	int pixel2() {
 		return _pixel2;
 	}
 	/// ditto
 	@property
-	void pixel2(size_t index) {
+	void pixel2(int index) {
 		checkWidget();
 		if (_colors.length <= index) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
@@ -202,7 +202,7 @@ class PaletteView : Canvas, Undoable {
 		redraw();
 	}
 	/// ditto
-	void reverseMask(size_t pixel) {
+	void reverseMask(int pixel) {
 		if (_colors.length <= pixel) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
@@ -375,9 +375,9 @@ class PaletteView : Canvas, Undoable {
 		checkWidget();
 		size_t tiCol, tiRow;
 		pitoti(pixel, tiCol, tiRow);
-		int cx = tiCol * _cBoxWidth;
-		int cy = tiRow * _cBoxHeight;
-		return CPoint(cx, cy);
+		auto cx = tiCol * _cBoxWidth;
+		auto cy = tiRow * _cBoxHeight;
+		return CPoint(cast(int)cx, cast(int)cy);
 	}
 	/// Converts from a pixel index to a table index (column, row).
 	private void pitoti(size_t pixel, ref size_t tiCol, ref size_t tiRow) {
@@ -428,7 +428,7 @@ class PaletteView : Canvas, Undoable {
 			foreach (tiRow; min(tiRow1, tiRow2) .. max(tiRow1, tiRow2) + 1) {
 				size_t pi = titopi(tiCol, tiRow);
 				if (pi < _colors.length) {
-					dlg(pi);
+					dlg(cast(int)pi);
 				}
 			}
 		}
@@ -447,14 +447,14 @@ class PaletteView : Canvas, Undoable {
 		raiseSelectionEvent(e);
 	}
 
-	private void piRedrawColor(int pixel) {
+	private void piRedrawColor(size_t pixel) {
 		if (-1 == pixel) return;
 		checkWidget();
 		auto cp = pitoc(pixel);
 		redraw(cp.x - 1, cp.y - 1, _cBoxWidth + 2, _cBoxHeight + 2, false);
 	}
 	/// Redraws a rectangle of range.
-	private void piRedrawRange(int piFrom, int piTo) {
+	private void piRedrawRange(size_t piFrom, size_t piTo) {
 		if (-1 == piFrom) return;
 		if (-1 == piTo) return;
 		if (piFrom == piTo) return;
@@ -776,7 +776,7 @@ class PaletteView : Canvas, Undoable {
 		if (this.p_style & SWT.READ_ONLY) return;
 		auto ca = this.p_clientArea;
 		int col = ca.width / _cBoxWidth;
-		int row = _colors.length / col;
+		int row = cast(int)_colors.length / col;
 		// Number of color in current row.
 		if (_colors.length % col) row++;
 

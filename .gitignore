@@ -1,6 +1,8 @@
+dharl_
 dharl.exe
 dharl.res
 build.log
+dharl_.log
 dharl.exe.log
 personal_memo.txt
 dharl_*.zip
@@ -9,3 +11,5 @@ example/*
 plugin/*
 Dharl.wiki
 Dharl.wiki/*
+*.a
+

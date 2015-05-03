@@ -32,8 +32,8 @@ ImageData colorReduction(ImageData image, bool errorDiffusion = true) {
 		}
 		auto result = new ImageData(image.width, image.height, 8, new PaletteData(rgbs));
 		auto pixels = new int[image.width * image.height];
-		image.getPixels(0, 0, pixels.length, pixels, 0);
-		result.setPixels(0, 0, pixels.length, pixels, 0);
+		image.getPixels(0, 0, cast(int)pixels.length, pixels, 0);
+		result.setPixels(0, 0, cast(int)pixels.length, pixels, 0);
 		return result;
 	}
 	auto d = Display.getCurrent();
@@ -41,7 +41,7 @@ ImageData colorReduction(ImageData image, bool errorDiffusion = true) {
 	// All colors used.
 	auto colors = new CRGB[image.width * image.height];
 	auto colors2 = new CRGB[image.width * image.height];
-	size_t ci = 0;
+	int ci = 0;
 	foreach(y; 0 .. image.height) {
 		foreach(x; 0 .. image.width) {
 			auto rgb = image.palette.getRGB(image.getPixel(x, y));
@@ -97,8 +97,8 @@ ImageData colorReduction(ImageData image, bool errorDiffusion = true) {
 		foreach(y; 0 .. image.height) {
 			foreach(x; 0 .. image.width) {
 				auto rgb = colors2[ci];
-				size_t sel = tree.searchLose(rgb);
-				result.setPixel(x, y, sel);
+				auto sel = tree.searchLose(rgb);
+				result.setPixel(x, y, cast(int)sel);
 
 				if (errorDiffusion) {
 					// Error diffusion.

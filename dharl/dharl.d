@@ -37,7 +37,11 @@ private import java.lang.all : ArrayWrapperString2;
 private import java.nonstandard.Locale;
 
 /// Pipe name for process communication.
-private immutable PIPE_NAME = "dharl";
+version (Windows) {
+	private immutable PIPE_NAME = "dharl";
+} else version (Posix) {
+	private immutable PIPE_NAME = "/tmp/dharl_pipe";
+} else static assert (0);
 
 /// Commands of process communication.
 private immutable MSG_EXECUTE      = "execute";
@@ -284,7 +288,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 				}, SWT.PUSH, false, mFileHistFrom + index);
 			}
 			foreach (i, file; c.conf.fileHistory) {
-				createItem(i + 1, file);
+				createItem(cast(int)i + 1, file);
 			}
 		}
 	}

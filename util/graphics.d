@@ -259,7 +259,7 @@ unittest {
 /// Params:
 ///  onFillArea = This function receives X, Y
 ///               and returns true if it is fill area.
-void pointsOfFill(void delegate(int x, int y) dlg, bool delegate(int x, int y) onFillArea, int sx, int sy, size_t w, size_t h) {
+void pointsOfFill(void delegate(int x, int y) dlg, bool delegate(int x, int y) onFillArea, int sx, int sy, uint w, uint h) {
 	pointsOfFill((int x, int y, int w, int h) {
 		foreach (ix; x .. w + x) {
 			foreach (iy; y .. h + y) {
@@ -269,7 +269,7 @@ void pointsOfFill(void delegate(int x, int y) dlg, bool delegate(int x, int y) o
 	}, onFillArea, sx, sy, w, h);
 }
 /// ditto
-void pointsOfFill(void delegate(int x, int y, int w, int h) dlg, bool delegate(int x, int y) onFillArea, int sx, int sy, size_t w, size_t h) {
+void pointsOfFill(void delegate(int x, int y, int w, int h) dlg, bool delegate(int x, int y) onFillArea, int sx, int sy, uint w, uint h) {
 	if (!onFillArea(sx, sy)) return;
 	if (sx < 0 || w <= sx) return;
 	if (sy < 0 || h <= sy) return;
@@ -334,12 +334,13 @@ unittest {
 		" #  # ".dup,
 		"  #   ".dup
 	];
+
 	// Paints with '@'.
 	pointsOfFill((int x, int y) {
 		img[y][x] = '@';
 	}, (int x, int y) {
 		return img[y][x] == ' ';
-	}, 2, 1, img[0].length, img.length);
+	}, 2, 1, cast(uint)img[0].length, cast(uint)img.length);
 	assert (img == [
 		"@@@@#@",
 		"#@@@@@",
@@ -351,7 +352,7 @@ unittest {
 		img[y][x] = '#';
 	}, (int x, int y) {
 		return img[y][x] == ' ';
-	}, 0, 2, img[0].length, img.length);
+	}, 0, 2, cast(uint)img[0].length, cast(uint)img.length);
 	assert (img == [
 		"@@@@#@",
 		"#@@@@@",
@@ -363,7 +364,7 @@ unittest {
 		img[y][x] = '&';
 	}, (int x, int y) {
 		return img[y][x] == '#';
-	}, 1, 2, img[0].length, img.length);
+	}, 1, 2, cast(uint)img[0].length, cast(uint)img.length);
 	assert (img == [
 		"@@@@#@",
 		"&@@@@@",
@@ -375,7 +376,7 @@ unittest {
 		img[y][x] = ' ';
 	}, (int x, int y) {
 		return true;
-	}, 3, 2, img[0].length, img.length);
+	}, 3, 2, cast(uint)img[0].length, cast(uint)img.length);
 	assert (img == [
 		"      ",
 		"      ",
@@ -398,7 +399,7 @@ unittest {
 		img[y][x] = '@';
 	}, (int x, int y) {
 		return img[y][x] == ' ';
-	}, 4, 2, img[0].length, img.length);
+	}, 4, 2, cast(uint)img[0].length, cast(uint)img.length);
 	assert (img == [
 		"#########",
 		"###@@@###",
@@ -426,7 +427,7 @@ unittest {
 		img[y][x] = '@';
 	}, (int x, int y) {
 		return img[y][x] == ' ';
-	}, 4, 2, img[0].length, img.length);
+	}, 4, 2, cast(uint)img[0].length, cast(uint)img.length);
 	assert (img == [
 		"#########".dup,
 		"@@@@@@@@#".dup,

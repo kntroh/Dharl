@@ -26,7 +26,6 @@ private immutable MAX_PATH = 0x8000;
 @property
 @safe
 pure
-nothrow
 bool isFilenameChar(dchar c) {
 	return c.isGraphical() && -1 == std.string.indexOf(INVALID_FILENAME, c);
 } unittest {
@@ -162,7 +161,7 @@ version (Windows) {
 
 	/// Load shared library.
 	libHandle dlopen(string lib) {
-		return cast(libHandle)core.sys.posix.dlfcn.dlopen(.toStringz(lib), RTLD_NOW);
+		return cast(libHandle)core.sys.posix.dlfcn.dlopen(.toStringz(lib), core.sys.posix.dlfcn.RTLD_NOW);
 	}
 	/// Gets symbol on shared library.
 	nothrow

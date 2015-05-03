@@ -439,7 +439,7 @@ class PaletteOperationDialog : DharlDialog {
 	private PaletteData[] _paletteData = [];
 
 	/// Index of selection palette.
-	private size_t _selectedPalette = 0;
+	private uint _selectedPalette = 0;
 
 	/// Preview of palette.
 	private PaletteView _paletteView = null;
@@ -460,7 +460,7 @@ class PaletteOperationDialog : DharlDialog {
 	}
 
 	/// Sets items of palette list.
-	void init(in PaletteData[] palettes, size_t selectedPalette) {
+	void init(in PaletteData[] palettes, uint selectedPalette) {
 		if (!palettes) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_NULL_ARGUMENT);
 		}
@@ -485,7 +485,7 @@ class PaletteOperationDialog : DharlDialog {
 	/// Index of selection palette.
 	@property
 	const
-	size_t selectedPalette() { return _selectedPalette; }
+	uint selectedPalette() { return _selectedPalette; }
 
 	protected override void setup(Composite area) {
 		area.p_layout = GL.window(2, false);
@@ -570,8 +570,8 @@ class PaletteOperationDialog : DharlDialog {
 			_palettes.add(name);
 			_copyFrom.add(name);
 			_copyTo.add(name);
-			if (from == name) _copyFrom.select(i);
-			if (to == name) _copyTo.select(i);
+			if (from == name) _copyFrom.select(cast(int)i);
+			if (to == name) _copyTo.select(cast(int)i);
 		}
 		_palettes.select(_selectedPalette);
 		if (-1 == _copyFrom.p_selectionIndex) {

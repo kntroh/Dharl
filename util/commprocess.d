@@ -71,7 +71,7 @@ version (Windows) {
 
 	/// Creates pipe name based on name.
 	private const(wchar)* createPipeName(string name) {
-		return (`\\.\pipe\` ~ name).toUTF16z();
+		return ("\\\\.\\pipe\\" ~ name).toUTF16z();
 	}
 
 	/// Creates a named pipe.
@@ -148,15 +148,17 @@ version (Windows) {
 
 } else version (linux) {
 
-	private import core.sys.posix.socket;
-	private import core.sys.posix.unistd;
-
 	private import core.stdc.errno;
+	private import core.stdc.string;
+	private import core.sys.posix.sys.socket;
+	private import core.sys.posix.sys.time;
+	private import core.sys.posix.sys.un;
+	private import core.sys.posix.unistd;
 
 	private import std.string;
 
 	/// Handle of named pipe.
-	private alias intptr_t pipeHandle;
+	private alias int pipeHandle;
 
 	/// Invalid pipe handle.
 	private immutable INVALID_PIPE = -1;
@@ -165,19 +167,12 @@ version (Windows) {
 	private pipeHandle createPipe(string name) {
 		auto pipe = .socket(AF_UNIX, SOCK_STREAM, 0);
 		if (INVALID_PIPE == pipe) return INVALID_PIPE;
-		sockaddr_un raddr;
-		raddr.sun_familiy = AF_INET;
-		.strcpy(&(raddr.sun_path[1]), name.toStringz());
-		if (-1 == connect(p, cast(sockaddr*)&raddr, raddr.sizeof)) {
-			.closePile(pipe, name);
-			return INVALID_PIPE;
-		}
 		return pipe;
 	}
 	/// Close a named pipe.
 	private void closePipe(pipeHandle pipe, string name) {
-		.shutdown(pipe.handle, 2);
-		.close(pipe.handle);
+		.shutdown(pipe, 2);
+		.close(pipe);
 		.unlink(name.toStringz());
 	}
 
@@ -189,11 +184,20 @@ version (Windows) {
 		auto pipe = .createPipe(name);
 		if (INVALID_PIPE == pipe) return false;
 		scope (exit) .closePipe(pipe, name);
+
+		sockaddr_un raddr;
+		raddr.sun_family = AF_UNIX;
+		.strcpy(cast(char*)&raddr.sun_path.ptr[1], name.toStringz());
+		if (-1 == .connect(pipe, cast(sockaddr*)&raddr, raddr.sizeof)) {
+			.closePipe(pipe, name);
+			return false;
+		}
+
 		char[] reply = null;
 		while (true) {
 			auto msg = send(reply);
 			if (msg is null || !msg.length) break;
-			if (-1 == .write(pipe.handle, msg.ptr, msg.length)) break;
+			if (-1 == .write(pipe, msg.ptr, msg.length)) break;
 			auto len = .read(pipe, buf.ptr, buf.length);
 			if (-1 == len) break;
 			reply = buf[0 .. len];
@@ -210,9 +214,9 @@ version (Windows) {
 
 		sockaddr_un laddr;
 		laddr.sun_family = AF_UNIX;
-		.strcpy(laddr.sun_path.ptr, name.toStringz());
+		.strcpy(cast(char*)laddr.sun_path.ptr, name.toStringz());
 
-		if (0 != .bind(pipe, cast(sockaddr*)&laddr, laddr.sun_family.sizeof + .strlen(laddr.sun_path.ptr))) {
+		if (0 != .bind(pipe, cast(sockaddr*)&laddr, cast(uint)(laddr.sun_family.sizeof + .strlen(cast(char*)laddr.sun_path.ptr)))) {
 			return false;
 		}
 		if (0 != .listen(pipe, 1)) {
@@ -224,7 +228,7 @@ version (Windows) {
 
 			char[MAX_MESSAGE] buf;
 			intptr_t len;
-			intptr_t rsock;
+			int rsock;
 			sockaddr_un raddr;
 			socklen_t rsocklen;
 
@@ -253,7 +257,7 @@ version (Windows) {
 					if (quit) break; // quit server
 					// When returned null from callback, quit communication.
 					if (msg is null || !msg.length) break;
-					if (-1 == cwrite(pipe, send.ptr, send.length)) break;
+					if (-1 == .write(pipe, msg.ptr, msg.length)) break;
 				}
 			}
 		}

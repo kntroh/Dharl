@@ -325,7 +325,7 @@ class MainPanel : Composite {
 				_paintArea.transparentPixel(l, tPixel);
 			}
 		};
-		_paintArea.changedMaskReceivers ~= (size_t pixel) {
+		_paintArea.changedMaskReceivers ~= (int pixel) {
 			_um.resetRetryWord();
 			_paletteView.reverseMask(pixel);
 		};
@@ -565,14 +565,14 @@ class MainPanel : Composite {
 			foreach (item; tPOp.menu.p_items) {
 				item.dispose();
 			}
-			void createMenu(size_t i) {
+			void createMenu(uint i) {
 				auto item = basicMenuItem(tPOp.menu, _c.text.fPaletteName.value.format(i + 1), {
 					selectPalette(i);
 				}, SWT.RADIO);
 				item.p_selection = (i == _paintArea.selectedPalette);
 			}
 			foreach (i; 0 .. _paintArea.palettes.length) {
-				createMenu(i);
+				createMenu(cast(uint)i);
 			}
 		};
 	}
@@ -810,7 +810,7 @@ class MainPanel : Composite {
 		clearTonesToolBar();
 
 		bool useTone = false;
-		void toneItem(size_t index, in Tone tone) {
+		void toneItem(uint index, in Tone tone) {
 			bool useIt = tone.value == _paintArea.tone;
 			auto icon = toneIcon(tone.value, 16, 16);
 			basicToolItem(_tones, tone.name, new Image(d, icon), {
@@ -820,7 +820,7 @@ class MainPanel : Composite {
 			if (useIt) useTone = true;
 		}
 		foreach (i, tone; _c.conf.tones.array) {
-			toneItem(i, tone);
+			toneItem(cast(uint)i, tone);
 		}
 		if (useTone) {
 			_tones.getItem(0).p_selection = false;
@@ -1114,7 +1114,7 @@ class MainPanel : Composite {
 
 		
 		// Selects loaded image.
-		selectImage(index);
+		selectImage(cast(int)index);
 		_imageList.showSelection();
 
 		pi.image.restoreReceivers ~= (UndoMode mode) {
@@ -1178,7 +1178,7 @@ class MainPanel : Composite {
 			"*.png",
 			"*.png"
 		];
-		size_t fi = 0; // filter index
+		int fi = 0; // filter index
 		auto ext = params.path.extension();
 		if (0 == ext.filenameCmp(".dhr")) {
 			fi = 0;
@@ -1737,7 +1737,7 @@ class MainPanel : Composite {
 		dialog.open();
 	}
 	/// Selects palette of paint area by index.
-	void selectPalette(size_t index) {
+	void selectPalette(uint index) {
 		if (_paintArea.palettes.length <= index) {
 			SWT.error(__FILE__, __LINE__, SWT.ERROR_INVALID_ARGUMENT);
 		}
@@ -1746,7 +1746,7 @@ class MainPanel : Composite {
 		setPalettes(null, index);
 	}
 	/// ditto
-	private void setPalettes(in PaletteData[] palettes, size_t sel) {
+	private void setPalettes(in PaletteData[] palettes, uint sel) {
 		Undoable[] storeData = [cast(Undoable)_paintArea, _paletteView];
 		_um.store(storeData);
 
