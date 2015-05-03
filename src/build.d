@@ -29,7 +29,7 @@ version (Windows) {
 	immutable RCC = "rcc";
 	immutable RC = NAME.setExtension("rc");
 	immutable RES = NAME.setExtension("res");
-	immutable EXE = NAME.setExtension("exe");
+	immutable EXE = "..".buildPath(NAME).setExtension("exe");
 	immutable LIB = [
 		"-L/rc:" ~ NAME,
 		"-L/NOM",
@@ -71,7 +71,7 @@ version (Windows) {
 	];
 	immutable O = "obj";
 } else {
-	immutable EXE = NAME ~ "_";
+	immutable EXE = "..".buildPath(NAME);
 	immutable LIB = [
 		"-Lorg.eclipse.swt.gtk.linux.x86.a",
 		"-Ldwt-base.a",

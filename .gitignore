@@ -1,12 +1,12 @@
-dharl_
+dharl
 dharl.exe
 dharl.res
 build.log
-dharl_.log
+dharl.log
 dharl.exe.log
 personal_memo.txt
 dharl_*.zip
-objs/*
+src/objs/*
 example/*
 plugin/*
 Dharl.wiki
