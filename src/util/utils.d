@@ -295,6 +295,7 @@ auto glob(const(char)[] pattern, bool followSymlink = true) {
 					recurse(current.buildPath(splitted[sIndex]), sIndex + 1);
 					return;
 				}
+				if (current == "") current = ".";
 				foreach (DirEntry file; dirEntries(current, splitted[sIndex], SpanMode.shallow, followSymlink)) {
 					if (sIndex + 1 == splitted.length) {
 						array ~= file;

@@ -37,11 +37,7 @@ private import java.lang.all : ArrayWrapperString2;
 private import java.nonstandard.Locale;
 
 /// Pipe name for process communication.
-version (Windows) {
-	private immutable PIPE_NAME = "dharl";
-} else version (Posix) {
-	private immutable PIPE_NAME = "/tmp/dharl_pipe";
-} else static assert (0);
+private immutable PIPE_NAME = "dharl";
 
 /// Commands of process communication.
 private immutable MSG_EXECUTE      = "execute";
@@ -152,7 +148,7 @@ void main(string[] args) {
 			return MSG_EXECUTE;
 		} else if (MSG_GET_ARGUMENT == reply) {
 			if (sentArg < argFiles.length) {
-				auto msg = MSG_ARGUMENT ~ argFiles[sentArg];
+				auto msg = MSG_ARGUMENT ~ argFiles[sentArg].absolutePath();
 				sentArg++;
 				return msg;
 			}

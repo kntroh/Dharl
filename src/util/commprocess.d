@@ -146,15 +146,20 @@ version (Windows) {
 		return true;
 	}
 
-} else version (linux) {
+} else version (Posix) {
 
 	private import core.stdc.errno;
 	private import core.stdc.string;
+
 	private import core.sys.posix.sys.socket;
 	private import core.sys.posix.sys.time;
 	private import core.sys.posix.sys.un;
+
 	private import core.sys.posix.unistd;
 
+	private import core.thread;
+
+	private import std.path;
 	private import std.string;
 
 	/// Handle of named pipe.
@@ -163,12 +168,6 @@ version (Windows) {
 	/// Invalid pipe handle.
 	private immutable INVALID_PIPE = -1;
 
-	/// Creates a named pipe.
-	private pipeHandle createPipe(string name) {
-		auto pipe = .socket(AF_UNIX, SOCK_STREAM, 0);
-		if (INVALID_PIPE == pipe) return INVALID_PIPE;
-		return pipe;
-	}
 	/// Close a named pipe.
 	private void closePipe(pipeHandle pipe, string name) {
 		.shutdown(pipe, 2);
@@ -181,15 +180,15 @@ version (Windows) {
 		if (!send) return false;
 
 		char[MAX_MESSAGE] buf;
-		auto pipe = .createPipe(name);
+		auto pipe = .socket(AF_UNIX, SOCK_STREAM, 0);
 		if (INVALID_PIPE == pipe) return false;
-		scope (exit) .closePipe(pipe, name);
+		scope (exit) .close(pipe);
 
+		name = "/tmp".buildPath(name);
 		sockaddr_un raddr;
 		raddr.sun_family = AF_UNIX;
-		.strcpy(cast(char*)&raddr.sun_path.ptr[1], name.toStringz());
+		.strcpy(cast(char*)raddr.sun_path.ptr, name.toStringz());
 		if (-1 == .connect(pipe, cast(sockaddr*)&raddr, raddr.sizeof)) {
-			.closePipe(pipe, name);
 			return false;
 		}
 
@@ -197,8 +196,8 @@ version (Windows) {
 		while (true) {
 			auto msg = send(reply);
 			if (msg is null || !msg.length) break;
-			if (-1 == .write(pipe, msg.ptr, msg.length)) break;
-			auto len = .read(pipe, buf.ptr, buf.length);
+			if (-1 == .write(pipe, msg.toStringz(), msg.length)) return false;
+			auto len = .read(pipe, buf.ptr, buf.length - 1);
 			if (-1 == len) break;
 			reply = buf[0 .. len];
 		}
@@ -208,29 +207,30 @@ version (Windows) {
 	private bool startPipeServerImpl(string name, string delegate(in char[] recv, out bool quit) callback, bool blocking, uint timeoutMillis) {
 		if (!callback) return false;
 
+		name = "/tmp".buildPath(name);
 		.unlink(name.toStringz());
-		auto pipe = .createPipe(name);
+		auto pipe = .socket(AF_UNIX, SOCK_STREAM, 0);
 		if (INVALID_PIPE == pipe) return false;
 
 		sockaddr_un laddr;
 		laddr.sun_family = AF_UNIX;
 		.strcpy(cast(char*)laddr.sun_path.ptr, name.toStringz());
 
-		if (0 != .bind(pipe, cast(sockaddr*)&laddr, cast(uint)(laddr.sun_family.sizeof + .strlen(cast(char*)laddr.sun_path.ptr)))) {
+		if (0 != .bind(pipe, cast(sockaddr*)&laddr, laddr.sizeof)) {
 			return false;
 		}
-		if (0 != .listen(pipe, 1)) {
+		if (0 != .listen(pipe, 1024)) {
 			return false;
 		}
+
+		auto parentThread = Thread.getThis();
 
 		void func() {
 			scope (exit) .closePipe(pipe, name);
 
 			char[MAX_MESSAGE] buf;
 			intptr_t len;
-			int rsock;
-			sockaddr_un raddr;
-			socklen_t rsocklen;
+			pipeHandle rsock;
 
 			bool quit = false;
 			while (!quit) {
@@ -242,22 +242,28 @@ version (Windows) {
 				FD_ZERO(&fdr);
 				FD_SET(pipe, &fdr);
 				auto selret = .select(FD_SETSIZE, &fdr, null, null, &tout);
-				if (-1 == selret && EINTR == errno) continue;
+				if (-1 == selret && EINTR == errno) {
+					if (parentThread.isRunning) {
+						continue;
+					} else {
+						break;
+					}
+				}
 				if (-1 == selret) break;
 				if (0 == selret) continue;
 				if (!FD_ISSET(pipe, &fdr)) continue;
-				rsock = .accept(pipe, cast(sockaddr*)&raddr, &rsocklen);
+				rsock = .accept(pipe, null, null);
 				if (-1 == rsock) break;
 				scope (exit) .close(rsock);
 
 				while (true) {
-					if (-1 == (len = .read(pipe, buf.ptr, buf.length))) break;
+					if (-1 == (len = .read(rsock, buf.ptr, buf.length - 1))) break;
 					auto recv = buf[0 .. len];
 					auto msg = callback(recv, quit);
 					if (quit) break; // quit server
 					// When returned null from callback, quit communication.
 					if (msg is null || !msg.length) break;
-					if (-1 == .write(pipe, msg.ptr, msg.length)) break;
+					if (-1 == .write(rsock, msg.ptr, msg.length)) break;
 				}
 			}
 		}

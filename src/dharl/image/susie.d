@@ -7,6 +7,9 @@ module dharl.image.susie;
 
 private import dharl.image.mlimage;
 
+private import std.file;
+private import std.path;
+
 version (Windows) {
 
 	private import core.stdc.string;
@@ -21,9 +24,7 @@ version (Windows) {
 
 	private import std.algorithm;
 	private import std.datetime;
-	private import std.file;
 	private import std.math;
-	private import std.path;
 	private import std.stream;
 	private import std.string;
 
@@ -443,7 +444,7 @@ version (Windows) {
 			string newLayerName,
 			MLImage[] delegate(string fileExtension, lazy ubyte[] fileData) tryLoadWithoutPlugin
 		) {
-			return [];
+			return tryLoadWithoutPlugin(file.extension(), cast(ubyte[]).read(file));
 		}
 	}
 }
