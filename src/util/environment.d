@@ -126,11 +126,7 @@ version (Windows) {
 	/// Gets default application data directory from the environment.
 	string appData(string defaultValue, bool freeLibrary) {
 		if (!_dllShell) {
-			version (Win64) {
-				_dllShell = .dlopen("shell64.dll");
-			} else version (Win32) {
-				_dllShell = .dlopen("shell32.dll");
-			} else static assert (0);
+			_dllShell = .dlopen("shell32.dll");
 		}
 		if (!_dllShell) return defaultValue;
 		scope (exit) {
@@ -144,6 +140,24 @@ version (Windows) {
 		auto result = fSHGetFolderPath(null, CSIDL_APPDATA, null, SHGFP_TYPE_CURRENT, pathBuf.ptr);
 		if (S_OK != result) return defaultValue;
 		return .text(pathBuf[0 .. .wcslen(pathBuf.ptr)]);
+	}
+
+	/// Converts fileName to hidden file name.
+	@property
+	@safe
+	nothrow
+	pure
+	T[] hiddenFileName(T)(T[] fileName) {
+		return fileName;
+	}
+	///
+	unittest {
+		assert ("filename.txt".hiddenFileName == "filename.txt");
+		assert ("folder".hiddenFileName == "folder");
+		assert ("dir/filename.txt".hiddenFileName == "dir/filename.txt");
+		assert ("dir/folder".hiddenFileName == "dir/folder");
+		assert (".filename.txt".hiddenFileName == ".filename.txt");
+		assert ("dir/.folder".hiddenFileName == "dir/.folder");
 	}
 
 } else version (Posix) {
@@ -184,6 +198,27 @@ version (Windows) {
 	/// Gets default application data directory from the environment.
 	string appData(string defaultValue, bool freeLibrary) {
 		return .to!string(getpwuid(getuid()).pw_dir);
+	}
+
+	/// Converts fileName to hidden file name.
+	@property
+	@safe
+	nothrow
+	pure
+	T[] hiddenFileName(T)(T[] fileName) {
+		auto dir = fileName.dirName();
+		auto base = fileName.baseName();
+		if (base.startsWith(".")) return fileName;
+		return fileName[0 .. $ - base.length] ~ '.' ~ base;
+	}
+	///
+	unittest {
+		assert ("filename.txt".hiddenFileName == ".filename.txt");
+		assert ("folder".hiddenFileName == ".folder");
+		assert ("dir/filename.txt".hiddenFileName == "dir/.filename.txt");
+		assert ("dir/folder".hiddenFileName == "dir/.folder");
+		assert (".filename.txt".hiddenFileName == ".filename.txt");
+		assert ("dir/.folder".hiddenFileName == "dir/.folder");
 	}
 
 } else static assert (0);

@@ -1,6 +1,10 @@
 dharl
 dharl.exe
 dharl.res
+dharl.exp
+dharl.ilk
+dharl.lib
+dharl.pdb
 build.log
 dharl.log
 dharl.exe.log

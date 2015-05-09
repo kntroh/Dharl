@@ -166,15 +166,15 @@ version (Windows) {
 
 				// BUG: len includes '\0' sometimes.
 				int len;
-				len = info.getPluginInfo(0, buf.ptr, buf.length);
+				len = info.getPluginInfo(0, buf.ptr, cast(int)buf.length);
 				if (len) info.apiVersion = buf[0 .. .strlen(buf.ptr)].idup;
-				len = info.getPluginInfo(1, buf.ptr, buf.length);
+				len = info.getPluginInfo(1, buf.ptr, cast(int)buf.length);
 				if (len) info.about = buf[0 .. .strlen(buf.ptr)].idup;
 				for (size_t n = 2; ; n += 2) {
-					len = info.getPluginInfo(n + 0, buf.ptr, buf.length);
+					len = info.getPluginInfo(cast(int)n + 0, buf.ptr, cast(int)buf.length);
 					if (!len) break;
 					info.extension ~= buf[0 .. .strlen(buf.ptr)].idup;
-					len = info.getPluginInfo(n + 1, buf.ptr, buf.length);
+					len = info.getPluginInfo(cast(int)n + 1, buf.ptr, cast(int)buf.length);
 					if (!len) break;
 					info.fileTypeName ~= buf[0 .. .strlen(buf.ptr)].idup;
 				}
@@ -278,7 +278,7 @@ version (Windows) {
 						if (bInfo && !(*(cast(void**)bInfo))) LocalFree(*(cast(void**)bInfo));
 						if (bm && !(*(cast(void**)bm))) LocalFree(*(cast(void**)bm));
 					}
-					errcode = lib.getPicture(data.ptr, data.length, MEMORY, &bInfo, &bm, null, 0);
+					errcode = lib.getPicture(data.ptr, cast(int)data.length, MEMORY, &bInfo, &bm, null, 0);
 					if (0 != errcode) continue;
 					if (!bInfo || !bm || !(*(cast(void**)bInfo)) || !(*(cast(void**)bm))) {
 						continue;
@@ -335,8 +335,8 @@ version (Windows) {
 					auto bytes = new byte[BITMAPFILEHEADER_SIZE + headerSize + size];
 					auto header = cast(BITMAPFILEHEADER*)bytes.ptr;
 					header.bfType = (cast(USHORT)('B' | ('M' << 8))).littleEndian;
-					header.bfSize = bytes.length.littleEndian;
-					header.bfOffBits = (BITMAPFILEHEADER_SIZE + headerSize).littleEndian;
+					header.bfSize = (cast(uint)bytes.length).littleEndian;
+					header.bfOffBits = (BITMAPFILEHEADER_SIZE + cast(uint)headerSize).littleEndian;
 
 					.memmove(&bytes[BITMAPFILEHEADER_SIZE], info, headerSize);
 					.memmove(&bytes[header.bfOffBits], bmp, size);
@@ -364,7 +364,7 @@ version (Windows) {
 					scope (exit) {
 						if (info && !(*(cast(void**)info))) LocalFree((*(cast(void**)info)));
 					}
-					errcode = lib.getArchiveInfo(data.ptr, data.length, MEMORY, &info);
+					errcode = lib.getArchiveInfo(data.ptr, cast(int)data.length, MEMORY, &info);
 					if (0 != errcode) continue;
 					if (!info) continue;
 					auto fileInfo = *(cast(fileInfo**)info);

@@ -105,8 +105,8 @@ version (Windows) {
 		while (true) {
 			auto msg = send(reply);
 			if (msg is null || !msg.length) break;
-			if (!WriteFile(pipe, msg.ptr, msg.length, &len, null)) break;
-			if (!ReadFile(pipe, buf.ptr, buf.length, &len, null)) break;
+			if (!WriteFile(pipe, msg.ptr, cast(DWORD)msg.length, &len, null)) break;
+			if (!ReadFile(pipe, buf.ptr, cast(DWORD)buf.length, &len, null)) break;
 			reply = buf[0 .. len];
 		}
 		return true;
@@ -133,7 +133,7 @@ version (Windows) {
 					if (quit) break; // quit server
 					// When returned null from callback, quit communication.
 					if (msg is null || !msg.length) break;
-					if (!WriteFile(pipe, msg.ptr, msg.length, &len, null)) break;
+					if (!WriteFile(pipe, msg.ptr, cast(DWORD)msg.length, &len, null)) break;
 				}
 			}
 		}
