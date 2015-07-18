@@ -1699,7 +1699,9 @@ class PaintArea : Canvas, Undoable {
 			clearCache(false);
 			auto pget = (int x, int y) => iGetPixels2(x, y, allLayers);
 			auto pset = (int x, int y, int[] pixels) => iSetPixels2(x, y, allLayers, pixels);
-			func(pget, pset, 0, 0, _image.width, _image.height);
+			auto w = _iCanvasW != 0 ? _iCanvasW : _image.width;
+			auto h = _iCanvasH != 0 ? _iCanvasH : _image.height;
+			func(pget, pset, 0, 0, w, h);
 		} else {
 			if (_um) _um.store(this);
 			clearCache(false);
