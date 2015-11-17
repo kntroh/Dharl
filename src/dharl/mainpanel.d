@@ -6,6 +6,7 @@
 module dharl.mainpanel;
 
 private import util.graphics;
+private import util.stream;
 private import util.types;
 private import util.undomanager;
 private import util.utils;
@@ -34,7 +35,6 @@ private import std.array;
 private import std.exception;
 private import std.path;
 private import std.range;
-private import std.stream;
 private import std.string;
 private import std.traits;
 
@@ -1040,12 +1040,10 @@ class MainPanel : Composite {
 				if (0 == ext.filenameCmp(".dhr")) {
 					r ~= new MLImage(data);
 				} else if (0 == ext.filenameCmp(".dpx")) {
-					auto s = new MemoryStream(data);
-					scope (exit) s.close();
+					auto s = .arrayStream(data);
 					r ~= .loadDPX(s);
 				} else if (0 == ext.filenameCmp(".edg")) {
-					auto s = new MemoryStream(data);
-					scope (exit) s.close();
+					auto s = .arrayStream(data);
 					r ~= .loadEDG(s);
 				} else {
 					foreach (filter; SUPPORTED_FORMATS) {

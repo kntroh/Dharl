@@ -7,24 +7,25 @@ module dharl.image.edg;
 
 private import util.convertendian;
 private import util.sjis;
+private import util.stream;
 
 private import dharl.image.mlimage;
 
 private import std.conv;
-private import std.stream;
+private import std.stdio;
 private import std.string;
 
 private import org.eclipse.swt.all : ImageData, PaletteData, RGB;
 
 /// Loads EDGE file (*.edg).
 MLImage loadEDG(string file) {
-	auto s = new BufferedFile(file, FileMode.In);
+	auto s = File(file, "rb");
 	scope (exit) s.close();
 	return loadEDG(s);
 }
 
 /// Loads EDGE image from s.
-MLImage loadEDG(InputStream s) {
+MLImage loadEDG(InputStream)(ref InputStream s) {
 	if ('E' != s.readL!ubyte() || 'D' != s.readL!ubyte() || 'G' != s.readL!ubyte() || 'E' != s.readL!ubyte()) {
 		throw new Exception("Data isn't EDGE image.");
 	}
@@ -51,7 +52,7 @@ MLImage loadEDG(InputStream s) {
 	foreach (li; 0 .. lCount) {
 		// Layer name.
 		auto nameBuf = new char[80];
-		s.read(cast(ubyte[])nameBuf);
+		s.rawRead(cast(ubyte[])nameBuf);
 		auto name = .text(nameBuf.ptr);
 		// Visibility.
 		auto visible = s.readL!ubyte();
@@ -80,7 +81,7 @@ MLImage loadEDG(InputStream s) {
 		auto uCount = s.readL!uint();
 		// Uncompressed data.
 		auto uData = new ubyte[uCount];
-		s.read(uData);
+		s.rawRead(uData);
 
 		uint x = 0, y = 0; // Position.
 		// Puts pixel.

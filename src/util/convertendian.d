@@ -5,7 +5,7 @@
 /// Authors: kntroh
 module util.convertendian;
 
-private import std.stream;
+private import util.stream;
 
 version (LittleEndian) {
 
@@ -67,7 +67,7 @@ T reverseBytes(T)(T value) {
 }
 
 /// Reads bytes from stream and reverses it.
-T readReverse(T)(InputStream stream) {
+T readReverse(T, InputStream)(InputStream stream) {
 	ubyte b;
 	stream.read(b);
 	T value = b;
@@ -78,7 +78,7 @@ T readReverse(T)(InputStream stream) {
 	return value;
 }
 /// Reads bytes from stream.
-T readNormal(T)(InputStream stream) {
+T readNormal(T, InputStream)(InputStream stream) {
 	T value;
 	static if (is(typeof(stream.read(value)))) {
 		stream.read(value);
@@ -97,13 +97,13 @@ T readNormal(T)(InputStream stream) {
 }
 
 /// Reverses bytes and writes it to stream.
-void writeReverse(T)(OutputStream stream, T value) {
+void writeReverse(T, OutputStream)(OutputStream stream, T value) {
 	for (size_t shift = 0; shift < T.sizeof * 8; shift += 8) {
 		stream.write(cast(ubyte)((value >>> shift) & 0xFF));
 	}
 }
 /// Writes bytes to stream.
-void writeNormal(T)(OutputStream stream, T value) {
+void writeNormal(T, OutputStream)(OutputStream stream, T value) {
 	static if (is(typeof(stream.write(value)))) {
 		stream.write(value);
 	} else {

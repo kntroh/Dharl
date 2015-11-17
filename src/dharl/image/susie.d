@@ -25,7 +25,7 @@ version (Windows) {
 	private import std.algorithm;
 	private import std.datetime;
 	private import std.math;
-	private import std.stream;
+	private import std.stdio;
 	private import std.string;
 
 	private import std.windows.charset;
@@ -220,9 +220,9 @@ version (Windows) {
 
 			ubyte[2048] head; // Beginning (2KB) of file.
 			{
-				auto s = new BufferedFile(file);
+				auto s = File(file, "rb");
 				scope (exit) s.close();
-				size_t len = s.read(head);
+				auto len = s.rawRead(head).length;
 				head[len .. $] = 0;
 			}
 			return loadWithSusieImpl(file, file.extension(), newLayerName, tryLoadWithoutPlugin, head, {

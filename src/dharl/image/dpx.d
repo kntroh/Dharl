@@ -7,27 +7,28 @@ module dharl.image.dpx;
 
 private import util.convertendian;
 private import util.sjis;
+private import util.stream;
 private import util.utils;
 
 private import dharl.image.mlimage;
 
 private import std.exception;
-private import std.stream;
+private import std.stdio;
 private import std.string;
 
 private import org.eclipse.swt.all : ImageData, PaletteData, RGB;
 
 /// Loads D-Pixed file (*.dpx).
 MLImage loadDPX(string file) {
-	auto s = new BufferedFile(file, FileMode.In);
+	auto s = File(file, "rb");
 	scope (exit) s.close();
 	return loadDPX(s);
 }
 
 /// Loads D-Pixed image from s.
-MLImage loadDPX(InputStream s) {
+MLImage loadDPX(InputStream)(ref InputStream s) {
 	ubyte[128] desc;
-	s.read(desc); // Description.
+	s.rawRead(desc); // Description.
 	if ('D' != desc[0] || 'P' != desc[1] || 'X' != desc[2]) {
 		throw new Exception("Data isn't D-Pixed image.");
 	}
@@ -79,9 +80,9 @@ MLImage loadDPX(InputStream s) {
 		// Layer name.
 		char[] name;
 		foreach (n; 0 .. 64) {
-			char c;
+			ubyte c;
 			s.read(c);
-			if (c) name ~= c;
+			if (c) name ~= cast(char)c;
 		}
 		if (0x00002100 <= ver) {
 			// Animation-related data. (Ignore)
@@ -99,7 +100,7 @@ MLImage loadDPX(InputStream s) {
 			// Color mask. (Ignore)
 			if (HAS_COLOR_MASK & layerFlags) {
 				ubyte[256] colorMask;
-				s.read(colorMask);
+				s.rawRead(colorMask);
 			}
 		}
 
@@ -157,7 +158,7 @@ MLImage loadDPX(InputStream s) {
 		}
 
 		auto maskData = new ubyte[maskDataSize];
-		s.read(maskData); // Mask data. (Ignore)
+		s.rawRead(maskData); // Mask data. (Ignore)
 
 		// Adds layer.
 		img.addLayer(0, Layer(data, .touni(name), 0 != (layerFlags & VISIBLE)));
