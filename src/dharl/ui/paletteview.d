@@ -15,6 +15,7 @@ private import dharl.ui.dwtutils;
 private import std.algorithm;
 private import std.conv;
 private import std.exception;
+private import std.string;
 
 private import org.eclipse.swt.all;
 
@@ -32,6 +33,8 @@ class PaletteView : Canvas, Undoable {
 	void delegate(int pixel1, int pixel2)[] colorSwapReceivers;
 	/// Receivers of changed transparent pixel event.
 	void delegate(int tPixel)[] changedTransparentPixelReceivers;
+
+	mixin BindListeners;
 
 	/// Size for box of color.
 	private int _cBoxWidth = 16;

@@ -13,6 +13,7 @@ private import std.file;
 private import std.functional;
 private import std.math;
 private import std.path;
+private import std.stdio;
 private import std.string;
 private import std.traits;
 

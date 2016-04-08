@@ -25,6 +25,8 @@ class LayerList : Canvas {
 	/// Height of a layer view of one.
 	private static immutable LAYER_H = 60;
 
+	mixin BindListeners;
+
 	/// Show layers of this paintArea.
 	private PaintArea _paintArea = null;
 

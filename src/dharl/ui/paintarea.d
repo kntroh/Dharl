@@ -20,6 +20,7 @@ private import std.algorithm;
 private import std.array;
 private import std.datetime;
 private import std.exception;
+private import std.string;
 
 private import org.eclipse.swt.all;
 
@@ -52,6 +53,8 @@ class PaintArea : Canvas, Undoable {
 	void delegate(int w, int h)[] resizeReceivers;
 	/// Receivers of change mask event.
 	void delegate(int pixel)[] changedMaskReceivers;
+
+	mixin BindListeners;
 
 	/// ID of this instance.
 	private string _id;
@@ -3252,6 +3255,8 @@ class PaintArea : Canvas, Undoable {
 
 /// This class is previewer for image.
 class PaintPreview : Canvas {
+	mixin BindListeners;
+
 	/// Preview this area.
 	private PaintArea _paintArea = null;
 

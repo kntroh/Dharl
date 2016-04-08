@@ -11,6 +11,7 @@ public import dwtutils.wrapper;
 private import core.thread;
 
 private import std.algorithm;
+private import std.ascii;
 private import std.conv;
 private import std.datetime;
 private import std.exception;
@@ -528,10 +529,12 @@ void addDragFunctions(Control control,
 /// 	/// A background image for this canvas.
 /// 	private Image _image;
 /// 
+///     mixin BindListeners; // Is required from dmd 2.071.
+/// 
 /// 	this (Composite parent, int style) {
 /// 		super (parent, style);
 /// 		_image = new Image(getDisplay(), "ocean.jpg");
-/// 		bindListeners(this);
+/// 		this.bindListeners();
 /// 	}
 /// 
 /// 	/// Processes event (SWT.Paint).
@@ -545,72 +548,76 @@ void addDragFunctions(Control control,
 /// 	}
 /// }
 /// ---
-void bindListeners(W)(W widget) {
-	bindListenersImpl!([
-		"None",
-		"KeyDown",
-		"KeyUp",
-		"MouseDown",
-		"MouseUp",
-		"MouseMove",
-		"MouseEnter",
-		"MouseExit",
-		"MouseDoubleClick",
-		"Paint",
-		"Move",
-		"Resize",
-		"Dispose",
-		"Selection",
-		"DefaultSelection",
-		"FocusIn",
-		"FocusOut",
-		"Expand",
-		"Collapse",
-		"Iconify",
-		"Deiconify",
-		"Close",
-		"Show",
-		"Hide",
-		"Modify",
-		"Verify",
-		"Activate",
-		"Deactivate",
-		"Help",
-		"DragDetect",
-		"Arm",
-		"Traverse",
-		"MouseHover",
-		"HardKeyDown",
-		"HardKeyUp",
-		"MenuDetect",
-		"SetData",
-		"MouseWheel",
-		"Settings",
-		"EraseItem",
-		"MeasureItem",
-		"PaintItem",
-		"ImeComposition",
-	])(widget, new BindListeners);
-}
-private class BindListeners : Listener {
-	void delegate(Event)[int] _receivers;
-	override void handleEvent(Event e) {
-		auto p = e.type in _receivers;
-		if (!p) return;
-		(*p)(e);
+mixin template BindListeners() {
+	private void bindListeners() {
+		this.bindListenersImpl!([
+			"None",
+			"KeyDown",
+			"KeyUp",
+			"MouseDown",
+			"MouseUp",
+			"MouseMove",
+			"MouseEnter",
+			"MouseExit",
+			"MouseDoubleClick",
+			"Paint",
+			"Move",
+			"Resize",
+			"Dispose",
+			"Selection",
+			"DefaultSelection",
+			"FocusIn",
+			"FocusOut",
+			"Expand",
+			"Collapse",
+			"Iconify",
+			"Deiconify",
+			"Close",
+			"Show",
+			"Hide",
+			"Modify",
+			"Verify",
+			"Activate",
+			"Deactivate",
+			"Help",
+			"DragDetect",
+			"Arm",
+			"Traverse",
+			"MouseHover",
+			"HardKeyDown",
+			"HardKeyUp",
+			"MenuDetect",
+			"SetData",
+			"MouseWheel",
+			"Settings",
+			"EraseItem",
+			"MeasureItem",
+			"PaintItem",
+			"ImeComposition",
+		])(new BindListener);
 	}
-}
-private void bindListenersImpl(alias Names, W)(W widget, BindListeners l) {
-	static const Name = Names[0];
-	static if (is(typeof(mixin("&widget.on" ~ Name)) == void delegate(Event))) {
-		// widget has onX(Event).
-		auto type = mixin("SWT." ~ Name);
-		l._receivers[type] = mixin("&widget.on" ~ Name);
-		widget.addListener(type, l);
+
+	private void bindListenersImpl(alias Names)(BindListener l) {
+		static const Name = Names[0];
+		static if (is(typeof(mixin("&this.on" ~ Name)) == void delegate(Event))) {
+			// A widget has onX(Event).
+			auto type = mixin("SWT." ~ Name);
+			l._receivers[type] = mixin("&this.on" ~ Name);
+			this.addListener(type, l);
+		}
+		static if (Names.length > 1) {
+			// recurse
+			bindListenersImpl!(Names[1 .. $])(l);
+		}
 	}
-	static if (Names.length > 1) {
-		// recurse
-		bindListenersImpl!(Names[1 .. $])(widget, l);
+
+	private static class BindListener : Listener {
+		void delegate(Event)[int] _receivers;
+		override void handleEvent(Event e) {
+			auto p = e.type in _receivers;
+			if (!p) return;
+			(*p)(e);
+		}
 	}
 }
 

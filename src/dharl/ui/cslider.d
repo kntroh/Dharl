@@ -49,6 +49,8 @@ class CSlider : Canvas {
 		PushedUp, // Pushed up button.
 	}
 
+	mixin BindListeners;
+
 	private int _cWBar = 15; /// Width of a bar.
 	private int _cWBtn = 13; /// Width of a up down button.
 

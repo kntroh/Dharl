@@ -33,6 +33,8 @@ class PImageList : Canvas {
 	/// Image spacing.
 	private static immutable SPACING = 5;
 
+	mixin BindListeners;
+
 	/// Size of a selectable piece.
 	private Point _pieceSize = null;
 	/// Index of image selected.
@@ -683,6 +685,8 @@ class PImageList : Canvas {
 
 /// One image.
 class PImageItem : Item {
+	mixin BindListeners;
+
 	private PImageList _parent; /// Parent of this item.
 
 	private string _name; /// Name of this image.

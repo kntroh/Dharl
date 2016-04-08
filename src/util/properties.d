@@ -7,10 +7,8 @@ module util.properties;
 
 private import util.types;
 
-private import std.ascii;
 private import std.conv;
 private import std.exception;
-private import std.file;
 private import std.string;
 private import std.xml;
 
@@ -40,6 +38,9 @@ mixin template MsgProp(string Name, string Value) {
 /// ditto
 mixin template PropIO(string RootName) {
 	private import util.utils;
+
+	private import std.ascii;
+	private import std.file;
 
 	/// Reads all properties from file.
 	void readXMLFile(string file) {
