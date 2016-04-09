@@ -33,8 +33,6 @@ class PImageList : Canvas {
 	/// Image spacing.
 	private static immutable SPACING = 5;
 
-	mixin BindListeners;
-
 	/// Size of a selectable piece.
 	private Point _pieceSize = null;
 	/// Index of image selected.
@@ -78,7 +76,7 @@ class PImageList : Canvas {
 		assert (vs);
 		vs.p_listeners!(SWT.Selection) ~= &redraw;
 
-		this.bindListeners();
+		mixin(BindListeners);
 	}
 
 	/// Calculates parameters of scrollbars.
@@ -685,8 +683,6 @@ class PImageList : Canvas {
 
 /// One image.
 class PImageItem : Item {
-	mixin BindListeners;
-
 	private PImageList _parent; /// Parent of this item.
 
 	private string _name; /// Name of this image.
@@ -737,7 +733,7 @@ class PImageItem : Item {
 		}
 		parent._images[index] = this;
 
-		this.bindListeners();
+		mixin(BindListeners);
 	}
 
 	/// Calculates bounds.

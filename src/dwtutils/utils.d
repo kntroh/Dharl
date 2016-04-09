@@ -529,12 +529,11 @@ void addDragFunctions(Control control,
 /// 	/// A background image for this canvas.
 /// 	private Image _image;
 /// 
-///     mixin BindListeners; // Is required from dmd 2.071.
-/// 
 /// 	this (Composite parent, int style) {
 /// 		super (parent, style);
 /// 		_image = new Image(getDisplay(), "ocean.jpg");
-/// 		this.bindListeners();
+/// 
+/// 		mixin(BindListeners);
 /// 	}
 /// 
 /// 	/// Processes event (SWT.Paint).
@@ -548,56 +547,18 @@ void addDragFunctions(Control control,
 /// 	}
 /// }
 /// ---
-mixin template BindListeners() {
-	private void bindListeners() {
-		this.bindListenersImpl!([
-			"None",
-			"KeyDown",
-			"KeyUp",
-			"MouseDown",
-			"MouseUp",
-			"MouseMove",
-			"MouseEnter",
-			"MouseExit",
-			"MouseDoubleClick",
-			"Paint",
-			"Move",
-			"Resize",
-			"Dispose",
-			"Selection",
-			"DefaultSelection",
-			"FocusIn",
-			"FocusOut",
-			"Expand",
-			"Collapse",
-			"Iconify",
-			"Deiconify",
-			"Close",
-			"Show",
-			"Hide",
-			"Modify",
-			"Verify",
-			"Activate",
-			"Deactivate",
-			"Help",
-			"DragDetect",
-			"Arm",
-			"Traverse",
-			"MouseHover",
-			"HardKeyDown",
-			"HardKeyUp",
-			"MenuDetect",
-			"SetData",
-			"MouseWheel",
-			"Settings",
-			"EraseItem",
-			"MeasureItem",
-			"PaintItem",
-			"ImeComposition",
-		])(new BindListener);
+immutable BindListeners = `
+{
+	static class BindListeners_Listener : Listener {
+		void delegate(Event)[int] _receivers;
+		override void handleEvent(Event e) {
+			auto p = e.type in _receivers;
+			if (!p) return;
+			(*p)(e);
+		}
 	}
 
-	private void bindListenersImpl(alias Names)(BindListener l) {
+	void BindListeners_bindListenersImpl(alias Names)(BindListeners_Listener l) {
 		static const Name = Names[0];
 		static if (is(typeof(mixin("&this.on" ~ Name)) == void delegate(Event))) {
 			// A widget has onX(Event).
@@ -607,19 +568,57 @@ mixin template BindListeners() {
 		}
 		static if (Names.length > 1) {
 			// recurse
-			bindListenersImpl!(Names[1 .. $])(l);
+			BindListeners_bindListenersImpl!(Names[1 .. $])(l);
 		}
 	}
 
-	private static class BindListener : Listener {
-		void delegate(Event)[int] _receivers;
-		override void handleEvent(Event e) {
-			auto p = e.type in _receivers;
-			if (!p) return;
-			(*p)(e);
-		}
-	}
+	BindListeners_bindListenersImpl!([
+		"None",
+		"KeyDown",
+		"KeyUp",
+		"MouseDown",
+		"MouseUp",
+		"MouseMove",
+		"MouseEnter",
+		"MouseExit",
+		"MouseDoubleClick",
+		"Paint",
+		"Move",
+		"Resize",
+		"Dispose",
+		"Selection",
+		"DefaultSelection",
+		"FocusIn",
+		"FocusOut",
+		"Expand",
+		"Collapse",
+		"Iconify",
+		"Deiconify",
+		"Close",
+		"Show",
+		"Hide",
+		"Modify",
+		"Verify",
+		"Activate",
+		"Deactivate",
+		"Help",
+		"DragDetect",
+		"Arm",
+		"Traverse",
+		"MouseHover",
+		"HardKeyDown",
+		"HardKeyUp",
+		"MenuDetect",
+		"SetData",
+		"MouseWheel",
+		"Settings",
+		"EraseItem",
+		"MeasureItem",
+		"PaintItem",
+		"ImeComposition",
+	])(new BindListeners_Listener);
 }
+`;
 
 /**
 Converts a SWT event type to event listener class.

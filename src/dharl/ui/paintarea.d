@@ -54,8 +54,6 @@ class PaintArea : Canvas, Undoable {
 	/// Receivers of change mask event.
 	void delegate(int pixel)[] changedMaskReceivers;
 
-	mixin BindListeners;
-
 	/// ID of this instance.
 	private string _id;
 
@@ -200,7 +198,7 @@ class PaintArea : Canvas, Undoable {
 		assert (vs);
 		vs.p_listeners!(SWT.Selection) ~= &redraw;
 
-		this.bindListeners();
+		mixin(BindListeners);
 	}
 
 	/// Calculates parameters of scrollbars.
@@ -3255,8 +3253,6 @@ class PaintArea : Canvas, Undoable {
 
 /// This class is previewer for image.
 class PaintPreview : Canvas {
-	mixin BindListeners;
-
 	/// Preview this area.
 	private PaintArea _paintArea = null;
 
@@ -3278,7 +3274,7 @@ class PaintPreview : Canvas {
 		this.p_background = d.getSystemColor(SWT.COLOR_GRAY);
 		this.p_foreground = d.getSystemColor(SWT.COLOR_DARK_GRAY);
 
-		this.bindListeners();
+		mixin(BindListeners);
 	}
 
 	/// Sets preview target image.

@@ -34,8 +34,6 @@ class PaletteView : Canvas, Undoable {
 	/// Receivers of changed transparent pixel event.
 	void delegate(int tPixel)[] changedTransparentPixelReceivers;
 
-	mixin BindListeners;
-
 	/// Size for box of color.
 	private int _cBoxWidth = 16;
 	/// ditto
@@ -77,7 +75,7 @@ class PaletteView : Canvas, Undoable {
 	/// The only constructor.
 	this (Composite parent, int style) {
 		super (parent, style);
-		this.bindListeners();
+		mixin(BindListeners);
 
 		initPalette(_colors);
 	}

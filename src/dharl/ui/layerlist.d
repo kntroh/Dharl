@@ -25,8 +25,6 @@ class LayerList : Canvas {
 	/// Height of a layer view of one.
 	private static immutable LAYER_H = 60;
 
-	mixin BindListeners;
-
 	/// Show layers of this paintArea.
 	private PaintArea _paintArea = null;
 
@@ -59,7 +57,7 @@ class LayerList : Canvas {
 		assert (vs);
 		vs.p_listeners!(SWT.Selection) ~= &redraw;
 
-		this.bindListeners();
+		mixin(BindListeners);
 	}
 
 	/// Manager of undo and redo operation.
