@@ -57,8 +57,8 @@ void errorout(T...)(T args) {
 
 debug private import std.datetime;
 
-debug __gshared TickDuration performance[128];
-debug __gshared size_t performanceCount[128];
+debug __gshared TickDuration[128] performance;
+debug __gshared size_t[128] performanceCount;
 debug {
 	immutable BPerfS = `debug auto performanceCounter = std.datetime.StopWatch(std.datetime.AutoStart.yes);`;
 } else {
@@ -67,16 +67,16 @@ debug {
 template BPerf(size_t I) {
 	const BPerf =
 		`debug performanceCounter.stop();`
-		`debug performance[` ~ .text(I) ~ `] += performanceCounter.peek();`
-		`debug performanceCount[` ~ .text(I) ~ `]++;`
-		`debug performanceCounter.reset();`
-		`debug performanceCounter.start();`;
+		~ `debug performance[` ~ .text(I) ~ `] += performanceCounter.peek();`
+		~ `debug performanceCount[` ~ .text(I) ~ `]++;`
+		~ `debug performanceCounter.reset();`
+		~ `debug performanceCounter.start();`;
 }
 template FPerf(size_t I) {
 	const FPerf =
 		`debug auto performanceCounter = std.datetime.StopWatch(std.datetime.AutoStart.yes);`
-		`debug scope (exit) performanceCount[` ~ .text(I) ~ `]++;`
-		`debug scope (exit) performance[` ~ .text(I) ~ `] += performanceCounter.peek();`;
+		~ `debug scope (exit) performanceCount[` ~ .text(I) ~ `]++;`
+		~ `debug scope (exit) performance[` ~ .text(I) ~ `] += performanceCounter.peek();`;
 }
 debug static ~this() {
 	foreach (i, time; performance) {

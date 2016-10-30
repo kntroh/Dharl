@@ -505,7 +505,7 @@ class LayerList : Canvas {
 		checkWidget();
 		if (0 == e.count) return;
 
-		auto layers = _paintArea.selectedLayers.sort;
+		auto layers = _paintArea.selectedLayers.sort().array();
 		if (e.count > 0) {
 			// up
 			if (layers[0] <= 0) return;

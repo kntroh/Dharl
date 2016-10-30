@@ -1614,7 +1614,7 @@ class MainPanel : Composite {
 	void addLayer() {
 		checkWidget();
 		checkInit();
-		_paintArea.addLayer(_paintArea.selectedLayers.sort[0], _c.text.newLayer);
+		_paintArea.addLayer(_paintArea.selectedLayers.sort().front, _c.text.newLayer);
 	}
 	/// ditto
 	void removeLayer() {
@@ -1639,7 +1639,7 @@ class MainPanel : Composite {
 		checkWidget();
 		checkInit();
 		if (!canUpLayer) return;
-		auto layers = _paintArea.selectedLayers.sort;
+		auto layers = _paintArea.selectedLayers.sort();
 		foreach (l; layers) {
 			if (0 == l) break;
 			_paintArea.swapLayers(l - 1, l);
@@ -1672,7 +1672,7 @@ class MainPanel : Composite {
 		checkWidget();
 		checkInit();
 		if (!canDownLayer) return;
-		auto layers = _paintArea.selectedLayers.sort;
+		auto layers = _paintArea.selectedLayers.sort();
 		foreach_reverse (l; layers) {
 			if (_paintArea.image.layerCount == l + 1) break;
 			_paintArea.swapLayers(l + 1, l);

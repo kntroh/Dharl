@@ -268,7 +268,7 @@ class CombinationDialog : DharlDialog {
 			int[] indices = _combiList.p_selectionIndices;
 			if (!indices.length) return;
 			_combiList.remove(indices);
-			foreach_reverse (i; indices.sort) {
+			foreach_reverse (i; indices.sort()) {
 				_combiData = _combiData.remove(i);
 				_preview.item(i).dispose();
 			}
@@ -287,7 +287,7 @@ class CombinationDialog : DharlDialog {
 			_preview.move(index1, index2);
 		}
 		_tUp = basicToolItem(combiTools, c.text.menu.up, .cimg(c.image.up), {
-			auto indices = _combiList.p_selectionIndices.sort;
+			auto indices = _combiList.p_selectionIndices.sort().array();
 			if (!indices.length) return;
 			if (0 == indices[0]) return;
 			foreach (i; indices) {
@@ -302,7 +302,7 @@ class CombinationDialog : DharlDialog {
 			updateEnabled();
 		});
 		_tDown = basicToolItem(combiTools, c.text.menu.down, .cimg(c.image.down), {
-			auto indices = _combiList.p_selectionIndices.sort;
+			auto indices = _combiList.p_selectionIndices.sort().array();
 			if (!indices.length) return;
 			if (_combiList.p_itemCount - 1 == indices[$ - 1]) return;
 			foreach_reverse (i; indices) {
@@ -321,7 +321,7 @@ class CombinationDialog : DharlDialog {
 	/// Sets enabled or disabled of a controls from state.
 	private void updateEnabled() {
 		bool existsCombi = 0 < _combiList.p_itemCount;
-		auto selCombi = _combiList.p_selectionIndices.sort;
+		auto selCombi = _combiList.p_selectionIndices.sort();
 		_combiList.p_enabled = existsCombi;
 		_layers.p_enabled = 0 < selCombi.length;
 		_palette.p_enabled = _layers.p_enabled;

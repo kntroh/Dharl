@@ -57,9 +57,8 @@ class TextDrawingTools {
 				_fontName = _c.conf.fontName;
 			}
 		}
-		fontNames = fontNames.sort;
-		fontNames = fontNames.uniq().array();
-		auto name = basicCombo(fontComp, true, fontNames.sort);
+		fontNames = fontNames.sort().uniq().array();
+		auto name = basicCombo(fontComp, true, fontNames);
 		name.p_listeners!(SWT.Modify) ~= {
 			_fontName = name.p_text;
 			_c.conf.fontName = _fontName;
