@@ -140,7 +140,7 @@ MenuItem basicMenuItem(Menu parent, string text, void delegate(Event e) listener
 }
 /// ditto
 MenuItem basicMenuItem(Menu parent, string text, Image image, void delegate() listener, int style = SWT.PUSH, bool selection = false, int index = -1) {
-	return basicMenuItem(parent, text, image, listener ? (Event) {
+	return basicMenuItem(parent, text, image, listener ? (Event e) {
 		listener();
 	} : null, style, selection, index);
 }
@@ -174,7 +174,7 @@ ToolItem basicToolItem(ToolBar parent, string text, void delegate(Event e) liste
 }
 /// ditto
 ToolItem basicToolItem(ToolBar parent, string text, Image image, void delegate() listener, int style = SWT.PUSH, bool selection = false, int index = -1) {
-	return basicToolItem(parent, text, image, listener ? (Event) {
+	return basicToolItem(parent, text, image, listener ? (Event e) {
 		listener();
 	} : null, style, selection, index);
 }
@@ -262,7 +262,7 @@ MTItem basicMenuItem(Menu menu, ToolBar tool, string text, void delegate(Event e
 }
 /// ditto
 MTItem basicMenuItem(Menu menu, ToolBar tool, string text, Image image, void delegate() listener, int style = SWT.PUSH, bool selection = false, int menuIndex = -1, int toolIndex = -1) {
-	return basicMenuItem(menu, tool, text, image, listener ? (Event) {
+	return basicMenuItem(menu, tool, text, image, listener ? (Event e) {
 		listener();
 	} : null, style, selection, menuIndex, toolIndex);
 }

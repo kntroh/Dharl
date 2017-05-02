@@ -236,8 +236,8 @@ void main(string[] args) {
 	// Build flags.
 	string[] test, option, dmdOption;
 	divide(args[1 .. $], test, option, dmdOption);
-	test = test.sort;
-	option = option.sort;
+	test = test.sort().array();
+	option = option.sort().array();
 	bool help = option.has("help");
 	bool release = option.has("release");
 	bool console = option.has("cui");

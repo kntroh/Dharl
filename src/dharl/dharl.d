@@ -573,7 +573,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	shell.p_listeners!(SWT.Activate) ~= &refreshMenu;
 
 	// Open last opened files.
-	const string[] lastOpenedFiles = c.conf.lastOpenedFiles;
+	string[] lastOpenedFiles = c.conf.lastOpenedFiles;
 	foreach (file; lastOpenedFiles.uniq()) {
 		try {
 			mainPanel.loadImage(file);
