@@ -1260,7 +1260,6 @@ class MainPanel : Composite {
 		} else {
 			return saveImageWithName(index);
 		}
-		return false;
 	}
 
 	/// Saves all image.

@@ -1,4 +1,4 @@
-﻿
+
 ドット絵エディタ Dharl 
 ======================
 
@@ -38,12 +38,10 @@ Dharlのウィンドウは、大まかにいって次の二つの領域に分割
 ビルド方法
 ----------
 
-dmd 2.063と[DWT2](https://github.com/d-widget-toolkit/dwt)が必要です。
+32ビット:
 
-次のコマンドでビルドできます。
+    dub build
 
-    rdmd build
+64ビット:
 
-リリース版の場合は次のようにします。
-
-    rdmd build release
+    dub build --arch=x86_64

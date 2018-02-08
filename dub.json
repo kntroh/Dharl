@@ -1,0 +1,32 @@
+{
+	"name": "dharl",
+	"description": "A low feature pixel art editor.",
+	"license": "Public Domain",
+	"authors": [
+		"knt.roh"
+	],
+
+	"targetType": "executable",
+	"application": "src/dharl/dharl.d",
+	"stringImportPaths": [
+		"src",
+		"src/res"
+	],
+	"dependencies": {
+		"dwt": "~>1.0.0"
+	},
+
+	"preBuildCommands-windows-x86": [
+		"rcc src/dharl.rc"
+	],
+	"lflags-windows-x86": [
+		"/rc:dharl.res"
+	],
+
+	"preBuildCommands-windows-x86_64": [
+		"rc src/dharl.rc"
+	],
+	"lflags-windows-x86_64": [
+		"src/dharl.res"
+	]
+}

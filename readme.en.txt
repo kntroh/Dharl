@@ -38,12 +38,10 @@ Your work flow is as follows for example:
 Build Process
 -------------
 
-Require dmd 2.063 and [DWT2](https://github.com/d-widget-toolkit/dwt) to build of the Dharl.
+For 32-bit systems:
 
-Build the Dharl with this command:
+    dub build
 
-    rdmd build
+For 64-bit systems:
 
-If want to build the release version:
-
-    rdmd build release
+    dub build --arch=x86_64

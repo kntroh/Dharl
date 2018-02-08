@@ -94,6 +94,8 @@ struct CRGB {
 
 	/// Gets hash code of this.
 	const
+	nothrow
+	@safe
 	hash_t toHash() {
 		hash_t hash = r;
 		hash += hash * 31 + g;
@@ -179,10 +181,12 @@ struct CHSV {
 
 	/// Gets hash code of this.
 	const
+	nothrow
+	@safe
 	hash_t toHash() {
 		hash_t hash = h;
-		hash += hash * 31 + s;
-		hash += hash * 31 + v;
+		hash += hash * 31 + cast(hash_t)s;
+		hash += hash * 31 + cast(hash_t)v;
 		return hash;
 	}
 }

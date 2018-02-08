@@ -96,8 +96,9 @@ mixin template PropIO(string RootName) {
 				// If fld is read only or fld value isn't changed,
 				// no creates element.
 				continue;
+			} else {
+				r ~= .toElementFunc(fld.NAME, fld.value);
 			}
-			r ~= .toElementFunc(fld.NAME, fld.value);
 		}
 		return r;
 	}

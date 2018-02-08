@@ -8,12 +8,14 @@ dharl.pdb
 build.log
 dharl.log
 dharl.exe.log
+dub.selections.json
 personal_memo.txt
 dharl_*.zip
+.dub/*
 src/objs/*
+src/dharl.res
 example/*
 plugin/*
 Dharl.wiki
 Dharl.wiki/*
 *.a
-
