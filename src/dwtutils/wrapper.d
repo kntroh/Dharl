@@ -497,7 +497,7 @@ private class TypedListenerWrapperImpl(W, ListenerType, string MethodName) {
 	}
 	auto opOpAssign(string s)(void delegate(EventType e) dlg) if (s == "~") {
 		return opOpAssign!s(new class BlackHole!ListenerType {
-			mixin(`override void ` ~ MethodName ~ `(EventType e) {
+			mixin(`void ` ~ MethodName ~ `(EventType e) {
 				dlg(e);
 			}`);
 		});

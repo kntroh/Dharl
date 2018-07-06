@@ -26,14 +26,19 @@ private import std.xml;
 ///    mixin PropIO!("windowBounds");
 /// }
 /// ---
-mixin template Prop(string Name, Type, Type DefaultValue = Type.init, bool ReadOnly = false) {
+mixin template Prop(string Name, Type, Type DefaultValue, bool ReadOnly = false, string ElementName = "") {
 	/// A property.
-	mixin("auto " ~ Name ~ " = PropValue!(Type, ReadOnly)(Name, DefaultValue);");
+	mixin("auto " ~ Name ~ " = PropValue!(Type, ReadOnly)(Name, DefaultValue, ElementName);");
 }
 /// ditto
-mixin template MsgProp(string Name, string Value) {
+mixin template Prop(string Name, Type, string ElementName = "") {
 	/// A property.
-	mixin Prop!(Name, string, Value, true);
+	mixin Prop!(Name, Type, Type.init, false, ElementName);
+}
+/// ditto
+mixin template MsgProp(string Name, string Value, string ElementName = "") {
+	/// A property.
+	mixin Prop!(Name, string, Value, true, ElementName);
 }
 /// ditto
 mixin template PropIO(string RootName) {
@@ -55,7 +60,7 @@ mixin template PropIO(string RootName) {
 		readElement(parser);
 	}
 	private void read(T)(ref T fld, std.xml.ElementParser ep) {
-		ep.onStartTag[fld.NAME] = (std.xml.ElementParser ep) {
+		ep.onStartTag[fld.ELEMENT_NAME] = (std.xml.ElementParser ep) {
 			fld = .fromElementFunc!(typeof(fld.value))(ep);
 		};
 	}
@@ -97,7 +102,7 @@ mixin template PropIO(string RootName) {
 				// no creates element.
 				continue;
 			} else {
-				r ~= .toElementFunc(fld.NAME, fld.value);
+				r ~= .toElementFunc(fld.ELEMENT_NAME, fld.value);
 			}
 		}
 		return r;
@@ -109,6 +114,8 @@ struct PropValue(Type, bool ReadOnly) {
 	static immutable READ_ONLY = ReadOnly;
 	/// Property name.
 	string NAME;
+	/// XML element name.
+	string ELEMENT_NAME;
 	/// Initializing value of property.
 	Type INIT;
 
@@ -118,10 +125,15 @@ struct PropValue(Type, bool ReadOnly) {
 	alias value this;
 
 	/// Creates instance.
-	this (string name, Type defaultValue) {
+	this (string name, Type defaultValue, string elementName = "") {
 		NAME = name;
 		INIT = defaultValue;
 		value = defaultValue;
+		if (elementName == "") {
+			ELEMENT_NAME = name;
+		} else {
+			ELEMENT_NAME = elementName;
+		}
 	}
 
 	static if (is(typeof(.text(Type.init)))) {

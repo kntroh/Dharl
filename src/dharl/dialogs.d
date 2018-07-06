@@ -167,15 +167,14 @@ class ResizeDialog : DharlDialog {
 
 		string title;
 		Image image;
-		final switch (_targ) {
-		case ResizeTarget.Character:
+		if (_targ == ResizeTarget.Character) {
 			title = c.text.fResize.value.format(c.text.appName);
 			image = .cimg(c.image.resize);
-			break;
-		case ResizeTarget.Canvas:
+		} else if (_targ == ResizeTarget.Canvas) {
 			title = c.text.fResizeCanvas.value.format(c.text.appName);
 			image = .cimg(c.image.resizeCanvas);
-			break;
+		} else {
+			assert (0);
 		}
 
 		auto buttons = DBtn.Ok | DBtn.Apply | DBtn.Cancel;
