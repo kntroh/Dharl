@@ -329,7 +329,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 	auto tCut = basicMenuItem(mEdit, toolBar, c.text.menu.cut, cimg(c.image.cut), {
 		mainPanel.paintArea.cut();
 	});
-	auto tCopy = basicMenuItem(mEdit, toolBar, c.text.menu.copyImage, cimg(c.image.copy), {
+	auto tCopy = basicMenuItem(mEdit, toolBar, c.text.menu.copy, cimg(c.image.copy), {
 		mainPanel.paintArea.copy();
 	});
 	auto tPaste = basicMenuItem(mEdit, toolBar, c.text.menu.paste, cimg(c.image.paste), {

@@ -244,7 +244,7 @@ version (Windows) {
 
 			if (tryLoadWithoutPlugin) {
 				// Try load without Susie Plug-in.
-				r ~= tryLoadWithoutPlugin(ext, (fileBytes ? fileBytes : fileBytes = readData()));
+				r ~= tryLoadWithoutPlugin(ext, (fileBytes ? fileBytes : (fileBytes = readData())));
 				if (r.length) {
 					// Successfully.
 					return r;

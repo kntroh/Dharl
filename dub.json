@@ -27,6 +27,27 @@
 		"rc src/dharl.rc"
 	],
 	"lflags-windows-x86_64": [
-		"src/dharl.res"
-	]
+		"src/dharl.res",
+	],
+
+	"buildTypes": {
+		"gui": {
+			"lflags-windows-x86": [
+				"/exet:nt/su:windows:4.0"
+			],
+			"lflags-windows-x86_64": [
+				"/SUBSYSTEM:Windows",
+				"/ENTRY:mainCRTStartup"
+			]
+		},
+		"release": {
+			"lflags-windows-x86": [
+				"/exet:nt/su:windows:4.0"
+			],
+			"lflags-windows-x86_64": [
+				"/SUBSYSTEM:Windows",
+				"/ENTRY:mainCRTStartup"
+			]
+		}
+	}
 }

@@ -309,7 +309,7 @@ struct DMenuText {
 	mixin MsgProp!("undo", "&Undo\tCtrl+Z"); /// ditto
 	mixin MsgProp!("redo", "&Redo\tCtrl+Y"); /// ditto
 	mixin MsgProp!("cut", "Cu&t\tCtrl+X"); /// ditto
-	mixin MsgProp!("copyImage", "&Copy\tCtrl+C", "copy"); /// ditto
+	mixin MsgProp!("copy", "&Copy\tCtrl+C"); /// ditto
 	mixin MsgProp!("paste", "&Paste\tCtrl+V"); /// ditto
 	mixin MsgProp!("del", "Delete\tDelete"); /// ditto
 	mixin MsgProp!("selectAll", "Select &All\tCtrl+A"); /// ditto
