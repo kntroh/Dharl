@@ -46,4 +46,4 @@ For 64-bit systems:
 
     dub build --arch=x86_64
 
-Specify `--target=gui` to build without a console. When creating a release build, specify `--target=release`.
+Specify `--build=gui` to build without a console. When creating a release build, specify `--build=release`.
