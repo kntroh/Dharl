@@ -136,6 +136,10 @@ struct PropValue(Type, bool ReadOnly) {
 		}
 	}
 
+	void opAssign(Type rhs) {
+		value = rhs;
+	}
+
 	static if (is(typeof(.text(Type.init)))) {
 		const
 		string toString() { return .text(value); }

@@ -596,7 +596,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 			fileHistory = fileHistory.remove(index);
 		}
 		fileHistory.insertInPlace(0, file);
-		c.conf.fileHistory = fileHistory;
+		c.conf.fileHistory.value = fileHistory;
 
 		refreshFileMenu();
 	};
@@ -622,7 +622,7 @@ private MainPanel initialize(DCommon c, Shell shell) {
 				openFiles ~= path.absolutePath().buildNormalizedPath();
 			}
 		}
-		c.conf.lastOpenedFiles = openFiles;
+		c.conf.lastOpenedFiles.value = openFiles;
 	};
 
 	// Update state.
