@@ -7,7 +7,7 @@ What's this?
 
 The Dharl is a low feature pixel art editor. It is a free software.
 
-The Dharl designed based on the design of the "キャラクタレイザー1999" that once existed on Japan.
+The Dharl design is inspired by the "キャラクタレイザー1999" that once existed on Japan.
 
 
 Usage
@@ -40,10 +40,10 @@ Build Process
 
 For 32-bit systems:
 
-    dub build
+    dub build --arch=x86
 
 For 64-bit systems:
 
-    dub build --arch=x86_64
+    dub build
 
 Specify `--build=gui` to build without a console. When creating a release build, specify `--build=release`.

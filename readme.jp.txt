@@ -40,10 +40,10 @@ Dharlのウィンドウは、大まかにいって次の二つの領域に分割
 
 32ビット:
 
-    dub build
+    dub build --arch=x86
 
 64ビット:
 
-    dub build --arch=x86_64
+    dub build
 
 コンソールを除く場合は`--build=gui`を、リリースビルド時には`--build=release`を追加で指定して下さい。
