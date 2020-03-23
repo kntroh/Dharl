@@ -13,7 +13,7 @@
 		"src/res"
 	],
 	"dependencies": {
-		"dwt": "~>1.0.1"
+		"dwt": "~>1.0.4"
 	},
 
 	"preBuildCommands-windows-x86": [
