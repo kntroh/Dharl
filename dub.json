@@ -17,7 +17,7 @@
 	},
 
 	"preBuildCommands-windows-x86": [
-		"rcc src/dharl.rc"
+		"rcc -32 src/dharl.rc"
 	],
 	"lflags-windows-x86": [
 		"/rc:dharl.res"

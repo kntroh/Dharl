@@ -1,2 +1,48 @@
-1 24 "dharl.exe.manifest"
+
+#define MAJOR_VERSION  0
+#define MINOR_VERSION  10
+#define VERSION_STRING "0.10\0"
+
+#define VS_VERSION_INFO      1
+#define RT_MANIFEST          24
+#define VS_FFI_FILEFLAGSMASK 0x0000003F
+#define VOS_NT_WINDOWS32     0x00040004
+#define VOS_NT_WINDOWS64     0x00040005
+#define VFT_APP              0x00000001L
+#define VFT_UNKNOWN          0x00000000L
+
+VS_VERSION_INFO RT_MANIFEST "dharl.exe.manifest"
 ID_APP ICON "dharl.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     MAJOR_VERSION, MINOR_VERSION, 0, 0
+PRODUCTVERSION  MAJOR_VERSION, MINOR_VERSION, 0, 0
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       0
+#ifdef WIN64
+FILEOS          VOS_NT_WINDOWS64
+#else
+FILEOS          VOS_NT_WINDOWS32
+#endif
+FILETYPE        VFT_APP
+FILESUBTYPE     VFT_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",      "knt.roh\0"
+            VALUE "FileDescription",  "Dharl\0"
+            VALUE "FileVersion",      VERSION_STRING
+            VALUE "InternalName",     "Dharl\0"
+            VALUE "LegalCopyright",   "Public Domain\0"
+            VALUE "OriginalFileName", "dharl.exe\0"
+            VALUE "ProductName",      "Dharl\0"
+            VALUE "ProductVersion",   VERSION_STRING
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
