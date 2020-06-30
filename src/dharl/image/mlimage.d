@@ -10,6 +10,7 @@ private import util.graphics;
 private import util.types;
 private import util.undomanager;
 private import util.utils;
+private import util.xml;
 
 private import dharl.image.imageutils;
 
@@ -23,8 +24,11 @@ private import std.path;
 private import std.range;
 private import std.string;
 private import std.typecons;
-private import std.xml;
 private import std.zip;
+
+private import dxml.parser;
+private import dxml.util;
+private import dxml.writer;
 
 private import org.eclipse.swt.all;
 
@@ -121,85 +125,119 @@ class MLImage : Undoable {
 
 		// Parses image information.
 		auto xml = cast(char[])archive.expand(info);
-		auto parser = new DocumentParser(.assumeUnique(xml));
-		.enforce("dharl" == parser.tag.name);
+		auto range = .parseXML!(.makeConfig(SkipComments.yes))(xml);
+		.enforce(range.front.type == EntityType.elementStart);
+		.enforce("dharl" == range.front.name);
 
 		ImageData baseImage = null;
 
 		// palettes
 		PaletteData[] palettes;
 		uint selPalette = 0;
-		parser.onStartTag["palettes"] = (ElementParser ep) {
-			selPalette = to!uint(ep.tag.attr["selected"]);
-			ep.onStartTag["palette"] = (ElementParser ep) {
-				RGB[] colors;
-				ep.onStartTag["color"] = (ElementParser ep) {
-					if (256 <= colors.length) return;
-					int r = to!int(ep.tag.attr["r"]);
-					int g = to!int(ep.tag.attr["g"]);
-					int b = to!int(ep.tag.attr["b"]);
-					colors ~= new RGB(r, g, b);
-				};
-				ep.parse();
-				foreach (i; colors.length .. 256) {
-					colors ~= new RGB(0, 0, 0);
-				}
-				assert (256 == colors.length);
-				palettes ~= new PaletteData(colors);
-			};
-			ep.parse();
-		};
-
 		// layers
 		Layer[] layers;
-		parser.onStartTag["layers"] = (ElementParser ep) {
-			ep.onStartTag["layer"] = (ElementParser ep) {
-				Layer layer;
-
-				// Image data.
-				auto bytes = archive.expand(images[ep.tag.attr["file"]]);
-				auto buf = new ByteArrayInputStream(cast(byte[])bytes);
-				layer.image = .colorReduction(new ImageData(buf), false);
-				assert (layer.image.palette.colors.length == 256);
-
-				// Visibility.
-				layer.visible = .to!bool(ep.tag.attr["visible"]);
-
-				// Name.
-				ep.onText = (string text) {
-					layer.name = text;
-				};
-				ep.parse();
-
-				layers ~= layer;
-				if ("base" in ep.tag.attr) {
-					baseImage = layer.image;
-				}
-			};
-			ep.parse();
-		};
 		// combinations
 		Combination[] combis;
-		parser.onStartTag["combinations"] = (ElementParser ep) {
-			ep.onStartTag["combination"] = (ElementParser ep) {
-				Combination combi;
-				combi.name = ep.tag.attr["name"];
-				combi.selectedPalette = .to!uint(ep.tag.attr.get("palette", "0"));
-				if (palettes.length <= combi.selectedPalette) {
-					combi.selectedPalette = 0;
+
+		int r = 0, g = 0, b = 0;
+		RGB[] colors = [];
+		Layer layer;
+		bool isBase = false;
+		Combination combi;
+		auto reader = XMLReader((name) {
+			.enforce(name == "dharl");
+		}, null, null, null, null, [
+			"palettes": XMLReader(null, (name, value) {
+				if (name == "selected") {
+					selPalette = .to!uint(value);
 				}
-				ep.onStartTag["visible"] = (ElementParser ep) {
-					ep.onText = (string text) {
-						combi.visible ~= .to!bool(text);
-					};
-					ep.parse();
-				};
-				ep.parse();
-				combis ~= combi;
-			};
-			ep.parse();
-		};
-		parser.parse();
+			}, null, null, null, [
+				"palette": XMLReader(null, null, null, null, null, [
+					"color": XMLReader(null, (name, value) {
+						switch (name) {
+						case "r":
+							r = .to!int(value);
+							break;
+						case "g":
+							g = .to!int(value);
+							break;
+						case "b":
+							b = .to!int(value);
+							break;
+						default:
+							break;
+						}
+					}, null, null, null, null, {
+						if (colors.length < 256) {
+							colors ~= new RGB(r, g, b);
+						}
+						r = 0;
+						g = 0;
+						b = 0;
+					}),
+				], {
+					foreach (i; colors.length .. 256) {
+						colors ~= new RGB(0, 0, 0);
+					}
+					assert (colors.length == 256);
+					palettes ~= new PaletteData(colors);
+					colors = [];
+				}),
+			], null),
+			"layers": XMLReader(null, null, null, null, null, [
+				"layer": XMLReader(null, (name, value) {
+					switch (name) {
+					case "file":
+						if (auto p = value in images) {
+							// Reads image data.
+							auto bytes = archive.expand(*p);
+							auto buf = new ByteArrayInputStream(cast(byte[])bytes);
+							layer.image = .colorReduction(new ImageData(buf), false);
+						}
+						break;
+					case "visible":
+						layer.visible = .to!bool(value);
+						break;
+					case "base":
+						isBase = true;
+						break;
+					default:
+						break;
+					}
+				}, (text) {
+					layer.name = text.idup;
+					layers ~= layer;
+					if (isBase) {
+						baseImage = layer.image;
+					}
+					isBase = false;
+					layer = Layer.init;
+				}, null, null, null, null),
+			], null),
+			"combinations": XMLReader(null, null, null, null, null, [
+				"combination": XMLReader(null, (name, value) {
+					switch (name) {
+					case "name":
+						combi.name = value.idup;
+						break;
+					case "palette":
+						combi.selectedPalette = .to!uint(value);
+						break;
+					default:
+						break;
+					}
+				}, null, null, null, [
+					"visible": XMLReader(null, null, (text) {
+						combi.visible ~= .to!bool(text.strip());
+					}, null, null, null, null),
+				], {
+					combis ~= combi;
+					combi = Combination.init;
+				}),
+			], null),
+		], null);
+
+		.readElement(range, reader);
 
 		// Initialize instance.
 		.enforce(layers.length);
@@ -213,10 +251,10 @@ class MLImage : Undoable {
 		foreach (i, l; layers) {
 			addLayer(i, l);
 		}
-		foreach (ref combi; combis) {
+		foreach (ref combi2; combis) {
 			// Ignore invalid combination.
-			if (layers.length == combi.visible.length) {
-				_combi ~= combi;
+			if (layers.length == combi2.visible.length) {
+				_combi ~= combi2;
 			}
 		}
 	}
@@ -231,12 +269,6 @@ class MLImage : Undoable {
 		auto time = Clock.currTime().SysTimeToDosFileTime();
 		auto archive = new ZipArchive();
 
-		auto doc = new Document(new Tag("dharl"));
-		auto palettes = new Element("palettes");
-		doc ~= palettes;
-		auto layers = new Element("layers");
-		doc ~= layers;
-
 		// Creates archive member.
 		ArchiveMember createMember(string name, ubyte[] data) {
 			auto member = new ArchiveMember;
@@ -250,59 +282,85 @@ class MLImage : Undoable {
 			return member;
 		}
 
-		// Palettes.
-		palettes.tag.attr["selected"] = .text(_selPalette);
-		foreach (palette; _palette) {
-			auto pe = new Element("palette");
-			palettes ~= pe;
-			foreach (rgb; palette.colors) {
-				auto ce = new Element("color");
-				pe ~= ce;
-				ce.tag.attr["r"] = .text(rgb.red);
-				ce.tag.attr["g"] = .text(rgb.green);
-				ce.tag.attr["b"] = .text(rgb.blue);
+		auto app = appender!string();
+		writeXMLDecl!string(app);
+		auto writer = .xmlWriter(app, " ");
+		{
+			writer.writeStartTag("dharl");
+			scope (exit) writer.writeEndTag("dharl");
+
+			if (_palette.length) {
+				writer.openStartTag("palettes");
+				writer.writeAttr("selected", .text(_selPalette));
+				writer.closeStartTag();
+				scope (exit) writer.writeEndTag("palettes");
+
+				foreach (palette; _palette) {
+					writer.writeStartTag("palette");
+					scope (exit) writer.writeEndTag("palette");
+
+					foreach (rgb; palette.colors) {
+						writer.openStartTag("color");
+						writer.writeAttr("r", .text(rgb.red));
+						writer.writeAttr("g", .text(rgb.green));
+						writer.writeAttr("b", .text(rgb.blue));
+						writer.closeStartTag(EmptyTag.yes);
+					}
+				}
 			}
-		}
-		// Layers.
-		foreach (i, l; _layers) {
-			auto le = new Element("layer", l.name);
-			layers ~= le;
+			if (_layers.length) {
+				writer.writeStartTag("layers");
+				scope (exit) writer.writeEndTag("layers");
 
-			le.tag.attr["visible"] = .text(l.visible);
-			string file = "layer_%d.png".format(i);
-			le.tag.attr["file"] = file;
+				foreach (i, ref l; _layers) {
+					auto file = "layer_%d.png".format(i);
+					writer.openStartTag("layer");
+					writer.writeAttr("visible", .text(l.visible));
+					writer.writeAttr("file", file.encodeAttr());
+					if (i + 1 == layerCount) {
+						writer.writeAttr("base", .text(true));
+					}
+					if (l.name == "") {
+						writer.closeStartTag(EmptyTag.yes);
+					} else {
+						writer.closeStartTag(EmptyTag.no);
+						scope (exit) writer.writeEndTag("layer", Newline.no);
 
-			// Creates image data.
-			auto loader = new ImageLoader;
-			auto stream = new ByteArrayOutputStream(1024);
-			loader.data ~= l.image;
-			loader.save(stream, SWT.IMAGE_PNG);
+						writer.writeText(l.name.encodeText(), Newline.no);
+					}
 
-			if (i + 1 == layerCount) {
-				le.tag.attr["base"] = .text(true);
+					// Creates image data.
+					auto loader = new ImageLoader;
+					auto stream = new ByteArrayOutputStream(1024);
+					loader.data ~= l.image;
+					loader.save(stream, SWT.IMAGE_PNG);
+					auto bytes = cast(ubyte[])stream.toByteArray();
+					archive.addMember(createMember(file, bytes));
+				}
 			}
+			if (_combi.length) {
+				writer.writeStartTag("combinations");
+				scope (exit) writer.writeEndTag("combinations");
 
-			auto bytes = cast(ubyte[])stream.toByteArray();
-			archive.addMember(createMember(file, bytes));
-		}
-		// Combinations.
-		Element combis = null;
-		foreach (ref combi; _combi) {
-			if (!combis) {
-				combis = new Element("combinations");
-				doc ~= combis;
-			}
-			auto ce = new Element("combination");
-			combis ~= ce;
-			ce.tag.attr["name"] = combi.name;
-			ce.tag.attr["palette"] = .text(combi.selectedPalette);
-			foreach (v; combi.visible) {
-				ce ~= new Element("visible", .text(v));
+				foreach (ref combi; _combi) {
+					writer.openStartTag("combination");
+					writer.writeAttr("name", combi.name.encodeAttr());
+					writer.writeAttr("palette", .text(combi.selectedPalette));
+					writer.closeStartTag(EmptyTag.no);
+					scope (exit) writer.writeEndTag("combination");
+
+					foreach (v; combi.visible) {
+						writer.writeStartTag("visible");
+						scope (exit) writer.writeEndTag("visible", Newline.no);
+
+						writer.writeText(.text(v), Newline.no);
+					}
+				}
 			}
 		}
 
 		// Image information.
-		auto xml = doc.prolog ~ "\n" ~ doc.pretty(2).join("\n") ~ "\n";
+		auto xml = writer.output.data;
 		archive.addMember(createMember("dharl.xml", cast(ubyte[])xml));
 
 		return archive.build();

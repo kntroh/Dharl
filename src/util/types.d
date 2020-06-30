@@ -12,7 +12,10 @@ private import std.conv;
 private import std.exception;
 private import std.math;
 private import std.string;
-private import std.xml;
+
+private import dxml.parser;
+private import dxml.util;
+private import dxml.writer;
 
 /// Value of RGB color model.
 struct CRGB {
@@ -44,25 +47,34 @@ struct CRGB {
 		return hsv;
 	}
 
-	/// Creates instance from ep.
-	static CRGB fromElement(ElementParser ep) {
+	/// Creates instance from range.
+	static CRGB fromElement(EntityRange)(ref EntityRange range) {
 		CRGB r;
-		auto p = "r" in ep.tag.attr;
-		if (p) r.r = safeParse!ubyte(*p, r.r);
-		p = "g" in ep.tag.attr;
-		if (p) r.g = safeParse!ubyte(*p, r.g);
-		p = "b" in ep.tag.attr;
-		if (p) r.b = safeParse!ubyte(*p, r.b);
+		foreach (attr; range.front.attributes.save) {
+			switch (attr.name) {
+			case "r":
+				r.r = safeParse!ubyte(attr.value.decodeXML(), r.r);
+				break;
+			case "g":
+				r.g = safeParse!ubyte(attr.value.decodeXML(), r.g);
+				break;
+			case "b":
+				r.b = safeParse!ubyte(attr.value.decodeXML(), r.b);
+				break;
+			default:
+				break;
+			}
+		}
 		return r;
 	}
 	/// Creates XML element from this instance.
 	const
-	Element toElement(string tagName) {
-		auto e = new Element(tagName);
-		e.tag.attr["r"] = text(r);
-		e.tag.attr["g"] = text(g);
-		e.tag.attr["b"] = text(b);
-		return e;
+	void toElement(XMLWriter)(ref XMLWriter writer, string tagName) {
+		writer.openStartTag(tagName);
+		writer.writeAttr("r", .text(r));
+		writer.writeAttr("g", .text(g));
+		writer.writeAttr("b", .text(b));
+		writer.closeStartTag(EmptyTag.yes);
 	}
 
 	/// Returns a string representing of RGB color.
@@ -103,6 +115,25 @@ struct CRGB {
 		return hash;
 	}
 }
+unittest {
+	import std.array;
+
+	auto xml = `<rgb r="101" g="102" b="103"/>`;
+	auto range = .parseXML(xml);
+	auto s = CRGB.fromElement(range);
+	assert (s.r == 101, .text(s));
+	assert (s.g == 102, .text(s));
+	assert (s.b == 103, .text(s));
+
+	auto writer = .xmlWriter(appender!string());
+	s.toElement(writer, "rgb");
+
+	xml = writer.output.data;
+	assert (xml == "\n" ~ `<rgb r="101" g="102" b="103"/>`, xml);
+	range = .parseXML(xml);
+	assert (s == CRGB.fromElement(range));
+}
+
 /// Value of HSV color model.
 struct CHSV {
 	ushort h; /// Hue.
@@ -134,25 +165,34 @@ struct CHSV {
 		}
 	}
 
-	/// Creates instance from ep.
-	static CHSV fromElement(ElementParser ep) {
+	/// Creates instance from range.
+	static CHSV fromElement(EntityRange)(ref EntityRange range) {
 		CHSV r;
-		auto p = "h" in ep.tag.attr;
-		if (p) r.h = safeParse!ushort(*p, r.h);
-		p = "s" in ep.tag.attr;
-		if (p) r.s = safeParse!real(*p, r.s);
-		p = "v" in ep.tag.attr;
-		if (p) r.v = safeParse!real(*p, r.v);
+		foreach (attr; range.front.attributes.save) {
+			switch (attr.name) {
+			case "h":
+				r.h = safeParse!ushort(attr.value.decodeXML(), r.h);
+				break;
+			case "s":
+				r.s = safeParse!real(attr.value.decodeXML(), r.s);
+				break;
+			case "v":
+				r.v = safeParse!real(attr.value.decodeXML(), r.v);
+				break;
+			default:
+				break;
+			}
+		}
 		return r;
 	}
 	/// Creates XML element from this instance.
 	const
-	Element toElement(string tagName) {
-		auto e = new Element(tagName);
-		e.tag.attr["h"] = text(h);
-		e.tag.attr["s"] = text(s);
-		e.tag.attr["v"] = text(v);
-		return e;
+	void toElement(XMLWriter)(ref XMLWriter writer, string tagName) {
+		writer.openStartTag(tagName);
+		writer.writeAttr("h", .text(h));
+		writer.writeAttr("s", .text(s));
+		writer.writeAttr("v", .text(v));
+		writer.closeStartTag(EmptyTag.yes);
 	}
 
 	/// Returns a string representing of HSV color.
@@ -191,9 +231,26 @@ struct CHSV {
 	}
 }
 unittest {
+	import std.array;
+
 	assert (CRGB(128, 64, 0).toHSV().toRGB() == CRGB(128, 64, 0));
 	assert (CRGB(255, 255, 255).toHSV().toRGB() == CRGB(255, 255, 255));
 	assert (CRGB(0, 0, 0).toHSV().toRGB() == CRGB(0, 0, 0));
+
+	auto xml = `<hsv h="101" s="102" v="103"/>`;
+	auto range = .parseXML(xml);
+	auto s = CHSV.fromElement(range);
+	assert (s.h == 101, .text(s));
+	assert (s.s == 102, .text(s));
+	assert (s.v == 103, .text(s));
+
+	auto writer = .xmlWriter(appender!string());
+	s.toElement(writer, "hsv");
+
+	xml = writer.output.data;
+	assert (xml == "\n" ~ `<hsv h="101" s="102" v="103"/>`, xml);
+	range = .parseXML(xml);
+	assert (s == CHSV.fromElement(range));
 }
 
 /// Bounds.
@@ -213,29 +270,58 @@ struct PBounds {
 		return this.x <= x && x < this.x + width && this.y <= y && y < this.y + height;
 	}
 
-	/// Creates instance from ep.
-	static PBounds fromElement(ElementParser ep) {
+	/// Creates instance from range.
+	static PBounds fromElement(EntityRange)(ref EntityRange range) {
 		PBounds r;
-		auto p = "x" in ep.tag.attr;
-		if (p) r.x = safeParse!int(*p, r.x);
-		p = "y" in ep.tag.attr;
-		if (p) r.y = safeParse!int(*p, r.y);
-		p = "width" in ep.tag.attr;
-		if (p) r.width = safeParse!int(*p, r.width);
-		p = "height" in ep.tag.attr;
-		if (p) r.height = safeParse!int(*p, r.height);
+		foreach (attr; range.front.attributes.save) {
+			switch (attr.name) {
+			case "x":
+				r.x = safeParse!int(attr.value.decodeXML(), r.x);
+				break;
+			case "y":
+				r.y = safeParse!int(attr.value.decodeXML(), r.y);
+				break;
+			case "width":
+				r.width = safeParse!int(attr.value.decodeXML(), r.width);
+				break;
+			case "height":
+				r.height = safeParse!int(attr.value.decodeXML(), r.height);
+				break;
+			default:
+				break;
+			}
+		}
 		return r;
 	}
 	/// Creates XML element from this instance.
 	const
-	Element toElement(string tagName) {
-		auto e = new Element(tagName);
-		e.tag.attr["x"] = text(x);
-		e.tag.attr["y"] = text(y);
-		e.tag.attr["width"] = text(width);
-		e.tag.attr["height"] = text(height);
-		return e;
+	void toElement(XMLWriter)(ref XMLWriter writer, string tagName) {
+		writer.openStartTag(tagName);
+		writer.writeAttr("x", .text(x));
+		writer.writeAttr("y", .text(y));
+		writer.writeAttr("width", .text(width));
+		writer.writeAttr("height", .text(height));
+		writer.closeStartTag(EmptyTag.yes);
 	}
+}
+unittest {
+	import std.array;
+
+	auto xml = `<bounds x="101" y="102" width="103" height="104"/>`;
+	auto range = .parseXML(xml);
+	auto s = PBounds.fromElement(range);
+	assert (s.x == 101, .text(s));
+	assert (s.y == 102, .text(s));
+	assert (s.width == 103, .text(s));
+	assert (s.height == 104, .text(s));
+
+	auto writer = .xmlWriter(appender!string());
+	s.toElement(writer, "bounds");
+
+	xml = writer.output.data;
+	assert (xml == "\n" ~ `<bounds x="101" y="102" width="103" height="104"/>`, xml);
+	range = .parseXML(xml);
+	assert (s == PBounds.fromElement(range));
 }
 
 /// Parameters of window.
@@ -262,27 +348,74 @@ struct WindowParameter {
 		return WindowParameter(PBounds(x, y, w, h), maximized, minimized);
 	}
 
-	/// Creates instance from ep.
-	static WindowParameter fromElement(ElementParser ep) {
-		auto r = WindowParameter(PBounds.fromElement(ep));
-		auto p = "maximized" in ep.tag.attr;
-		if (p) r.maximized = safeParse!bool(*p, r.maximized);
-		p = "minimized" in ep.tag.attr;
-		if (p) r.minimized = safeParse!bool(*p, r.minimized);
+	/// Creates instance from range.
+	static WindowParameter fromElement(EntityRange)(ref EntityRange range) {
+		auto r = WindowParameter(PBounds.fromElement(range));
+		foreach (attr; range.front.attributes.save) {
+			switch (attr.name) {
+			case "maximized":
+				r.maximized = safeParse!bool(attr.value.decodeXML(), r.maximized);
+				break;
+			case "minimized":
+				r.minimized = safeParse!bool(attr.value.decodeXML(), r.minimized);
+				break;
+			default:
+				break;
+			}
+		}
 		return r;
 	}
 	/// Creates XML element from this instance.
 	const
-	Element toElement(string tagName) {
-		auto e = new Element(tagName);
-		e.tag.attr["x"] = text(x);
-		e.tag.attr["y"] = text(y);
-		e.tag.attr["width"] = text(width);
-		e.tag.attr["height"] = text(height);
-		if (maximized) e.tag.attr["maximized"] = text(maximized);
-		if (minimized) e.tag.attr["minimized"] = text(minimized);
-		return e;
+	void toElement(XMLWriter)(ref XMLWriter writer, string tagName) {
+		writer.openStartTag(tagName);
+		writer.writeAttr("x", .text(x));
+		writer.writeAttr("y", .text(y));
+		writer.writeAttr("width", .text(width));
+		writer.writeAttr("height", .text(height));
+		if (maximized) writer.writeAttr("maximized", .text(maximized));
+		if (minimized) writer.writeAttr("minimized", .text(minimized));
+		writer.closeStartTag(EmptyTag.yes);
 	}
+}
+unittest {
+	import std.array;
+
+	auto xml = `<windowParameter x="101" y="102" width="103" height="104" maximized="true" minimized="true"/>`;
+	auto range = .parseXML(xml);
+	auto s = WindowParameter.fromElement(range);
+	assert (s.x == 101, .text(s));
+	assert (s.y == 102, .text(s));
+	assert (s.width == 103, .text(s));
+	assert (s.height == 104, .text(s));
+
+	auto writer = .xmlWriter(appender!string());
+	s.toElement(writer, "windowParameter");
+
+	xml = writer.output.data;
+	assert (xml == "\n" ~ `<windowParameter x="101" y="102" width="103" height="104" maximized="true" minimized="true"/>`, xml);
+	range = .parseXML(xml);
+	assert (s == WindowParameter.fromElement(range));
+
+	s.maximized = false;
+	s.minimized = true;
+	auto writer2 = .xmlWriter(appender!string());
+	s.toElement(writer2, "windowParameter");
+
+	xml = writer2.output.data;
+	assert (xml == "\n" ~ `<windowParameter x="101" y="102" width="103" height="104" minimized="true"/>`, xml);
+	range = .parseXML(xml);
+	assert (s == WindowParameter.fromElement(range));
+
+	s.maximized = true;
+	s.minimized = false;
+	auto writer3 = .xmlWriter(appender!string());
+	s.toElement(writer3, "windowParameter");
+
+	xml = writer3.output.data;
+	assert (xml == "\n" ~ `<windowParameter x="101" y="102" width="103" height="104" maximized="true"/>`, xml);
+	range = .parseXML(xml);
+	assert (s == WindowParameter.fromElement(range));
 }
 
 /// Coordinate.
@@ -292,23 +425,48 @@ struct PPoint {
 	/// ditto
 	int y;
 
-	/// Creates instance from ep.
-	static PPoint fromElement(ElementParser ep) {
+	/// Creates instance from range.
+	static PPoint fromElement(EntityRange)(ref EntityRange range) {
 		PPoint r;
-		auto p = "x" in ep.tag.attr;
-		if (p) r.x = safeParse!int(*p, r.x);
-		p = "y" in ep.tag.attr;
-		if (p) r.y = safeParse!int(*p, r.y);
+		foreach (attr; range.front.attributes.save) {
+			switch (attr.name) {
+			case "x":
+				r.x = safeParse!int(attr.value.decodeXML(), r.x);
+				break;
+			case "y":
+				r.y = safeParse!int(attr.value.decodeXML(), r.y);
+				break;
+			default:
+				break;
+			}
+		}
 		return r;
 	}
 	/// Creates XML element from this instance.
 	const
-	Element toElement(string tagName) {
-		auto e = new Element(tagName);
-		e.tag.attr["x"] = text(x);
-		e.tag.attr["y"] = text(y);
-		return e;
+	void toElement(XMLWriter)(ref XMLWriter writer, string tagName) {
+		writer.openStartTag(tagName);
+		writer.writeAttr("x", .text(x));
+		writer.writeAttr("y", .text(y));
+		writer.closeStartTag(EmptyTag.yes);
 	}
+}
+unittest {
+	import std.array;
+
+	auto xml = `<point x="101" y="102"/>`;
+	auto range = .parseXML(xml);
+	auto s = PPoint.fromElement(range);
+	assert (s.x == 101, .text(s));
+	assert (s.y == 102, .text(s));
+
+	auto writer = .xmlWriter(appender!string());
+	s.toElement(writer, "point");
+
+	xml = writer.output.data;
+	assert (xml == "\n" ~ `<point x="101" y="102"/>`, xml);
+	range = .parseXML(xml);
+	assert (s == PPoint.fromElement(range));
 }
 
 /// Size.
@@ -318,23 +476,48 @@ struct PSize {
 	/// ditto
 	uint height;
 
-	/// Creates instance from ep.
-	static PSize fromElement(ElementParser ep) {
+	/// Creates instance from range.
+	static PSize fromElement(EntityRange)(ref EntityRange range) {
 		PSize r;
-		auto p = "width" in ep.tag.attr;
-		if (p) r.width = safeParse!int(*p, r.width);
-		p = "height" in ep.tag.attr;
-		if (p) r.height = safeParse!int(*p, r.height);
+		foreach (attr; range.front.attributes.save) {
+			switch (attr.name) {
+			case "width":
+				r.width = safeParse!int(attr.value.decodeXML(), r.width);
+				break;
+			case "height":
+				r.height = safeParse!int(attr.value.decodeXML(), r.height);
+				break;
+			default:
+				break;
+			}
+		}
 		return r;
 	}
 	/// Creates XML element from this instance.
 	const
-	Element toElement(string tagName) {
-		auto e = new Element(tagName);
-		e.tag.attr["width"] = text(width);
-		e.tag.attr["height"] = text(height);
-		return e;
+	void toElement(XMLWriter)(ref XMLWriter writer, string tagName) {
+		writer.openStartTag(tagName);
+		writer.writeAttr("width", .text(width));
+		writer.writeAttr("height", .text(height));
+		writer.closeStartTag(EmptyTag.yes);
 	}
+}
+unittest {
+	import std.array;
+
+	auto xml = `<size width="101" height="102"/>`;
+	auto range = .parseXML(xml);
+	auto s = PSize.fromElement(range);
+	assert (s.width == 101, .text(s));
+	assert (s.height == 102, .text(s));
+
+	auto writer = .xmlWriter(appender!string());
+	s.toElement(writer, "size");
+
+	xml = writer.output.data;
+	assert (xml == "\n" ~ `<size width="101" height="102"/>`, xml);
+	range = .parseXML(xml);
+	assert (s == PSize.fromElement(range));
 }
 
 /// Weights of split area.
@@ -342,23 +525,48 @@ struct Weights {
 	uint l; /// Weight of left area.
 	uint r; /// Weight of right area.
 
-	/// Creates instance from ep.
-	static Weights fromElement(ElementParser ep) {
+	/// Creates instance from range.
+	static Weights fromElement(EntityRange)(ref EntityRange range) {
 		Weights w;
-		auto p = "l" in ep.tag.attr;
-		if (p) w.l = safeParse!uint(*p, w.l);
-		p = "r" in ep.tag.attr;
-		if (p) w.r = safeParse!uint(*p, w.r);
+		foreach (attr; range.front.attributes.save) {
+			switch (attr.name) {
+			case "l":
+				w.l = safeParse!uint(attr.value.decodeXML(), w.l);
+				break;
+			case "r":
+				w.r = safeParse!uint(attr.value.decodeXML(), w.r);
+				break;
+			default:
+				break;
+			}
+		}
 		return w;
 	}
 	/// Creates string from this instance.
 	const
-	Element toElement(string tagName) {
-		auto e = new Element(tagName);
-		e.tag.attr["l"] = text(l);
-		e.tag.attr["r"] = text(r);
-		return e;
+	void toElement(XMLWriter)(ref XMLWriter writer, string tagName) {
+		writer.openStartTag(tagName);
+		writer.writeAttr("l", .text(l));
+		writer.writeAttr("r", .text(r));
+		writer.closeStartTag(EmptyTag.yes);
 	}
+}
+unittest {
+	import std.array;
+
+	auto xml = `<weights l="101" r="102"/>`;
+	auto range = .parseXML(xml);
+	auto s = Weights.fromElement(range);
+	assert (s.l == 101, .text(s));
+	assert (s.r == 102, .text(s));
+
+	auto writer = .xmlWriter(appender!string());
+	s.toElement(writer, "weights");
+
+	xml = writer.output.data;
+	assert (xml == "\n" ~ `<weights l="101" r="102"/>`, xml);
+	range = .parseXML(xml);
+	assert (s == Weights.fromElement(range));
 }
 
 /// Tone.
@@ -367,26 +575,35 @@ struct Tone {
 	/// Data of tone.
 	bool[][] value;
 
-	/// Creates instance from ep.
-	static Tone fromElement(ElementParser ep) {
+	/// Creates instance from range.
+	static Tone fromElement(EntityRange)(ref EntityRange range) {
 		Tone r;
-		r.name = ep.tag.attr.get("name", "(No name)");
-		ep.onText = (string s) {
-			auto lines = s.split(" ");
+		r.name = "(No Name)";
+		foreach (attr; range.front.attributes.save) {
+			switch (attr.name) {
+			case "name":
+				r.name = attr.value.decodeXML();
+				break;
+			default:
+				break;
+			}
+		}
+		range.popFront();
+		if (range.front.type == EntityType.text) {
+			auto lines = range.front.text.decodeXML().split(" ");
 			foreach (line; lines) {
 				bool[] lv;
-				foreach (j, c; line) {
+				foreach (c; line) {
 					lv ~= '1' == c;
 				}
 				r.value ~= lv;
 			}
-		};
-		ep.parse();
+		}
 		return r;
 	}
 	/// Creates string from this instance.
 	const
-	Element toElement(string tagName) {
+	void toElement(XMLWriter)(ref XMLWriter writer, string tagName) {
 		char[] buf;
 		foreach (i, line; value) {
 			foreach (c; line) {
@@ -396,8 +613,27 @@ struct Tone {
 				buf ~= ' ';
 			}
 		}
-		auto e = new Element(tagName, assumeUnique(buf));
-		e.tag.attr["name"] = name;
-		return e;
+		writer.openStartTag(tagName);
+		writer.writeAttr("name", name.encodeAttr());
+		writer.closeStartTag(EmptyTag.no);
+		writer.writeText(buf.encodeText(), Newline.no, InsertIndent.no);
+		writer.writeEndTag(tagName, Newline.no);
 	}
+}
+unittest {
+	import std.array;
+
+	auto xml = `<tone name="&quot;Tone&quot;">010 101 110</tone>`;
+	auto range = .parseXML(xml);
+	auto s = Tone.fromElement(range);
+	assert (s.name == `"Tone"`, .text(s));
+	assert (s.value == [[false, true, false], [true, false, true], [true, true, false]], .text(s));
+
+	auto writer = .xmlWriter(appender!string());
+	s.toElement(writer, "tone");
+
+	xml = writer.output.data;
+	assert (xml == "\n" ~ `<tone name="&quot;Tone&quot;">010 101 110</tone>`, xml);
+	range = .parseXML(xml);
+	assert (s == Tone.fromElement(range));
 }

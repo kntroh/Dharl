@@ -12,7 +12,6 @@ private import std.conv;
 private import std.exception;
 private import std.path;
 private import std.string;
-private import std.xml;
 
 /// Version of the application.
 immutable VERSION = import("@version.txt").chomp();
