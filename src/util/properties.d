@@ -18,6 +18,7 @@ mixin template Prop(string Name, Type, Type DefaultValue, bool ReadOnly = false,
 }
 ///
 unittest {
+	import std.conv;
 	import std.string;
 
 	/// Window bounds.
@@ -71,7 +72,16 @@ unittest {
 
 	WindowBounds wb2;
 	wb2.readXML(xml);
-	assert (wb == wb2);
+	assert (wb == wb2, text(wb2));
+
+	WindowBounds wb3;
+	xml = wb3.writeXML();
+	assert (xml == join([
+		`<?xml version="1.0" encoding="UTF-8"?>`,
+		`<windowBounds/>`,
+	], "\n"), xml);
+	wb.readXML(xml);
+	assert (wb == WindowBounds.init, text(wb));
 }
 /// ditto
 mixin template Prop(string Name, Type, string ElementName = "") {
@@ -115,6 +125,7 @@ mixin template PropIO(string RootName) {
 			// so have to use __traits to generate a call for putDelegate.
 			static if (is(typeof(.fromElementFunc!(typeof(fld.value))(range))) || __traits(hasMember, typeof(fld), "fromElement")) {
 				putDelegate(fld, put);
+				fld.value = fld.INIT;
 			}
 		}
 		while (!range.empty()) {
@@ -171,7 +182,8 @@ mixin template PropIO(string RootName) {
 	const
 	void toElement(XMLWriter)(ref XMLWriter writer, string tagName) {
 		import dxml.writer;
-		writer.writeStartTag(tagName);
+		
+		auto start = false;
 		foreach (fld; this.tupleof) {
 			// is(typeof(...)) will silently ignore it when a compile error occurs,
 			// so have to use __traits to generate a call for toElementFunc.
@@ -181,11 +193,19 @@ mixin template PropIO(string RootName) {
 					// no creates element.
 					continue;
 				} else {
+					if (!start) {
+						writer.writeStartTag(tagName);
+						start = true;
+					}
 					.toElementFunc(writer, fld.ELEMENT_NAME, fld.value);
 				}
 			}
 		}
-		writer.writeEndTag(tagName);
+		if (start) {
+			writer.writeEndTag(tagName);
+		} else {
+			writer.writeStartTag(tagName, EmptyTag.yes);
+		}
 	}
 }
 /// ditto
