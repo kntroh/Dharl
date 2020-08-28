@@ -48,8 +48,37 @@ private immutable MSG_ARGUMENT     = "argument "; // appends filepath after spac
 /// ditto
 private immutable MSG_QUIT         = "quit";
 
-/// Entry point of program.
-void main(string[] args) {
+version (LDC) {
+	version (Windows) {
+		// The libcmt.lib that comes with the LDC requires a C runtime entry point
+		// when specified "/ENTRY:mainCRTStartup" as a linker option.
+		private import core.runtime;
+		private import core.stdc.string;
+		private import core.sys.windows.windows;
+		/// Entry point of C runtime.
+		extern (C) INT main(INT argc, const char** argv) {
+			Runtime.initialize();
+			scope (exit) Runtime.terminate();
+			string[] args;
+			foreach (i; 0 .. argc) args ~= .to!string(argv);
+			try {
+				dmain(args);
+				return 0;
+			} catch (Throwable e) {
+				return -1;
+			}
+		}
+	} else {
+		/// Entry point of D runtime.
+		void main(string[] args) { dmain(args); }
+	}
+} else {
+	/// Entry point of D runtime.
+	void main(string[] args) { dmain(args); }
+}
+
+/// Entry point of the program.
+private void dmain(string[] args) {
 	string exe = .thisExePath();
 	.coutf("Execute: %s", exe);
 	.errorLog = "%s.log".format(exe);

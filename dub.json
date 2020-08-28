@@ -13,23 +13,29 @@
 		"src/res"
 	],
 	"dependencies": {
-		"dwt": "~>1.0.4",
+		"dwt": "~>1.0.5",
 		"dxml": "~>0.4.3"
 	},
 
-	"preBuildCommands-windows-x86": [
+	"preBuildCommands-windows-x86-dmd": [
 		"rcc -32 src/dharl.rc"
 	],
-	"lflags-windows-x86": [
+	"lflags-windows-x86-dmd": [
 		"/rc:dharl.res"
 	],
-
+	"preBuildCommands-windows-x86-ldc": [
+		"rc src/dharl.rc"
+	],
+	"lflags-windows-x86-ldc": [
+		"src/dharl.res",
+	],
 	"preBuildCommands-windows-x86_64": [
 		"rc src/dharl.rc"
 	],
 	"lflags-windows-x86_64": [
 		"src/dharl.res",
 	],
+
 	"libs-linux": [
 		"atk-1.0",
 		"cairo",
@@ -60,9 +66,18 @@
 	],
 
 	"buildTypes": {
+		"debug": {
+			"versions": [
+				"Console"
+			]
+		},
 		"gui": {
-			"lflags-windows-x86": [
+			"lflags-windows-x86-dmd": [
 				"/exet:nt/su:windows:4.0"
+			],
+			"lflags-windows-x86-ldc": [
+				"/SUBSYSTEM:Windows",
+				"/ENTRY:mainCRTStartup"
 			],
 			"lflags-windows-x86_64": [
 				"/SUBSYSTEM:Windows",
@@ -70,8 +85,12 @@
 			]
 		},
 		"release": {
-			"lflags-windows-x86": [
+			"lflags-windows-x86-dmd": [
 				"/exet:nt/su:windows:4.0"
+			],
+			"lflags-windows-x86-ldc": [
+				"/SUBSYSTEM:Windows",
+				"/ENTRY:mainCRTStartup"
 			],
 			"lflags-windows-x86_64": [
 				"/SUBSYSTEM:Windows",
