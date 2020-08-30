@@ -55,12 +55,13 @@ version (LDC) {
 		private import core.runtime;
 		private import core.stdc.string;
 		private import core.sys.windows.windows;
+		private import std.windows.charset;
 		/// Entry point of C runtime.
-		extern (C) INT main(INT argc, const char** argv) {
+		extern (C) INT main(INT argc, immutable char** argv) {
 			Runtime.initialize();
 			scope (exit) Runtime.terminate();
 			string[] args;
-			foreach (i; 0 .. argc) args ~= .to!string(argv);
+			foreach (i; 0 .. argc) args ~= .to!string(.fromMBSz(argv[i]));
 			try {
 				dmain(args);
 				return 0;
